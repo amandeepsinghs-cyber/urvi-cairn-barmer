@@ -1,678 +1,299 @@
-# Implementation & Verification Checklist (`checklist.md`)
-## WellPulse: Energy Well Operations & Voice AI Platform
+# Cairn Oil & Gas (Barmer Basin) — Step-by-Step Implementation & Verification Checklist (`checklist.md`)
+## Urvi AI Agent for Cairn Oil & Gas · Vedanta Limited (Block RJ-ON-90/1, Rajasthan)
 
-**Document Version:** 3.2.0 (V 1.0 reconciliation)  
-**Date:** 2026-11-15  
-**Status:** **V 1.0 (Urvi AI Agent) live** on Cloud Run (`wellpulse-app-00008-g49`, image `v1-4b8463d`). v0.4 stages M…W, v0.5 DG/NN/FR and v0.6 ED are done. Still open: Playwright E2E, the canvas-routing/brevity eval run, NN plausibility review, W2 selfcheck refresh, and **Stage RB, hierarchy-based access (reopened; scope pending)**. See [Checklist review 2026-11-15](#checklist-review-2026-11-15) and [`backlog_refinements.md`](../backlog_refinements.md) (latest changes, refinements, backlog).  
-**Companion Docs:** [`v05_change_brief.md`](./v05_change_brief.md) · [`build.md`](./build.md) · [`verbatim.md`](../verbatim.md) · [`BRD.md`](./BRD.md) · [`features.md`](./features.md) · [`BDD.md`](./BDD.md) · [`SDD.md`](./SDD.md) · [`DELEGATION.md`](./DELEGATION.md) · [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md)  
-**Autonomy:** Authorised by user (2026-10-07) — dry-run / local-test first, then apply; never delete existing resources. A gate that fails 3 times is marked **BLOCKED** here and independent stages continue; never fake a gate; never change the model.  
-**User rule:** "During the build, do a git commit and push to origin main after every major milestone (each passed stage gate)."  
-**Legend:** `[O]` = orchestrator (Opus/Pro), `[A]` = Argon (`gemini-3.8-flash-high`), `[F]` = Gemini Flash worker (lands only after its deterministic gate passes and `[O]` reviews it).
+**Document Version:** 4.0.0 (Cairn Barmer Replica — 64-Step Dual-Check Tracker)  
+**Date:** 2026-11-15 · **CIO Meeting Deadline:** 2026-11-18  
+**Authoritative Build Guide:** [`build.md`](./build.md) (Part I Deep Research Spec · Part II 64 Atomic Steps)  
+**Companion Docs:** [`backlog_refinements.md`](../backlog_refinements.md) · [`plan_prompt.md`](../plan_prompt.md) · [`DELEGATION.md`](./DELEGATION.md)  
+*(Inherited ONGC checklist remains permanently preserved in git history at `git show c8fc208:docs/checklist.md`.)*
 
 ---
 
 > [!IMPORTANT]
-> **Answer first:** The WellPulse baseline (Phases 1–7) is fully shipped and running in production. The v0.4 verbatim expansion executes across 13 discrete stages (Stages M through W), ordered strictly by data dependency rather than priority, each ending in a gate from [`build.md`](./build.md).
+> **Mandatory Step-by-Step Verification Law (Enforced After Every Single Completed Step):**
+> 1. Every atomic step `Ck.m` in [`docs/build.md`](./build.md) has **TWO checkboxes** below:
+>    - **`[Ck.m · Impl]`** — Code / configuration / document written within declared file ownership (`[O]` Orchestrator, `[A]` Argon, `[F]` Gemini Flash).
+>    - **`[Ck.m · Verify]`** — Exact verification command from `docs/build.md` executed by `[O]` in the main workspace, exited `0`, with measured output recorded inline under *Evidence*.
+> 2. **Zero Batch Drift on Verification:** Never move to step `Ck.(m+1)` until **both** `[Ck.m · Impl]` and `[Ck.m · Verify]` are checked `[x]`.
+> 3. **User Approval Gates (`[USER GATE]`):** Pause and obtain explicit user OK before `C0.7` (initial lockdown commit/push), `C0.8` (enable 5 GCP APIs & IAM SA), `C4.1` (GCS/BQ cloud resource creation), `C9.3` (Cloud Run deploy), and `C9.5` (final git push).
+> 4. **Honest ML Gates:** If `C5.3` (Gate Q) or `C5.4` (Gate E) fails, mark `BLOCKED` and report exact metrics to the user immediately — **never relax thresholds or tune to pass**.
 
 ---
 
-## Checklist review 2026-11-15
+## Progress Summary
 
-> [!IMPORTANT]
-> **Answer first:** V 1.0 is functionally complete. Most unticked boxes were bookkeeping drift: the gate commits, NN, FR, ED and the W2 deploy were all done but never ticked. One user-reported defect is real: **the persona dropdown has no effect**. It is reopened as **Stage RB** below.
-
-**What changed in this revision (verified from code, git history and a fresh test run; user statements are marked "user"):**
-1. **Gate commits:** every v0.4 stage has its `v0.4(<stage>)` commit on `origin/main` (hashes are noted on each line). The original per-gate commit lines are now ticked.
-2. **Built but never ticked:** T-F2/T-F3 components (in `components/decision/`), NN-O1…F5 (in `success_engine.py` + `RecommendationPanel.tsx`), FR-O3/O4/F5 (in `field_report.py` + `FieldReportOverlay.tsx`), DF-F1/F2, and W2-O2…O4 (V 1.0 deploy).
-3. **Voice (user, 2026-11-15):** Live voice works very well, so latency, barge-in and open mic are accepted without further measurement.
-4. **Decision D-43 (user, 2026-11-15):** a reconnect **starts a fresh session**, so every demo starts clean. "Reconnect keeps context" is removed from all gates.
-5. **Reopened:** "Persona switch works" (Gate Y). The dropdown changes the `X-Persona` header, but showcase mode (D-33, `WELLPULSE_RBAC_ENFORCE=0`) gives every persona FULL access, and `api/decision.ts` hard-codes `ASSET_MANAGER`. So switching persona changes nothing. See Stage RB.
-6. **Backlog:** Cloud Run scale-out (single instance + in-memory sessions, D-16) is on hold until its scope is clear.
-
-**Fresh baseline (2026-11-15):** `tsc --noEmit` green · backend pytest **718 passed, 24 skipped, 0 failed** (3 m 46 s). The 23 BigQuery parity tests skipped because local ADC had expired (`gcloud auth application-default login`), and 1 opt-in live-LLM demo test skipped (`WELLPULSE_LIVE_LLM=1`). NN / FR / RBAC tests all ran.
-
----
-
-## Baseline history (Phases 1-7, done)
-
-### Phase 1: Archiving & Repository Scaffolding
-- [x] Create `archive/` directory to preserve previous prototypes for learning.
-- [x] Relocate legacy `drilling-dashboard/` and `drilling-intelligence/` into `archive/`.
-- [x] Synthesize `archive/LEARNINGS.md` with lessons learned.
-- [x] Scaffold top-level project folders: `docs/`, `backend/`, `frontend/`, `scripts/`.
-- [x] Initialize Git repository and link to GitHub remote.
-
-### Phase 2: Specification Documentation Suite
-- [x] Generate **BRD.md** (Business Requirements Document).
-- [x] Generate **BDD.md** (Behavior-Driven Development Gherkin scenarios).
-- [x] Generate **SDD.md** (Software Design Document & Architecture).
-- [x] Generate **features.md** (Detailed Feature Catalog with MoSCoW prioritization).
-- [x] Generate **build.md** (Step-by-step local prerequisites and execution commands).
-- [x] Generate **checklist.md** (Phased verification tracker).
-
-### Phase 3: Backend & Synthetic Data Engine
-- [x] Create `backend/requirements.txt` (`fastapi`, `uvicorn`, `pydantic`, `python-dotenv`, `google-genai`).
-- [x] Implement `backend/app/services/data_generator.py` simulating 50 Geleki Brownfield wells with 730d telemetry.
-- [x] Implement `backend/app/api/wells.py` REST API and WebSocket routes.
-- [x] Implement Engineering Reports Dossier Generator:
-  - [x] Well Completion Report (WCR)
-  - [x] Daily Workover Shift Log (DWR)
-  - [x] Bottomhole Pressure & Sonolog Survey (BHP)
-  - [x] Produced Water Chemistry & Scale Assay (Lab)
-- [x] Implement GCS Data Lake export script and hydrate `gs://workover-operations-agentic-ai-datalake`.
-
-> [!NOTE]
-> **Correction (2026-10-07, verified from code):**
-> `backend/requirements.txt` lacks `requests`, which is imported by `ai_agent.py`; fixed by `uv` in Stage M.
-
-### Phase 4: Frontend Map, Telemetry & Voice UI
-- [x] React 18 + Vite + Tailwind CSS + Leaflet GIS setup.
-- [x] Interactive Leaflet Satellite imagery with tagged wellhead labels.
-- [x] 3-tier health status visualization (🟢 Optimal, 🟡 Warning, 🔴 Critical).
-- [x] 24-month historical telemetry charts (BOPD, MCFD, Water Cut %, Pressures).
-- [x] Chronological workover timeline and quantitative flow gain cards.
-- [x] 4-tab Engineering Reports Dossier component.
-- [x] Bilingual Voice AI Copilot (Hinglish, English, Hindi).
-
-> [!NOTE]
-> **Correction (2026-10-07, verified from code):**
-> Health status is hard-coded 32/12/6; replaced by data-driven TC-020 in Stage P.
-
-### Phase 5: Cloud Run Production Deployment
-- [x] Multi-stage Dockerfile bundling frontend distribution into Python runtime.
-- [x] Configure Google Cloud project `workover-operations-agentic-ai`.
-- [x] Deploy to Cloud Run in `us-central1` (native Gemini Live region).
-- [x] Resolve organization policy to permit unauthenticated access (`allUsers`).
-- [x] Initial push to GitHub repository `amandeepsinghs-cyber/workover-operations-ai-agent-cloudrun`.
-
-> [!NOTE]
-> **Correction (2026-10-07, verified from code):**
-> Phase 5 lists a multi-stage Dockerfile, but the actual Dockerfile is single-stage `python:3.11-slim` copying pre-built `frontend/dist/`; the true multi-stage Dockerfile arrives in Stage W.
-
-### Phase 6: Deep Context AI & Voice UX Overhaul (Completed)
-- [x] Enable Vertex AI API (`aiplatform.googleapis.com`) in GCP project `workover-operations-agentic-ai`.
-- [x] Grant `roles/aiplatform.user` to Cloud Run service account.
-- [x] Update `ai_agent.py` to use Vertex AI ADC natively in `us-central1` (`gemini-2.5-flash`).
-- [x] Upgrade local petroleum fallback engine with comprehensive semantic question matching.
-- [x] Fix Voice Button UX in `VoiceAgentPanel.tsx`:
-  - [x] Replace `<MicOff>` mute icon with an active, pulsing `<Mic>` icon.
-  - [x] Switch styling to active emerald green glow with ripple animation.
-  - [x] Enable `interimResults = true` so spoken words appear immediately in the input box.
-  - [x] Add sound-wave frequency bars and clear "Listening... Speak now" indicator.
-- [x] Add Geleki Gas Gathering Stations (GGS-1, GGS-2, GGS-3) and pipeline network on the satellite map.
-- [x] Add One-Click Engineering Dossier Export (Download formatted JSON/Markdown).
-
-> [!NOTE]
-> **Correction (2026-10-07, verified from code):**
-> Phase 6 notes that `ai_agent.py` uses Vertex AI ADC with `gemini-2.5-flash`, but the code today calls the Generative Language REST API with `GEMINI_API_KEY` and model `gemini-3.8-flash`; Vertex ADC returns in Stage U/V (with decision D-13 keeping `gemini-3.8-flash`).
-
-### Phase 7: Verification, Redeployment & GitHub Sync (Completed)
-- [x] Verify local production build (`npm run build`).
-- [x] Test Vertex AI live chat in Hinglish, English, and Hindi.
-- [x] Redeploy optimized service to Cloud Run in `us-central1`.
-- [x] Verify live unauthenticated Cloud Run URL.
-- [x] Stage, commit, and push all updates to GitHub.
+| Stage | Scope | Steps | Impl Checked | Verify Checked | Gate Status |
+|---|---|---|---|---|---|
+| **C0** | Deep Research Lock, Lockdown Commit & GCP Preflight | `C0.1`–`C0.8` (8) | `6 / 8` | `6 / 8` | ⏳ In Progress |
+| **C1** | Core Barmer 60-Month Synthetic Data Engine (`460` Wells) | `C1.1`–`C1.12` (12) | `0 / 12` | `0 / 12` | ⬜ Pending |
+| **C2** | Stage-DG Wellbore, Deviation, Integrity, Hazards & GeoJSONs | `C2.1`–`C2.5` (5) | `0 / 5` | `0 / 5` | ⬜ Pending |
+| **C3** | Barmer PDF Corpus (`D01–D11`), SOPs & 100% Fact-Slot Audit | `C3.1`–`C3.5` (5) | `0 / 5` | `0 / 5` | ⬜ Pending |
+| **C4** | GCS Lakehouse & BigQuery Medallion (`asia-south1`) | `C4.1`–`C4.6` (6) | `0 / 6` | `0 / 6` | ⬜ Pending |
+| **C5** | ML Feature Rebuild, Retraining (Gate Q & E) & Analog Index | `C5.1`–`C5.5` (5) | `0 / 5` | `0 / 5` | ⬜ Pending |
+| **C6** | Backend Tools, Cairn Branding, Prompts, Voice & RBAC | `C6.1`–`C6.6` (6) | `0 / 6` | `0 / 6` | ⬜ Pending |
+| **C7** | Frontend Map, Voice Controls, Persona UI, Architecture & Docs | `C7.1`–`C7.6` (6) | `0 / 6` | `0 / 6` | ⬜ Pending |
+| **C8** | Test Suite, Golden Schemas, Eval Migration & Zero-ONGC Audit | `C8.1`–`C8.6` (6) | `0 / 6` | `0 / 6` | ⬜ Pending |
+| **C9** | Local Rehearsal, Cloud Run Deploy & CIO Demo Script | `C9.1`–`C9.5` (5) | `0 / 5` | `0 / 5` | ⬜ Pending |
+| **TOTAL** | **Full Cairn Oil & Gas (Barmer Basin) Build** | **64 Steps** | **`6 / 64`** | **`6 / 64`** | — |
 
 ---
 
-## Phase 8+ · v0.4 verbatim expansion
+## Stage C0 · Deep Research Lock, Repo Lockdown Commit & GCP Preflight (Day 1 AM)
 
-### Phase 8 · Stage M — Preflight & baseline
-**Verbatim anchor:** derived: safe migration (D-14), no tests exist today
+- [x] **[C0.1 · Impl]** `[O]` Author Barmer Basin stratigraphy (7 units), 4-field portfolio (`Mangala` 180, `Bhagyam` 120, `Aishwariya` 100, `Raageshwari` 60 = 460 wells), post-2008 completion windows, pad coordinates, and true depth/casing laws in `docs/build.md` Part I §§1–3.
+- [x] **[C0.1 · Verify]** `[O]` Run `C0.1` assertion check on `docs/build.md` (`448 m TVDSS`, `Raageshwari_Volcanics`, `MPT-NAGANA`, `RGT-TERMINAL`, `2008-06-01`). · *Evidence:* `C0.1 OK (exit 0, 2026-11-15)`
 
-#### Tasks
-- [x] [O] Step 0 Auth preflight: verify ADC and set project to `workover-operations-agentic-ai` (`gcloud auth list`, `gcloud auth application-default print-access-token`, `gcloud config set project`)
-- [x] [O] Step 1 uv initialization: initialize `backend/pyproject.toml` and `backend/uv.lock`, add runtime (`fastapi`, `uvicorn[standard]`, `pydantic`, `python-dotenv`, `google-genai`, `requests`) and dev (`pytest`, `httpx`, `pytest-asyncio`, `ruff`) dependencies, update `.gitignore`, and remove `backend/requirements.txt`
-- [x] [O] Step 2 Golden API snapshots: implement `backend/tests/golden/capture.py` capturing GLK-101, GLK-120, GLK-150, generate `backend/tests/golden/*.schema.json`, and implement `backend/tests/test_api_shapes.py`
-- [x] [O] Step 3 UI baseline verification: execute `npm ci` and `npm run build` in `frontend/` and log bundle size
-- [x] [O] Step 4 Baseline port source: copy `${ADK_REPO}/data/landing` to `backend/tests/baseline/landing_v030` (git-ignored) and verify ADK repo contract tests and validator
-- [x] [O] Step 5 Launcher update: update `run_local.sh` to use `uv run` while serving `:8002` and `:5180`
+- [x] **[C0.2 · Impl]** `[O]` Author waxy crude rheology (`42°C` pour point, `59°C` WAT, Bhagyam biodegradation `15–500 cP`), `<8,000 ppm` TDS low-salinity HPAM/ASP EOR rules, and 6-lift telemetry table (`JET_PUMP`, `ESP`, `PCP`, `SRP`, `GAS_LIFT`, `NATURAL`) in `docs/build.md` Part I §§4–5.
+- [x] **[C0.2 · Verify]** `[O]` Run `C0.2` assertion check on `docs/build.md` (`42.0°C`, `59.0°C`, `HPAM`, all 6 lifts, `-0.16` Bhagyam bias). · *Evidence:* `C0.2 OK (exit 0, 2026-11-15)`
 
-#### Gate M
-- [x] ADC valid; `gcloud config get-value project` = `workover-operations-agentic-ai`
-- [x] `backend/pyproject.toml` and `uv.lock` committed; `uv sync --frozen` works from clean; `requests` resolved
-- [x] `./run_local.sh` uses `uv run` and still serves `:8002` / `:5180`
-- [x] Golden schema files exist for every existing `/api` route, and `test_api_shapes.py` is green
-- [x] `npm run build` succeeds; bundle size logged
-- [x] ADK repo baseline: contract tests green, validator 0 violations; `landing_v030/` copied (git-ignored)
-- [x] [O] Commit + push after Gate M passes: `git commit -m "v0.4(M): preflight & baseline — Gate M passed" && git push origin main` — *on origin/main as `8301bab` (verified 2026-11-15)*
+- [x] **[C0.3 · Impl]** `[O]` Author Barmer workover catalogue (`IC-01..IC-15`, cost bands, rig-days, `>= 45` training episode floor) and 6 scripted hero wells (`MNG-042`, `BHG-019`, `BHG-088`, `ASH-023`, `ASH-061`, `RAG-014`) in `docs/build.md` Part I §§6–7.
+- [x] **[C0.3 · Verify]** `[O]` Run `C0.3` assertion check verifying `IC-01..IC-15` and all 6 hero well IDs in `docs/build.md`. · *Evidence:* `C0.3 OK (exit 0, 2026-11-15)`
 
----
+- [x] **[C0.4 · Impl]** `[O]` Author Cairn / Vedanta identity, `cairn_vedanta_wordmark.svg` spec, Vedanta upstream personas, 4 Cairn India upstream asset map locations (`Barmer`, `Ravva`, `Cambay`, `Jorhat OALP`), and `[verify]` markers in `docs/build.md` Part I §8.
+- [x] **[C0.4 · Verify]** `[O]` Run `C0.4` assertion check on `docs/build.md` (`Urvi AI Agent for Cairn Oil & Gas, Barmer`, `Ravva`, `Cambay`, `[verify]`). · *Evidence:* `C0.4 OK (exit 0, 2026-11-15)`
 
-### Phase 9 · Stage N — Data foundation v2
-**Verbatim anchor:** §1 *"Lakwa… Lakhmani… three areas, with their individual cluster"*; §1 *"generate more data"*
+- [x] **[C0.5 · Impl]** `[O]` Generate 1-to-1 synchronized `docs/checklist.md` (64 steps × 2 checks) and log update in `backlog_refinements.md` (§1, §2 `C-R2`, §3 `CB-1..CB-4`).
+- [x] **[C0.5 · Verify]** `[O]` Run `C0.5` regex parity script confirming `build.md` steps == `checklist.md` `Impl` == `checklist.md` `Verify` == `64`. · *Evidence:* `C0.5 OK: 64/64 steps synced (exit 0, 2026-11-15)`
 
-#### Tasks
-- [x] [F] N-F1 Port generator modules and `train.py` boilerplate from `${ADK_REPO}` with import rewrites into `backend/app/analytics/generator/` and `backend/app/analytics/model/train.py`
-- [x] [O] N.1 FieldConfig and field modules: implement `backend/app/analytics/generator/fields/{__init__.py, geleki.py, lakwa.py, lakhmani.py}` with fixtures (LKW-047, LKW-088, LKW-112, LKM-023, LKM-061, LKM-090) and new tables in `{hierarchy.py, construction.py, operations_events.py, targets.py}` (incl. `pressure_surveys`, `formation_tops`, D-19)
-- [x] [O] N.2 Catalogue and labels (K-1, K-2): add `GLV_REPLACE` and `cost_band` to `job_catalogue`; add `catalogue_job_code` and `intervention_class` (IC-01…IC-15) to `workover_history`
-- [x] [O] N.3 Telemetry columns (D-19): add `wht_degc`, `gl_inj_rate_mscfd`, `gl_inj_pressure_kgcm2` (GOR = `gor_scf_bbl`; SPM for SRP), plus append-only `pressure_surveys` and `formation_tops`
-- [x] [O] N.4 Repository layer: implement `backend/app/data_access/{repository.py, parquet_repo.py, adapters.py}`, update `backend/app/api/wells.py` to read from repository, and deprecate/delete `backend/app/services/data_generator.py`
-- [x] [F] N-F2 Frontend type and label updates: update `frontend/src/types/well.ts` and `frontend/src/components/timeline/WorkoverTimeline.tsx` (replace `cost_usd` with `cost_band` + `rig_days`)
-- [x] [O] N.5 Generation and validation: generate 60-month dataset (2021-10-01 to 2026-09-30) for all fields, validate V-N1..V-N7 and baseline comparison, verify CoxPH model training
-- [x] [O] N.6 Pin design targets: run `pin_targets.py` to generate `docs/pinned_values.md` and replace `«target ± tol»` placeholders in `BDD.md`
+- [x] **[C0.6 · Impl]** `[O]` Execute local port preflight (`:5180`, `:8002`), `deploy/deploy.sh plan` target guard check, and `cd backend && uv sync --frozen`.
+- [x] **[C0.6 · Verify]** `[O]` Confirm zero listeners on `:5180`/`:8002`, `deploy.sh plan` exits `0`, and `uv run python -c "import fastapi, pandas, sklearn"` passes. · *Evidence:* `C0.6 OK — 0 listeners, deploy.sh plan exit 0, uv synced 103 pkgs (2026-11-15)`
 
-#### Gate N
-- [x] Validator 0 violations for Geleki, Lakwa and Lakhmani; well counts 142 / 160 / 110
-- [x] Geleki's pre-existing columns are hash-identical to `landing_v030`; the Geleki join at the prepend boundary is continuous (±3%)
-- [x] All fields cover 2021-10-01 → 2026-09-30, and two runs produce byte-identical parquet (reproducible; fixes the `now()` defect)
-- [x] CoxPH C-index reproduces 0.7128 with the prepend excluded (Gate E)
-- [x] Every IC-01…IC-15 has ≥ 30 `workover_history` rows; `GLV_REPLACE` exists
-- [x] Lakwa gap vs. target inside −18% ± 3 pp; LKW-047 has 41 `WAIT_ON_RIG` days and 12 `WAIT_ON_MATERIAL` days
-- [x] `wht_degc`, `gor_scf_bbl`, `gl_inj_rate_mscfd`, `gl_inj_pressure_kgcm2` present; `pressure_surveys` and `formation_tops` populated (verbatim WS6, D-19)
-- [x] `test_api_shapes.py` green against the repository (React UI unchanged except for the N-F2 cost-band fields); `npm run build` green
-- [x] No `cost_usd` remains in API responses (D-1)
-- [x] `docs/pinned_values.md` written; BDD targets replaced
-- [x] [O] Commit + push after Gate N passes: `git commit -m "v0.4(N): data foundation v2 — Gate N passed" && git push origin main` — *on origin/main as `a3bd8cb` (verified 2026-11-15)*
+- [ ] **[C0.7 · Impl]** `[O]` **`[USER GATE]`** After explicit user OK, stage, commit, and push initial Cairn lockdown + `plan_prompt.md` + `docs/build.md` + `docs/checklist.md` + `backlog_refinements.md` to `amandeepsinghs-cyber/urvi-cairn-barmer` (`main`).
+- [ ] **[C0.7 · Verify]** `[O]` Confirm `git remote -v` has only `urvi-cairn-barmer`, `git status --porcelain` is empty, and `origin/main` is synced. · *Evidence:* `pending`
+
+- [ ] **[C0.8 · Impl]** `[O]` **`[USER GATE]`** After explicit user OK, enable `run`, `cloudbuild`, `artifactregistry`, `aiplatform`, and `iam` APIs in `urvi-cairn-barmer-ai-agent` and run `bash deploy/deploy.sh iam`.
+- [ ] **[C0.8 · Verify]** `[O]` Confirm all 5 GCP APIs enabled and `urvi-cairn-run@urvi-cairn-barmer-ai-agent.iam.gserviceaccount.com` exists. · *Evidence:* `pending`
+
+### Gate C0 Sign-Off
+- [ ] **Gate C0 Passed:** Deep research locked (`C0.1`–`C0.5`), local `uv` env ready (`C0.6`), Commit #1 pushed (`C0.7`), 5 GCP APIs + `urvi-cairn-run` SA active (`C0.8`).
 
 ---
 
-### Phase 10 · Stage O — PDF corpus + SOPs
-**Verbatim anchor:** §1 *"generate the documents of PDF files of… well interventions"*; §3 *"The SOPs"*
+## Stage C1 · Core Barmer 60-Month Synthetic Data Engine (`460 Wells` · Day 1)
 
-#### Tasks
-- [x] [O] O-O1 Fact-slot framework: implement `backend/app/analytics/generator/docs_pdf/{facts.py, render.py, scanify.py, validate.py, index.py}`, fact-slot schemas, and API routes in `backend/app/api/docs.py` (`GET /api/docs/{doc_id}.pdf`, `GET /api/wells/{id}/documents`) — built at `backend/app/analytics/docs_pdf/` (packet path; not `analytics/generator/`)
-- [x] [F] O-F1 D1 Well Completion Report (WCR) generator template
-- [x] [F] O-F2 D2 Workover Completion Report generator template
-- [x] [F] O-F3 D3 Daily Workover Shift Log (DWR) generator template
-- [x] [F] O-F4 D4 Well Completion Schematic generator template
-- [x] [F] O-F5 D5 Cement Bond Log (CBL) survey generator template
-- [x] [F] O-F6 D6 Chemical Treatment Log generator template
-- [x] [F] O-F7 D7 Well Test Report generator template
-- [x] [F] O-F8 D8 Root Cause Analysis (RCA) report generator template
-- [x] [F] O-F9 D9 Field Study Report generator template
-- [x] [F] O-F10 D10 Monthly Field Performance Report generator template
-- [x] [F] O-F11 D11 SOP library generator template (IC-01…IC-14) — Flash outputs (D1–D11 templates, IC-01…IC-14 YAML, hero YAML) reviewed by [O] (BDD-F19-S02); D5 QUESTIONABLE branch split by `assessment_basis` by lead
-- [x] [F] Hero narrative prose drafting for GK-129, LKW-047, LKW-112, LKM-090 (reviewed by [O]) — lead review done 2026-10-07: overclaims softened (no VDL/amplitude data claimed; GK-129 2019 water cut "not recorded"; LKM-090 wording uses signed change)
-- [x] [O] UI document integration: update `frontend/src/components/reports/WellReportsTab.tsx` to consume document index while keeping the JSON export
-- [x] [O] Corpus generation and validation: run `render --field all`, `scanify --fraction 0.10 --types D1,D5`, validate 100% facts, and build the TF-IDF index `backend/app/data/index/{doc_chunks.parquet, tfidf.pkl}` (D-17)
+- [ ] **[C1.1 · Impl]** `[O]` Extend `FieldConfig` in `backend/app/analytics/generator/fields/base.py` with `completion_window`, `surface_shoe_m`, `casing_mix_in`, `tubing_mix_in`, `zone_depths_md`, `zone_md_tvd_ratio`, and Barmer `primary_reservoirs`.
+- [ ] **[C1.1 · Verify]** `[O]` Run `C1.1` import & dataclass field assertion in `backend/`. · *Evidence:* `pending`
 
-#### Gate O
-- [x] D1…D11 present for all 3 fields; every IC-01…IC-14 has an SOP (D11)
-- [x] Fact validation 100%; no digit in template prose outside a fact slot
-- [x] Every `document_index` row resolves; `GET /api/docs/{id}.pdf` returns `application/pdf`
-- [x] The scanned subset is flagged `has_text_layer=false` and is still retrievable
-- [x] GK-129 has the 1998 CBL (D5) and the 2019 failed water-shut-off report (D2)
-- [x] WellReportsTab shows real documents for the selected well; `npm run build` green
-- [x] Corpus size logged (target ≤ 200 MB, so it fits in the image) — measured 155.0 MB (PDF 118.6 + facts.json 36.4) + index 34.5 MB; git-ignored, regenerated by `uv run python -m app.analytics.docs_pdf.build` (D-18)
-- [x] [O] Commit + push after Gate O passes: `git commit -m "v0.4(O): PDF corpus + SOPs — Gate O passed" && git push origin main` — *on origin/main as `d3792ad` (verified 2026-11-15)*
+- [ ] **[C1.2 · Impl]** `[A]` Implement `MANGALA` (`MNG-001..180`, seed `5101`, `MPT-NAGANA`, `55% JET_PUMP / 35% ESP / 5% PCP / 5% SRP`, hero `MNG-042`) in `backend/app/analytics/generator/fields/mangala.py` (`[O]` hero review).
+- [ ] **[C1.2 · Verify]** `[O]` Run `C1.2` assertion check (`n_wells==180`, lift sum `1.0`, `MNG-042` fixture present). · *Evidence:* `pending`
 
----
+- [ ] **[C1.3 · Impl]** `[A]` Implement `BHAGYAM` (`BHG-001..120`, seed `5202`, shallow `OWC 448 m TVDSS`, `target_bias=-0.16`, `40% PCP / 35% ESP / 15% JET_PUMP / 10% SRP`, heroes `BHG-019` & `BHG-088`) in `backend/app/analytics/generator/fields/bhagyam.py` (`[O]` hero review).
+- [ ] **[C1.3 · Verify]** `[O]` Run `C1.3` assertion check (`n_wells==120`, `target_bias==-0.16`, `BHG-019` & `BHG-088` present). · *Evidence:* `pending`
 
-### Phase 11 · Stage P — Analytics port + attribution + health
-**Verbatim anchor:** §1 *"why did the production decline? Was it human factor, controllable factor"*; §1 *"which of the wells are doing okay… not producing now"*
+- [ ] **[C1.4 · Impl]** `[A]` Implement `AISHWARIYA` (`ASH-001..100`, seed `5303`, AF + horizontal `ASH-ABH-3` `Barmer_Hill`, fixtures `ASH-023` & `ASH-061`) in `backend/app/analytics/generator/fields/aishwariya.py` (`[O]` hero review).
+- [ ] **[C1.4 · Verify]** `[O]` Run `C1.4` assertion check (`n_wells==100`, `ASH-023` & `ASH-061` present). · *Evidence:* `pending`
 
-#### Tasks
-- [x] [O] Deterministic tools port: port 18 deterministic tools (TC-001…TC-018) from `${ADK_REPO}/tools/` into `backend/app/analytics/tools/{common,arps_decline,chan_diagnostic,candidate_ranking,render_well_map}.py`, removing Geleki defaults (K-6)
-- [x] [O] Hierarchy helper: implement `field_of()` in `backend/app/analytics/tools/hierarchy.py`
-- [x] [O] TC-019 decline attribution: implement `backend/app/analytics/tools/attribution.py` and `backend/app/analytics/config/factor_map.yaml`
-- [x] [O] TC-020 data-driven health engine: implement `backend/app/analytics/tools/health.py` and wire into `backend/app/api/wells.py` (`/api/wells/kpis` and well status) — wired through `data_access/adapters.well_summary` (wells.py unchanged; kpis/status follow)
-- [x] [F] P-F1 Unit-test scaffolds from TC signatures for tools port, TC-019 attribution, and TC-020 health
+- [ ] **[C1.5 · Impl]** `[A]` Implement `RAAGESHWARI` (`RAG-001..060`, seed `5404`, `RGT-TERMINAL`, deep `Raageshwari_Volcanics` `2,950–3,720 m MD`, hero `RAG-014`) in `raageshwari.py`, wire `fields/__init__.py`, and delete `geleki.py`, `lakwa.py`, `lakhmani.py`.
+- [ ] **[C1.5 · Verify]** `[O]` Run `C1.5` check (`list(FIELD_CONFIGS)==['Mangala','Bhagyam','Aishwariya','Raageshwari']`, total wells `== 460`). · *Evidence:* `pending`
 
-#### Gate P
-- [x] All 18 ported tools pass the ADK contract tests (ported to `tests/unit/test_tools_port.py`); no `GK-129` / `Geleki` defaults remain (K-6)
-- [x] The attribution waterfall sums to the total loss within 0.5% for every well in all 3 fields
-- [x] LKW-047's largest class is `HUMAN_PROCESS`; LKM-090 is ≥ 80% `SUBSURFACE`; LKW-088 shows `EXTERNAL` (`GRID_POWER_OUTAGE`)
-- [x] TC-020 buckets come from data; `random.seed(42)` status removed; `/api/wells/kpis` = TC-020 counts
-- [x] Geleki trigger results are unchanged from the ADK baseline — accepted by orchestrator: data-driven replaces hard-coded fixtures (deviation table: pinned_values.md §8.2)
-- [x] [O] Commit + push after Gate P passes: `git commit -m "v0.4(P): analytics port + attribution + health — Gate P passed" && git push origin main` — *on origin/main as `d3792ad + 4c3d464` (verified 2026-11-15)*
+- [ ] **[C1.6 · Impl]** `[A]` Refactor `backend/app/analytics/generator/wells_native.py` for post-2008 completion dates, field-zone MD/TVD profiles, tubular sizes, and 6 lift types.
+- [ ] **[C1.6 · Verify]** `[O]` Run `C1.6` check (`460` wells, `completion_date >= 2008`, Bhagyam `total_depth_tvd_m < 700 m`). · *Evidence:* `pending`
+
+- [ ] **[C1.7 · Impl]** `[A]` Refactor `backend/app/analytics/generator/formation_tops.py` for the 7-unit Barmer stratigraphic column (`Thar_Alluvium_Kapurdi` → `Raageshwari_Volcanics`).
+- [ ] **[C1.7 · Verify]** `[O]` Run `C1.7` check confirming strictly contiguous positive layer thicknesses across all 460 wells. · *Evidence:* `pending`
+
+- [ ] **[C1.8 · Impl]** `[A]` Refactor `backend/app/analytics/generator/construction.py` for dynamic shallow surface shoes (`< perf_top_m - 80 m`), deep RDG intermediate casing, and 6-lift downhole strings.
+- [ ] **[C1.8 · Verify]** `[O]` Run `C1.8` check confirming `SURFACE` shoe `< perf_top_m - 50 m` and valid `tubing_string` / `perforation_intervals` across all 4 fields. · *Evidence:* `pending`
+
+- [ ] **[C1.9 · Impl]** `[A]` Update `catalogue.py`, `pressure_surveys.py`, `telemetry.py`, `operations_events.py`, `hierarchy.py`, and `targets.py` for Barmer lift/reservoir physics and desert/pad events.
+- [ ] **[C1.9 · Verify]** `[O]` Run `C1.9` check confirming `IC-01..IC-15` coverage and zero `ONGC` strings in `job_catalogue`. · *Evidence:* `pending`
+
+- [ ] **[C1.10 · Impl]** `[O]` Generalize `simulate.py` & `native.py` across 6 lift types (`>= 45` episodes per `IC` class) and implement the 6 Barmer hero fixtures in `fixtures.py`.
+- [ ] **[C1.10 · Verify]** `[O]` Run `C1.10` Mangala simulation smoke test confirming `MNG-042` and 60-month `daily_production` output. · *Evidence:* `pending`
+
+- [ ] **[C1.11 · Impl]** `[O]` Update `generate.py` (+ Barmer `well_run`, `draft_plan`, `decision_log`), delete `landing/{geleki,lakwa,lakhmani}/`, and run `generate --field all`.
+- [ ] **[C1.11 · Verify]** `[O]` Confirm 4 Barmer folders + `asset/` materialized (`460` wells) and legacy Assam folders absent. · *Evidence:* `pending`
+
+- [ ] **[C1.12 · Impl]** `[O]` Update `validate.py` (`V-N1..V-N7`) and `pin_targets.py` for Barmer fields & hero wells.
+- [ ] **[C1.12 · Verify]** `[O]` Run `uv run python -m app.analytics.generator.validate` (`0` violations) and `pin_targets`. · *Evidence:* `pending`
+
+### Gate C1 Sign-Off
+- [ ] **Gate C1 Passed:** All 460 Barmer wells, 60-month core parquets, and asset tables generated and `generator.validate` exits `0` (`backlog_refinements.md` updated).
 
 ---
 
-### Phase 12 · Stage Q — ML intervention classifier
-**Verbatim anchor:** §1 *"run a classification algorithm… 5 to 10… or 15 type of interventions"*
+## Stage C2 · Stage-DG Wellbore, Deviation, Integrity & Hazard Tables + GeoJSONs (Day 1 PM)
 
-#### Tasks
-- [x] [O] Feature engineering: implement `backend/app/analytics/model/features.py` incorporating production telemetry, well history, and construction tables (casing, tubing, perforations) without data leakage
-- [x] [O] Classifier training pipeline: implement `backend/app/analytics/model/train_classifier.py` (multi-class IC-01…IC-15 with SHAP explainability), producing `backend/app/analytics/model/intervention_classifier_v1.pkl` and `intervention_classifier_metrics.json`
-- [x] [O] TC-021 classifier tool: implement `backend/app/analytics/tools/intervention_classifier.py`
-- [x] [O] Unit and leakage tests: implement `backend/tests/unit/{test_features_no_leakage.py, test_tc021_classifier.py}`
+- [ ] **[C2.1 · Impl]** `[A]` Update `dg/common.py` and `dg/tubing_deviation.py` for Barmer pad S-wells and `ASH-ABH-3` `Barmer_Hill` horizontals (`tubing_tally`, `deviation_survey`).
+- [ ] **[C2.1 · Verify]** `[O]` Run `dg --field mangala` and verify `tubing_tally` & `deviation_survey` schema + `100% is_synthetic`. · *Evidence:* `pending`
 
-#### Gate Q
-- [x] Holdout **macro-F1 0.70–0.92**
-- [x] Top-3 accuracy ≥ 0.90
-- [x] Beats the TC-008 rule baseline by ≥ 0.05 macro-F1
-- [x] ECE ≤ 0.08
-- [x] Leakage test green (no post-event features); LKM-023 → IC-06, LKM-061 → IC-07 — leakage green; LKM-023 → IC-06; LKM-061 top-2 = {IC-07, IC-04} per orchestrator ruling Q-R2 (dual-signature fixture); see pinned_values.md §10
-- [x] Features include construction tables (casing, tubing, perforations) and prior-job history (verbatim §1)
-- [x] [O] Commit + push after Gate Q passes: `git commit -m "v0.4(Q): ML classifier — Gate Q passed" && git push origin main` — *on origin/main as `11202ee` (verified 2026-11-15)*
+- [ ] **[C2.2 · Impl]** `[A]` Update `dg/integrity.py` (`barrier_tests`, `wellhead_rating` `3k/5k/10k psi`, plus `RAG-014` failed annular barrier + frac-rating veto fixture).
+- [ ] **[C2.2 · Verify]** `[O]` Run `dg --field raageshwari` and verify `RAG-014` `FAIL` record in `barrier_tests.parquet`. · *Evidence:* `pending`
 
----
+- [ ] **[C2.3 · Impl]** `[A]` Update `dg/hazards_fishing.py` (`fluid_hazards` `42°C` waxy crude / polymer ppm / RDG CO2; `fishing_records` on failed jobs) and run `dg --field all`.
+- [ ] **[C2.3 · Verify]** `[O]` Confirm all `24` DG parquets (`4 fields × 6 tables`) exist, non-empty, and `100% is_synthetic=True`. · *Evidence:* `pending`
 
-### Phase 13 · Stage R — Next best action + counterfactual
-**Verbatim anchor:** §1 *"recommend what is the next best action"*; §3 *"Why are you recommending this against an alternative?"*
+- [ ] **[C2.4 · Impl]** `[A]` Generate `mangala`, `bhagyam`, `aishwariya`, and `raageshwari` `*_boundary.geojson` files, update `tools/geodata.py`, and delete Assam GeoJSONs.
+- [ ] **[C2.4 · Verify]** `[O]` Confirm `load_field_geojson` loads all 4 Barmer polygons and `geleki_boundary.geojson` is removed. · *Evidence:* `pending`
 
-#### Tasks
-- [x] [O] TC-022 Next Best Action: implement `backend/app/analytics/tools/nba.py` with expected uplift, cost band, rig-days, risk profile, and SOP link (D11)
-- [x] [O] TC-027 Counterfactual defense: implement `backend/app/analytics/tools/counterfactual.py` evaluating reservoir pressure/IPR (row 1 uses `pressure_surveys`), historical efficacy, and cost-band/downtime delta; served by `GET /api/wells/{id}/compare?recommended=&alternative=`
-- [x] [O] Recommendations API refactoring: update `backend/app/services/ai_agent.py` (`generate_structured_recommendation` delegates to TC-022) and `POST /api/wells/{id}/recommendations`, replacing `estimated_cost_usd` with `cost_band` + `rig_days`
-- [x] [O] Unit tests: implement `backend/tests/unit/{test_tc022_nba.py, test_tc027_counterfactual.py}`
+- [ ] **[C2.5 · Impl]** `[O]` Port `test_dg_tubing_deviation.py`, `test_dg_integrity.py`, and `test_dg_hazards_fishing.py` to the 4 Barmer fields (`460` wells).
+- [ ] **[C2.5 · Verify]** `[O]` Run `pytest` on all 3 Stage-DG consistency test suites (`0` failures). · *Evidence:* `pending`
 
-#### Gate R
-- [x] LKW-047 action 1 = `PUMP_OVERHAUL`; LKM-090 action 1 = `NO_JOB_JUSTIFIED`
-- [x] Hero GK-129: `compare_interventions(squeeze vs. wax removal)` returns the verdict, the deciding dimension and a cited prior-job document (D5 1998 CBL / D2 2019 WSO)
-- [x] The counterfactual covers the reservoir/IPR, historical-efficacy and cost-band + rig-days dimensions (verbatim §4 T5)
-- [x] A Chan-negative fixture yields `CHOKE_BACK` with `MODEL_PHYSICS_DISAGREEMENT`
-- [x] Priority ranking (`GET /api/fields/{field}/priority`) = deferred bbl × p_success ÷ rig-days, shown with the cost band (K-7)
-- [x] **No ₹, USD or payback point value** in any response (D-1); `grep -rn "estimated_cost_usd\|payback" backend/app` returns nothing (only D-1 guard code remains — pinned_values §11 R-D9)
-- [x] Every action has a resolving `sop_doc_id` (D11) and SOP steps, unit type and duration band (verbatim §4 T5)
-- [x] [O] Commit + push after Gate R passes: `git commit -m "v0.4(R): NBA + counterfactual — Gate R passed" && git push origin main` — *on origin/main as `54faa63` (verified 2026-11-15)*
+### Gate C2 Sign-Off
+- [ ] **Gate C2 Passed:** All 24 Stage-DG parquets, 4 Barmer GeoJSONs, and DG unit consistency suites green (`backlog_refinements.md` updated).
 
 ---
 
-### Phase 14 · Stage S — Field-engineer dossier
-**Verbatim anchor:** §1 *"aggregate all the history and give it to the person who is going to the field"*
+## Stage C3 · Barmer PDF Document Corpus (`D01–D11`), SOPs & Fact-Slot Audit (Day 1 PM)
 
-#### Tasks
-- [x] [F] S-F1 Layout, styling, and 9 section templates (no digits) for the pre-job dossier PDF in `backend/app/analytics/tools/dossier.py`
-- [x] [O] TC-023 Dossier assembly: implement data assembly, fact tracing, and UNAVAILABLE fallbacks in `backend/app/analytics/tools/dossier.py`
-- [x] [O] Export route & UI integration: update `GET /api/wells/{id}/export` in `backend/app/api/wells.py` (JSON adds `pdf_url`; `?format=pdf` returns the PDF), add `POST /api/wells/{id}/dossier` (English-only, Q-2; lithology from `formation_tops`), and wire into `frontend/src/components/reports/WellReportsTab.tsx`
-- [x] [O] Unit tests: implement `backend/tests/unit/test_tc023_dossier.py`
+- [ ] **[C3.1 · Impl]** `[F]` Rewrite `templates/sop/IC-01.yaml..IC-14.yaml` for Cairn Barmer operations (HOCU wax flush, wireline Jet-Pump insert, HPAM gel squeeze, ABH/RDG prop-frac) (`[O]` review).
+- [ ] **[C3.1 · Verify]** `[O]` Confirm zero ONGC/Assam tokens in `sop/` and `load_all_sops()` returns all 14 SOPs. · *Evidence:* `pending`
 
-#### Gate S
-- [x] 2–4 pages, ≤ 10 s, all 9 sections, including lithology and casing/tubing tallies (verbatim WS4)
-- [x] Every number traces to a table or tool return; missing sections render `UNAVAILABLE — <table>`
-- [x] GK-129 cites the 1998 CBL and the 2019 WSO
-- [x] The JSON export still works (baseline FEAT kept)
-- [x] [O] Commit + push after Gate S passes: `git commit -m "v0.4(S): dossier — Gate S passed" && git push origin main` — *on origin/main as `c5ff77c` (verified 2026-11-15)*
+- [ ] **[C3.2 · Impl]** `[F]` Rewrite `templates/hero_text.yaml` for `MNG-042`, `BHG-019`, `BHG-088`, `ASH-023`, `ASH-061`, and `RAG-014` using `{{slot}}` tokens only (`[O]` review).
+- [ ] **[C3.2 · Verify]** `[O]` Confirm zero Assam well IDs/tokens and valid YAML structure in `hero_text.yaml`. · *Evidence:* `pending`
 
----
+- [ ] **[C3.3 · Impl]** `[F]` Update `docs_pdf/{facts,render,validate,show,ir,index}.py`, `templates/{d08_rca,d09_field_study,d10_monthly}.py`, and `slot_catalogue/D01..D11.json` for Cairn Barmer (`[O]` review).
+- [ ] **[C3.3 · Verify]** `[O]` Confirm grep finds `0` ONGC/Assam tokens across `backend/app/analytics/docs_pdf/`. · *Evidence:* `pending`
 
-### Phase 15 · Stage T — Asset view & drill-down
-**Verbatim anchor:** §1 *"Which particular field is not performing?"*; §3 *"Can you give me a plot?"*, *"drill down to one particular well"*, *"information of nearby wells"*
+- [ ] **[C3.4 · Impl]** `[O]` Build, scanify (10% D1/D5 + `MNG-042` scanned CBL), validate, and index the full Barmer PDF corpus (`uv run python -m app.analytics.docs_pdf.build --field all`).
+- [ ] **[C3.4 · Verify]** `[O]` Confirm `docs_pdf.build --field all` exits `0` and populates `data/docs_pdf/` and `data/index/`. · *Evidence:* `pending`
 
-#### Tasks
-- [x] [O] Field analytics tools: implement `backend/app/analytics/tools/{field_performance.py (TC-024, TC-028), hierarchy.py (TC-025), well_profile.py (TC-029)}` and TC-017 v2 job markers — TC-028 placed in `field_history.py`; TC-017 v2 `well_production_series` in `well_profile.py`
-- [x] [O] Fields REST API: implement `backend/app/api/fields.py` (`GET /api/fields`, `/api/fields/history?fields=`, `/api/fields/{field}/history`, `/api/fields/compare?period=`, `/api/fields/{field}/health?cluster_id=`, `/api/fields/{field}/attribution?window_days=`, `/api/fields/{field}/priority`) and in `wells.py` `/api/wells/{id}/profile`, `/api/wells/{id}/production` (markers + WHT / GOR / gas-lift series) — Stage T routes live in new `app/api/asset.py` (+ `/api/fields/map`) to avoid editing Stage P's `fields.py`/`wells.py`; `/health` and `/attribution` remain in `fields.py`
-- [x] [F] T-F1 Boundary geodata: create synthetic GeoJSON boundaries for Geleki, Lakwa, Lakhmani and GGS clusters in `backend/app/data/geodata/` (D-3) — generated by `python -m app.analytics.tools.geodata` from field_master + cluster convex hulls
-- [x] [F] T-F2 Recharts visualization components: implement `frontend/src/components/field/{FieldHistoryChart.tsx, FieldComparisonTable.tsx, AttributionWaterfall.tsx, HealthBucketsCard.tsx, PriorityQueueTable.tsx}` and `components/well/NbaCard.tsx` — PARTIAL: `components/fields/{FieldHistoryChart,FieldComparison}.tsx` done (comparison includes health counts + deferred-by-factor stacks); AttributionWaterfall / HealthBucketsCard / PriorityQueueTable / NbaCard not built in Stage T. **Done later (verified 2026-11-15):** all four exist in `components/decision/`
-- [x] [F] T-F3 Screen scaffolding & integration: implement `frontend/src/components/common/FieldSelector.tsx`, `components/well/{WellDeepDive.tsx, NearbyWellsTable.tsx, CounterfactualTable.tsx}`, and update `TelemetryCharts.tsx` with job markers, WHT, GOR and gas-lift injection rate + pressure — PARTIAL: `fields/FieldSelector.tsx`, `well/{WellDeepDiveDrawer,NearbyWellsList,ProductionMarkersChart}.tsx`, TelemetryCharts section, App/WellMap integration done; CounterfactualTable not built. **Done later (verified 2026-11-15):** `components/decision/CounterfactualTable.tsx`
-- [x] [O] Unit and contract tests: implement `backend/tests/unit/{test_tc024_fields.py, test_tc025_hierarchy.py, test_tc028_field_history.py, test_tc029_well_profile.py}` (+ `test_asset_routes.py`)
+- [ ] **[C3.5 · Impl]** `[O]` Execute standalone fact-slot digit audit across `HERO`, `SOP`, and `--full` corpus.
+- [ ] **[C3.5 · Verify]** `[O]` Confirm `docs_pdf.validate --type HERO`, `--type SOP`, and `--full` all exit `0` (`0` unauthorized digits). · *Evidence:* `pending`
 
-#### Gate T
-- [x] `compare_fields` ranks Lakwa worst, inside the pinned band, with a controllable top driver; the rows include target, uptime, water cut and `active_interventions` counts (TC-024, verbatim WS1) — QTD Lakwa −17.6% / Lakhmani −8.5% / Geleki −1.5%, all in band; top driver HUMAN_PROCESS 59.5% (controllable); Lakwa active_interventions 7
-- [x] TC-028 returns 60 monthly points per field for oil, water cut and gas; aggregation reconciles with well sums within 0.1% — 60 pts/field, max reconciliation error 0.0%
-- [x] TC-029 returns formation, casing/tubing, lift type and ≥ 3 neighbours on the same cluster; TC-017 v2 shows all in-window job markers
-- [x] `TelemetryCharts` shows WHT, GOR and gas-lift injection rate + pressure from `GET /api/wells/{id}/production`
-- [x] UI: field selector, 5-year field chart, comparison, well deep-dive with markers and nearby wells all render from the APIs (no hard-coded values) — Lakwa map: 160 LKW points, 0 foreign, 3 GGS polygons
-- [x] `npm run build` green; Part I screens are not regressed — tsc + build green; pytest 288 passed (excl. Stage Q `test_tc021_classifier.py`, pending its model artifact)
-- [x] [O] Commit + push after Gate T passes: `git commit -m "v0.4(T): asset view & drill-down — Gate T passed" && git push origin main` — *on origin/main as `11202ee` (verified 2026-11-15)*
+### Gate C3 Sign-Off
+- [ ] **Gate C3 Passed:** Full D01–D11 Barmer PDF corpus rendered, scanified, BM25-indexed, and 100% fact-slot validated (`backlog_refinements.md` updated).
 
 ---
 
-### Phase 16 · Stage X — Medallion Lakehouse
-**Verbatim anchor:** §3 *"showcase that in the Medallion architecture… Lakehouse"*; *"whether it should go ultimately into BigQuery or… a better database"*
+## Stage C4 · GCS Lakehouse & BigQuery Medallion Pipeline (`asia-south1` · Day 1 Eve)
 
-#### Tasks
-- [x] [F] X-F1 Medallion DDL scripts: write BigQuery DDL schemas for Bronze, Silver, and Gold in `lakehouse/ddl/*.sql` (Silver partitioned by `production_date`, clustered by `field, well_id`; Silver `doc_chunks` mirror of the TF-IDF index, D-17)
-- [x] [F] X-F2 Bronze-to-Silver ETL loader: implement `lakehouse/load/bronze_to_silver.py` loading `gs://workover-operations-agentic-ai-datalake/bronze/` and `documents/` into BigQuery; exports to `silver_exports/`
-- [x] [F] X-F3 Dataform pipeline: create `lakehouse/dataform/` compiling and executing Silver-to-Gold aggregations (`field_kpi_monthly`, NBA features)
-- [x] [O] DDL apply — Authorised by user (2026-10-07) — dry-run / local-test first, then apply; never delete existing resources: `bq query --dry_run` every DDL file, then apply; bucket = existing `gs://workover-operations-agentic-ai-datalake`
-- [x] [O] X-O4 Repository & parity: implement `backend/app/data_access/bigquery_repo.py`, integration parity test `backend/tests/integration/test_backend_parity.py` (`DATA_BACKEND=parquet|bigquery`), and production-store decision record in `SDD.md`
+- [ ] **[C4.1 · Impl]** `[O]` **`[USER GATE]`** Provision `gs://urvi-cairn-barmer-ai-agent-datalake` in `asia-south1` with uniform bucket-level access and public-access prevention.
+- [ ] **[C4.1 · Verify]** `[O]` Run `gcloud storage buckets describe` confirming `ASIA-SOUTH1` and uniform access `True`. · *Evidence:* `pending`
 
-#### Gate X
-- [x] `wellpulse_bronze`, `wellpulse_silver` and `wellpulse_gold` exist in `asia-south1`; Silver `daily_production` is partitioned by `production_date` and clustered by `field, well_id`
-- [x] Silver row counts = Bronze; Gold `field_kpi_monthly` = TC-028 output
-- [x] Parquet vs. BigQuery parity test green; the app runs with `DATA_BACKEND=bigquery`
-- [x] Silver `doc_chunks` mirrors the TF-IDF index from D1–D11 (D-17; Vertex AI Search optional later, verbatim §5) — 28,675 chunks / 20,966 docs = `data/index/doc_chunks.parquet`; `gold.dossier_facts` 1,522,055 facts; 41,932 objects (155 MB) in `documents/`
-- [x] Production-store decision record (BigQuery vs. alternatives) recorded in [`SDD.md`](./SDD.md) §15.2 (verbatim §3) — full record: `lakehouse/decision_record.md`
-- [x] [O] Commit + push after Gate X passes: `git commit -m "v0.4(X): medallion lakehouse — Gate X passed" && git push origin main` — *on origin/main as `dc96267 + 6a2096f` (verified 2026-11-15)*
+- [ ] **[C4.2 · Impl]** `[A]` Update `lakehouse/config.py`, `lakehouse/load/{doc_chunks,dossier_facts}.py`, `lakehouse/dataform/definitions/gold/*.sqlx`, and regenerate `lakehouse/ddl/*.sql` via `generate_ddl.py`.
+- [ ] **[C4.2 · Verify]** `[O]` Confirm `generate_ddl.py` exits `0` and zero ONGC/Assam tokens remain in `lakehouse/`. · *Evidence:* `pending`
 
----
+- [ ] **[C4.3 · Impl]** `[O]` Upload Barmer landing parquets (`bronze_upload.py`) and PDF corpus (`documents_upload.py`) to `gs://urvi-cairn-barmer-ai-agent-datalake`.
+- [ ] **[C4.3 · Verify]** `[O]` Confirm `--dry-run` + live uploads exit `0` and objects exist under `bronze/` & `documents/`. · *Evidence:* `pending`
 
-### Phase 17 · Stage U — Real Gemini Live
-**Verbatim anchor:** §1 *"Gemini Live is not working well… working very good in Drilling Intelligence 2.0"*
+- [ ] **[C4.4 · Impl]** `[O]` Create `urvi_cairn_{bronze,silver,gold}` datasets (`00_datasets.sql`), dry-run, and apply `10..40` DDL files via `apply_ddl.py`.
+- [ ] **[C4.4 · Verify]** `[O]` Confirm `apply_ddl.py --dry-run-only` & `apply_ddl.py` exit `0` and all 3 datasets exist in `asia-south1`. · *Evidence:* `pending`
 
-#### Tasks
-- [x] [O] Reference study: inspect `${DI2_REPO}/backend/app/agent/live_session.py`, `backend/app/api/ws_live.py`, `frontend/src/live/{liveClient,micCapture,audioPlayer}.ts`, and `docs/adr/ADR-003-gemini-live-adk-proxy.md`
-- [x] [O] Model verification (U.2): run live model verification script against Vertex AI in `us-central1` and write exact returned names into `backend/.env` (`TEXT_MODEL`, `LIVE_MODEL`, `LIVE_LOCATION`); if missing after 3 attempts, mark Stage U BLOCKED — never substitute
-- [x] [O] Live session engine: implement `backend/app/live/{session.py, voice_tools.py, live_prompt.md, fallback.py}` supporting resumption, context compression, session recap, and 3-failure fallback to text
-- [x] [O] Live WebSocket route: implement `backend/app/api/live.py` serving `WS /ws/live` (field/well context message); legacy `WS /api/wells/{id}/live` shim kept until Gate V (D-20)
-- [x] [F] U-F1 AudioWorklet client: implement `frontend/src/live/{liveClient.ts, micCapture.ts, pcm-worklet.js, audioPlayer.ts}` (16 kHz upload / 24 kHz playback)
-- [x] [F] U-F2 Voice UI state machine: update `frontend/src/components/agent/VoiceAgentPanel.tsx` with connection states (connecting, listening, speaking, fallback), remove browser `speechSynthesis`, retain language toggle, add open-mic hands-free option (audio-only)
-- [x] [O] Integration testing: implement `backend/tests/integration/test_ws_live.py` verifying reconnect, recap, and 3-failure fallback
+- [ ] **[C4.5 · Impl]** `[O]` Run `bronze_to_silver.py` MERGE, `doc_chunks.py`, and `dossier_facts.py` loaders into BigQuery.
+- [ ] **[C4.5 · Verify]** `[O]` Confirm `bronze_to_silver.py --check-only` reports 100% row-count parity and doc/dossier tables are populated. · *Evidence:* `pending`
 
-#### Gate U
-- [x] The model names in `.env` come from the U.2 listing (output pasted into the commit message or PR)
-- [x] Spoken answer to *"Which field is underperforming?"*; first audio ≤ 2.5 s warm — *accepted by user 2026-11-15 ("voice works very well"); not measured*
-- [x] Barge-in ≤ 300 ms; ~~a forced reconnect keeps context (resumption + recap)~~; 3 failures → text fallback with a visible notice — *barge-in accepted by user 2026-11-15; context on reconnect is dropped by design (**D-43**: every demo starts fresh)*
-- [x] Spoken numbers equal tool returns (same functions as the text path)
-- [x] The language toggle still works; `speechSynthesis` is no longer used for Live replies
-- [x] Open-mic hands-free mode works; `FIELD_ENGINEER` persona can use Live voice — *open mic accepted by user 2026-11-15; Live voice is open to every persona*
-- [x] Runs on Vertex ADC; `GEMINI_API_KEY` is not read anywhere (`grep -rn GEMINI_API_KEY backend/app` is empty) — *grep empty, re-verified 2026-11-15*
-- [x] [O] Commit + push after Gate U passes: `git commit -m "v0.4(U): real Gemini Live — Gate U passed" && git push origin main` — *on origin/main as `dcd726d` (verified 2026-11-15)*
+- [ ] **[C4.6 · Impl]** `[O]` Compile and execute Dataform Gold models (`@dataform/cli@3.0.25`) in `lakehouse/dataform/`.
+- [ ] **[C4.6 · Verify]** `[O]` Confirm Dataform run + `field_kpi_monthly_reconciles` assertion succeed and `urvi_cairn_silver.well_master` counts `180 / 120 / 100 / 60` (`460` total). · *Evidence:* `pending`
+
+### Gate C4 Sign-Off
+- [ ] **Gate C4 Passed:** GCS datalake + BigQuery Bronze/Silver/Gold Medallion live in `asia-south1` with 100% row parity (`backlog_refinements.md` updated).
 
 ---
 
-### Phase 18 · Stage Y — RBAC + multi-field GIS
-**Verbatim anchor:** §3 *"role-based access… Executive Director… versus a field engineer"*; §3 *"they can see different fields… and the wells"*
+## Stage C5 · ML Feature Engineering, Model Retraining & Look-Alike Index (Day 2 AM)
 
-#### Tasks
-- [x] [O] Y-O1 RBAC policy engine: implement `backend/app/agent/rbac.py` (matrix in code) and `require()` checks in `backend/app/agent/adk_tools.py` in tool wrappers across `ED`, `ASSET_MANAGER`, and `FIELD_ENGINEER` personas — *Stage Y: matrix, `require()` (REST), `@gated` (tool wrappers), voice + doc_type gating, redaction done and applied to fields/asset/docs/voice; decorating `adk_tools.py` wrappers is Stage V (file does not exist yet; see `rbac.STAGE_V_TODO`)*
-- [x] [F] Y-F2 Persona UI & Multi-field Map: implement `frontend/src/components/common/PersonaPicker.tsx`, update `components/map/WellMap.tsx` (multi-field boundaries, GGS clusters, health colours, field filter, synthetic label per D-3, Esri basemap per D-5), and update `Header.tsx`
-- [x] [O] Unit and BDD tests: implement `backend/tests/unit/test_rbac.py` and BDD tests in `backend/tests/bdd` — *unit done (16 tests, rbac + gis); pytest-bdd glue for BDD-F16/F17 left for Stage V (V-F1)*; BDD done in V-F1 (20 scenarios); `test_rbac.py` has 13 tests (verified 2026-11-15)
+- [ ] **[C5.1 · Impl]** `[O]` Refactor `backend/app/analytics/model/features.py` for Barmer `FIELDS` (4), `ZONES` (4), and `LIFT_TYPES` (6) with strict `< s` causal truncation.
+- [ ] **[C5.1 · Verify]** `[O]` Confirm `build_features('MNG-042', date(2026,9,23))` returns `status=='OK'` with `field_Mangala` and `lift_JET_PUMP`. · *Evidence:* `pending`
 
-#### Gate Y
-- [x] The same question as ED vs. FIELD_ENGINEER gives correctly scoped answers per verbatim §6; a direct denied tool call returns `UNAVAILABLE` (no data leak in the error)
-- [x] The map shows 3 fields with boundaries, GGS markers and a field filter; header counts = TC-020; the well drawer = TC-029
-- [x] Synthetic coordinates are labelled as synthetic on the map (D-3)
-- [ ] **REOPENED 2026-11-15 → Stage RB.** User: the persona dropdown does not work. Cause: showcase mode (D-33) leaves RBAC off, so every persona sees everything, and `frontend/src/api/decision.ts` hard-codes `X-Persona: ASSET_MANAGER`. Persona switch works in both text and Live — *REST (X-Persona on every /api call) and Live (query param + `context` ui_state, server re-gates every voice tool) verified at API/unit level; agent text chat depends on Stage V runner; in-browser check pending*
-- [x] [O] Commit + push after Gate Y passes: `git commit -m "v0.4(Y): RBAC + multi-field GIS — Gate Y passed" && git push origin main` — *on origin/main as `54faa63` (verified 2026-11-15)*
+- [ ] **[C5.2 · Impl]** `[O]` Port `backend/tests/unit/test_features_no_leakage.py` to Barmer wells (`MNG-042`, `BHG-019`, `ASH-023`, `RAG-014`).
+- [ ] **[C5.2 · Verify]** `[O]` Run `pytest tests/unit/test_features_no_leakage.py -q` (`0` failures — zero temporal/target leakage proven before training). · *Evidence:* `pending`
 
----
+- [ ] **[C5.3 · Impl]** `[O]` Update `train_classifier.py` & `intervention_classifier.py` for Barmer (`ASH-023` & `ASH-061` fixtures, `leave_aishwariya_out`) and retrain `intervention_classifier_v1.pkl`.
+- [ ] **[C5.3 · Verify]** `[O]` Confirm **Gate Q passes honestly** (`0.70 <= macro_f1 <= 0.92`, `top3 >= 0.90`, `+0.05` over baseline, `ece <= 0.08`, `min_support >= 30`). · *Evidence:* `pending`
 
-### Phase 19 · Stage V — Agent wiring & eval
-**Verbatim anchor:** §3 *"do you see the hierarchy of question and answering?"* (5-level flow, §4 L1–L5)
+- [ ] **[C5.4 · Impl]** `[O]` Update `train.py` & `candidate_ranking.py::predict_failure` for Barmer pumped producers and retrain CoxPH survival model (`coxph_srp_v1.pkl`).
+- [ ] **[C5.4 · Verify]** `[O]` Confirm **Gate E passes honestly** (`0.65 <= holdout_c_index <= 0.78` and `holdout_c_index > trigger_b_c_index`). · *Evidence:* `pending`
 
-#### Tasks
-- [x] [O] In-process ADK Runner: implement `backend/app/agent/{runner.py, adk_tools.py, prompt.py, callbacks.py}` wiring ~30 tool wrappers with strict numeric trace and anti-fabrication guardrails — *Stage V: ADK 2.11 Runner, 30 wrappers (`adk_tools.py` + `adk_tools_ext.py`, RBAC via `invoke()`), `check_numbers` after-model guardrail (masks ungrounded numerals as «see table», deviation from SDD §12.6 regenerate), FakeLlm for CI*
-- [x] [O] Chat API refactoring: implement `backend/app/api/chat.py` (`POST /api/chat`), route per-well `/chat` and `/audio` to Runner, remove legacy `/api/wells/{id}/live` and `/audio` shims at the end of V (D-20), and delete prompt-stuffing and keyword fallback in `services/ai_agent.py` — *`/chat` → Runner; `/audio` + per-well WS removed; `ai_agent.py` keeps only `generate_structured_recommendation` (TC-022)*
-- [x] [F] V-F1 BDD Gherkin test suite: generate `backend/tests/bdd/features/*.feature` and step implementations for L1–L5 hierarchical conversation flow — *20 pytest-bdd scenarios (F-18, X, F-04/09/11/12/13/16), all green*
-- [x] [F] V-F2 Agent evaluation dataset: build `backend/tests/eval/wellpulse-eval.json` (≥ 30 cases: every L1–L5 turn × 3 personas + refusals, all voice and text scenarios) — *46 cases (21 F-18 L1–L5 × 3 personas, Hinglish/Hindi, refusals, 10 holdout)*
-- [ ] [F] V-F3 Playwright E2E specs: implement `frontend/tests/e2e/*.spec.ts` for full UI click-through — *still open: `frontend/tests/` does not exist (2026-11-15)*
-- [ ] [O] Eval iteration & test execution: run pytest suite, run `agents-cli eval run` (tool selection ≥ 90%), and execute Playwright tests — *pytest 426 passed / 1 skipped (live); eval via `tests/eval/run_eval.py` (ADK Runner, not agents-cli) on gemini-3.8-flash: tool selection 46/46 = 100% (holdout 10/10), number grounding 46/46 (`tests/eval/results/vertex-final-20261007T234533.json`); Playwright NOT run (V-F3 not done)*
+- [ ] **[C5.5 · Impl]** `[O]` Rebuild `analog_index.parquet` (`success_engine.py --build-index`) across all 460 Barmer wells.
+- [ ] **[C5.5 · Verify]** `[O]` Verify deterministic top-3 recommendations & engineering plausibility on `MNG-042`, `BHG-019`, `ASH-023`, `ASH-061`, and `RAG-014`. · *Evidence:* `pending`
 
-#### Gate V
-- [x] All BDD scenarios green, including one automated test per demo turn L1–L5 (verbatim §8 M6) — *20/20 BDD + `tests/integration/test_demo_flow.py` (fake LLM; live gemini-3.8-flash L1–L5 7/7 turns in 3/3 runs)*
-- [x] Eval tool-selection accuracy ≥ 90% on `tests/eval/wellpulse-eval.json` (≥ 30 cases); if it is lower, apply the SDD sub-agent split and re-run — *100% (46/46) on gemini-3.8-flash, 4 runs all 46/46; sub-agent split not needed*
-- [x] No answer contains a number missing from that turn's tool returns (number-trace test) — *`test_agent_callbacks.py` (fabricating model → masked, ok=False), demo-flow + eval grounding 46/46*
-- [x] The agent refuses at least once per new field (LKM-090 → no job justified) and explains why — *eval `f04_s03_refusal_lkm090` + BDD-F04-S03*
-- [x] The prompt-stuffing code and the keyword fallback are removed; text runs on Vertex ADC with `gemini-3.8-flash` (D-13) — *Vertex `global`, project from settings; `grep GEMINI_API_KEY backend/app` empty*
-- [ ] Playwright: L1→L5 click-through passes against `npm run build` served by FastAPI
-- [x] Legacy `/api/wells/{id}/live` and `/audio` shims removed; `WS /ws/live` is the only Live route (D-20) — *`test_legacy_audio_and_well_live_routes_removed`*
-- [x] [O] Commit + push after Gate V passes: `git commit -m "v0.4(V): agent wiring & eval — Gate V passed" && git push origin main` — *on origin/main as `c5ff77c` (verified 2026-11-15)*
+### Gate C5 Sign-Off
+- [ ] **Gate C5 Passed:** Features leakage-free, Intervention Classifier Gate Q passed honestly, Lift Survival Model Gate E passed honestly, and 460-well Analog Index rebuilt (`backlog_refinements.md` updated).
 
 ---
 
-### Phase 20 · Stage W — Deploy (authorised by user, 2026-10-07)
-**Verbatim anchor:** derived: demo must run on the existing public URL
+## Stage C6 · Backend Tools, Cairn Branding, Prompts, Voice & RBAC (Day 2 PM)
 
-#### Tasks
-- [x] [O] W.1 Multi-stage Dockerfile: implement 3-stage Dockerfile (Node web build, uv deps sync, python:3.11-slim runtime), `selfcheck` + uvicorn per SDD §17.1, update `.dockerignore` to exclude tests, and untrack `frontend/dist` in the same commit (resolved)
-  - W-prep 2026-10-07: Dockerfile (web → build [uv sync, landing-if-missing, `docs_pdf.build`, `deploy/selfcheck.py`] → non-root runtime on `$PORT`), `.dockerignore`, `.gcloudignore`, `deploy/` (deploy.sh, env.cloudrun.yaml, smoke_test.py, selfcheck.py, README.md). Cloud Build `de2bc811…` SUCCESS in 9m52s on e2-highcpu-8 → `…/wellpulse-app:v04-prep` (379 MB compressed). **Still for the orchestrator at commit:** `git rm -r --cached frontend/dist` + add `frontend/dist/` to `.gitignore`.
-- [x] [O] W.2 Local container validation: build `wellpulse:v04` image and verify `/api/healthz` and `/api/fields` locally with Vertex credentials
-  - W-prep substitute (no docker on host): stage-2 commands replayed in a scratch copy (8 workers, corpus 253 s, selfcheck OK), then the image CMD run on the scratch tree with `deploy/env.cloudrun.yaml` → `deploy/smoke_test.py` 6/6 PASS (health, kpis 412 wells, 3 fields, docs search 10 hits, WS `connecting→connected` gemini-3.8-live, SPA); RSS 1.65 GB. Accepted as the local validation (no docker on host); the real image then passed the same smoke on Cloud Run.
-- [x] [O] W.3 Deploy gate — Authorised by user (2026-10-07) — dry-run / local-test first, then apply; never delete existing resources: proceed only if W.2 passed locally
-  - 2026-10-08: `deploy.sh plan` → `build` (Cloud Build `c423c37b…` SUCCESS 13m07s, image `wellpulse-app:v04-c5ff77c`) → `deploy`. Nothing deleted; rollback target `wellpulse-app-00004-2p2` kept.
-- [x] [O] W.4 Cloud Run deployment: deploy to `wellpulse-app` in `us-central1` (project `workover-operations-agentic-ai`, memory 4Gi, cpu 2, min/max instances 1, session affinity, no CPU throttling, env `TEXT_MODEL`, `LIVE_MODEL`, `LIVE_LOCATION`, `AS_OF=2026-09-23`, `BQ_LOCATION`, remove `GEMINI_API_KEY`)
-  - Revision `wellpulse-app-00005-9b2` serves 100 %; runtime SA `wellpulse-run@…`; env from `deploy/env.cloudrun.yaml` (no `GEMINI_API_KEY`).
-- [x] [O] Post-deployment smoke test & pre-warm: run `scripts/smoke.sh` against the public URL, run L1–L5 text and voice queries, test reconnect and fallback
-  - `deploy.sh smoke` 6/6 PASS. Remote L1–L5 replay (real gemini-3.8-flash, `X-Debug-Trace`) 7/7 turns PASS: expected tools called, 0 ungrounded numbers, 6–12 s per turn. Voice audio, reconnect and fallback in a browser: **left for the user** (WS handshake only verified).
+- [ ] **[C6.1 · Impl]** `[O]` Update `backend/app/data_access/{adapters,parquet_repo,bigquery_repo}.py` (`BASIN = "Barmer Basin (RJ-ON-90/1)"`, retired prefix handling).
+- [ ] **[C6.1 · Verify]** `[O]` Confirm `BASIN` contains `"Barmer"` and `get_repo().list_wells()` returns `460` wells. · *Evidence:* `pending`
 
-#### Gate W
-- [x] https://wellpulse-app-bowxi5445q-uc.a.run.app serves v0.4: `/api/healthz`, `/api/fields`, a dossier PDF, `/api/docs/{id}.pdf`
-  - `/api/health` 200, `/api/fields` 3 fields, dossier GK-129 PDF 200 (27 KB, 4 pages), `/api/docs/SOP-IC-04.pdf` 200. Polish revision `wellpulse-app-00006-mhb` (image `v04-04c648b`): `/api/healthz` 200, smoke 6/6, remote L1–L5 7/7 again.
-- [x] Text L1–L5 and Live (*"Which field is underperforming?"*) work end to end on the URL; ~~forced reconnect~~ and fallback both work — *Live accepted by user 2026-11-15; reconnect starts fresh by design (D-43)*
-  - Text L1–L5: PASS on the URL. Live: `/ws/live` reaches `connected`; spoken audio, forced reconnect and fallback need an in-browser check by the user.
-- [x] No `GEMINI_API_KEY` on the service; the revision runs on Vertex ADC
-- [ ] Pre-warm checklist for demo day: min-instance up, Live connect test, fallback test, persona switch (demo-day task; min-instances=1 is set) — *recurring per demo; persona switch depends on Stage RB*
-- [x] [O] Commit + push after Gate W passes: `git commit -m "v0.4(W): deploy — Gate W passed" && git push origin main`
+- [ ] **[C6.2 · Impl]** `[O]` Replace India asset map data (`ongc_assets.py` / `cairn_assets.py` & `api/asset.py`) with Cairn/Vedanta's 4 blocks (`RJ-ON-90/1 Barmer`, `Ravva`, `Cambay`, `Jorhat OALP`).
+- [ ] **[C6.2 · Verify]** `[O]` Confirm `GET /api/geo/cairn-assets` returns `200` with `Barmer` & `Ravva` and zero `ONGC` strings. · *Evidence:* `pending`
 
----
+- [ ] **[C6.3 · Impl]** `[O]` Clean all remaining `backend/app/analytics/tools/*.py` modules of `Assam`/`Geleki`/`Lakwa`/`Lakhmani`/`Nazira` strings and docstrings.
+- [ ] **[C6.3 · Verify]** `[O]` Confirm grep finds `0` Assam/ONGC tokens across `backend/app/analytics/tools/` (excl. `field_report.py` handled in `C6.4`). · *Evidence:* `pending`
 
-## Phase 21+ · v0.5 answer canvas & multimodal model
+- [ ] **[C6.4 · Impl]** `[F]` Create `frontend/public/brand/cairn_vedanta_wordmark.svg`, delete `ongc_logo.svg`, and rebrand `backend/app/analytics/tools/field_report.py` (`[O]` review).
+- [ ] **[C6.4 · Verify]** `[O]` Confirm `ongc_logo.svg` deleted, `cairn_vedanta_wordmark.svg` exists, and `build_field_report('MNG-042')` passes sidecar validation with `"Cairn"` branding and zero `"ONGC"`. · *Evidence:* `pending`
 
-> [!IMPORTANT]
-> **Rule:** After each passed gate and user approval: commit + push to origin main (orchestrator only).
+- [ ] **[C6.5 · Impl]** `[O]` Update RBAC role titles & API docstrings in `backend/app/agent/rbac.py` and `backend/app/api/{me,analytics_wells,docs,dossier,fields,wells}.py` to Vedanta upstream roles.
+- [ ] **[C6.5 · Verify]** `[O]` Confirm `GET /api/me` returns `200` with Cairn/Vedanta persona metadata and zero `"ONGC"`. · *Evidence:* `pending`
 
-### Milestone MS-14 · Stage AC — Answer canvas
-**Anchor:** brief §1 U-1, U-2, U-3; §3 (D-25)
+- [ ] **[C6.6 · Impl]** `[O]` Rebrand `backend/app/agent/{prompt,router,runner,ui_control,adk_tools,adk_tools_ext,fake_llm,callbacks}.py` and `backend/app/live/{live_prompt.md,session,voice_tools,fallback}.py` to *"Urvi AI Agent for Cairn Oil & Gas, Barmer"* (`MNG|BHG|ASH|RAG`).
+- [ ] **[C6.6 · Verify]** `[O]` Confirm zero ONGC/Assam tokens across `agent/`, `live/`, `api/` and `build_system_prompt()` contains `"Cairn Oil & Gas"` and `"Mangala"`. · *Evidence:* `pending`
 
-#### Tasks
-- [~] built, awaiting user sign-off: Answer canvas views (`overview`, `production`, `interventions`, `wellbore`, `pressures`, `diagnosis`, `recommendation`, `compare`, `nearby`, `report`) in `WellDeepDiveDrawer.tsx`
-- [~] built, awaiting user sign-off: `pickCanvasView(toolKindOrToolName, userText)` routing in `frontend/src/api/chat.ts` (keyword table, tool aliases, fallback)
-- [~] built, awaiting user sign-off: Expandable middle panel hiding the map, with ESC hotkey and restore button
-- [~] built, awaiting user sign-off: Interventions table view with job dates, rig-days, uplift, outcome, and doc links
-- [~] built, awaiting user sign-off: Compare view auto-open on counterfactual questions
-- [~] [F] AC-F1 Chat brevity enforcement: strictly ≤ 3 sentences plus optional collapsed card; eliminate multi-section well history dumps — *partial: text prompt says 2–4 sentences (`prompt.py` rule 6), Live says 1–3 (`live_prompt.md`); collapsible chat cards + "Showing in panel" chips shipped (`e0300c3`, `12fe3e0`); no automated ≤ 3 check*
-- [ ] [O] AC-O2 User UI sign-off: verify canvas interaction, view switching, map restore, and responsive drawer behavior — *note: the layout was reworked in UI-2…UI-4 (map is home, one well panel), so sign-off applies to the V 1.0 layout*
-
-#### Gate AC
-- [ ] 10 demo phrases route to the correct view via `pickCanvasView`
-- [ ] No full-history dump in chat; replies strictly ≤ 3 sentences
-- [x] `cd frontend && npm run build` and `tsc` green — *`tsc --noEmit` green 2026-11-15; `vite build` green in the V 1.0 Cloud Build*
-- [ ] User UI sign-off on expandable middle panel, map hide, and ESC restore
+### Gate C6 Sign-Off
+- [ ] **Gate C6 Passed:** Backend tools, A4 field report, RBAC roles, ADK chat agent, and Gemini Live voice prompts 100% rebranded to Cairn Barmer (`backlog_refinements.md` updated).
 
 ---
 
-### Milestone MS-15 · Stage DF — Demo flow & eval
-**Anchor:** brief §1 U-1..U-4; §6
+## Stage C7 · Frontend Map, Voice Controls, Persona UI, Architecture Tab & Docs (Day 2 PM)
 
-#### Tasks
-- [x] [F] DF-F1 11-step demo script: author `docs/demo_flow.md` (Lakwa → LKW-019) covering Field compare, Sick wells, Priority list, Overview, Production, Interventions, Wellbore, Diagnosis, Recommendation (top 3), "Why not sand cleanout" (compare), and "Prepare me for the field" (report link) — *done: `docs/demo_flow.md` (11 steps + guardrail case + ED rehearsal script)*
-- [x] [F] DF-F2 Eval dataset expansion: add +12 canvas-routing and brevity cases to `backend/tests/eval/wellpulse-eval.json` — *done as a separate file `backend/tests/eval/canvas_routing_v05.json` (12 cases)*
-- [ ] [O] DF-O3 Automated demo rehearsal: run `tests/eval/run_eval.py` asserting canvas routing and tool selection ≥ 90% across chat and voice — *still open: the latest Vertex result is `vertex-final-20261007…` (pre-v0.5); `canvas_routing_v05.json` has never been run against Vertex*
+- [ ] **[C7.1 · Impl]** `[F]` Update `frontend/src/components/map/WellMap.tsx` & `frontend/src/api/asset.ts` for `/api/geo/cairn-assets`, `BARMER_DRILL_BOUNDS`, and Barmer pads/MPT/RGT (`[O]` review).
+- [ ] **[C7.1 · Verify]** `[O]` Confirm zero ONGC/Assam tokens in `WellMap.tsx` & `asset.ts` and `npx tsc --noEmit` exits `0`. · *Evidence:* `pending`
 
-#### Gate DF
-- [ ] 11-step demo script (§6) passes in chat and voice
-- [ ] Eval set +12 canvas-routing cases ≥ 90%
-- [ ] Each demo turn yields ≤ 3 sentence answer in chat and voice
+- [ ] **[C7.2 · Impl]** `[F]` Update `App.tsx`, `uiCommands.ts`, `api/chat.ts`, `VoiceAgentPanel.tsx` (English default greeting), `FieldHistoryChart.tsx`, and `FieldReportOverlay.tsx` (`[O]` review).
+- [ ] **[C7.2 · Verify]** `[O]` Confirm zero ONGC/Assam tokens in modified UI files and `npx tsc --noEmit` exits `0`. · *Evidence:* `pending`
 
----
+- [ ] **[C7.3 · Impl]** `[F]` Update `PersonaPicker.tsx`, `state/persona.tsx`, `i18n/strings.ts`, and `api/decision.ts` to Vedanta titles (removing `CMD` / ONGC).
+- [ ] **[C7.3 · Verify]** `[O]` Confirm zero `ONGC`/`CMD` tokens in persona/i18n modules and `npx tsc --noEmit` exits `0`. · *Evidence:* `pending`
 
-### Milestone MS-16 · Stage DG — Synthetic data gaps — **DONE**
-**Anchor:** brief §4; WH-06, WH-08, WH-10, WH-13, WH-14 (D-29, D-31)
-**Status:** **DONE**. 6 tables generated for 412 wells; unit tests green; DG integration complete.
+- [ ] **[C7.4 · Impl]** `[F]` Update `frontend/scripts/{build_architecture,architecture_explain}.py` for Barmer fields & Vedanta target enterprise sources (`[verify]`) and regenerate `frontend/public/architecture/*` (`[O]` review).
+- [ ] **[C7.4 · Verify]** `[O]` Run `build_architecture.py` and confirm zero ONGC/Assam/WellPulse project tokens in `frontend/public/architecture/`. · *Evidence:* `pending`
 
-#### Tasks
-- [x] [A] DG-A1 Table group A generators: `tubing_tally` (WH-06) and `deviation_survey` (WH-08) — DONE (412 wells, tests green)
-- [x] [A] DG-A2 Table group B generators: `barrier_tests` (WH-14) and `wellhead_rating` (WH-14) — DONE (412 wells, tests green)
-- [x] [A] DG-A3 Table group C generators: `fluid_hazards` (WH-13) and `fishing_records` (WH-10) — DONE (412 wells, tests green)
-- [x] [A] DG-A4 Consistency test suite: `backend/tests/unit/test_dg_*.py` and `test_tc033_dg_tables.py` green
-- [x] [O] DG-O5 Landing data generation & DG integration: 6 tables generated (seed `20261008`), routes `/tubing-tally`, `/deviation`, `/integrity` implemented, lakehouse DDL regenerated (not applied), `well_history_template.md` data gap register updated from GAP to AVAILABLE (synthetic)
+- [ ] **[C7.5 · Impl]** `[O]` Compile production frontend bundle (`cd frontend && npm run build`).
+- [ ] **[C7.5 · Verify]** `[O]` Confirm `npm run build` exits `0` and `grep -ri "ongc" frontend/dist/` finds `0` matches. · *Evidence:* `pending`
 
-#### Gate DG
-- [x] 6 new tables generated for 100% of wells (412 wells), `is_synthetic=true` on every row
-- [x] `tests/unit/test_dg_*.py` and `tests/unit/test_tc033_dg_tables.py` green (tally length within ±1 joint, TVD monotonic and ≤ MD, barrier dates in range, rating ≥ 1.5 × max THP, fishing matches failure codes)
-- [x] DG integration complete: routes `/tubing-tally`, `/deviation`, `/integrity` done; lakehouse DDL regenerated (not applied)
-- [x] `well_history_template.md` data gap register flips GAP → AVAILABLE (synthetic)
+- [ ] **[C7.6 · Impl]** `[F]` Update `README.md` (preserving isolation banner), `docs/how_urvi_works.md`, `docs/ml_recommendation_engine.md` (exact Barmer ML metrics), and `docs/data_access_plan.md` (`[O]` review).
+- [ ] **[C7.6 · Verify]** `[O]` Confirm zero `Geleki`/`Lakwa`/`Lakhmani`/`Sivasagar`/`GK-129` strings in those 4 docs. · *Evidence:* `pending`
+
+### Gate C7 Sign-Off
+- [ ] **Gate C7 Passed:** Frontend UI, India/Barmer GIS map, voice screen controls, Vedanta personas, Architecture tab, `frontend/dist/`, and core docs compiled cleanly with zero ONGC leaks (`backlog_refinements.md` updated).
 
 ---
 
-### Milestone MS-17 · Stage NN — Multimodal success engine (demo scorer)
-**Anchor:** brief §1 U-4, U-5; §5 (D-32)
+## Stage C8 · Full Test Suite, Golden Schemas, Eval Migration & Zero-ONGC Audit (Day 2 Eve)
 
-#### Tasks
-- [x] [O] NN-O1 Deterministic demo scorer: implement `backend/app/analytics/tools/success_engine.py` evaluating `P(success | c) = clip(p_mechanism(c)^0.5 × (0.5·base_rate + 0.5·analog_rate), 0.05, 0.95)` with Bayesian shrinkage to asset rate — *`success_engine.score()`; `test_tc030_success_engine.py`*
-- [x] [O] NN-O2 Recommendation contract TC-030: implement `recommend_interventions` in `backend/app/analytics/tools/recommendations.py` returning top 3 candidates + `NO_JOB_JUSTIFIED`, expected uplift, rig-days, cost band, risks, analogs, drivers — *implemented in `success_engine.py` (no separate `recommendations.py`)*
-- [x] [O] NN-O3 Analog search TC-031: implement `similar_wells` in `backend/app/analytics/tools/similar_wells.py` (k=5 analogs via cosine similarity on standardised `build_features` vectors that ran candidate c) — *implemented in `success_engine.py` (no separate `similar_wells.py`)*
-- [x] [F] NN-F4 NbaCard top-3 UI: update frontend with P(success), look-alike analog counts, and plain-English top drivers — *`components/decision/RecommendationPanel.tsx` (+ `NbaCard.tsx`)*
-- [x] [F] NN-F5 "How did you decide?" panel: implement explanation panel with evidence chain, analog wells, top drivers, and multimodal NN architecture diagram (with Vertex AI custom job + Model Registry described as production path) — *"How did you decide?" section in `RecommendationPanel.tsx` (evidence chain, analogs, drivers, architecture)*
-- [ ] [O] NN-O6 Plausibility review: verify outputs for hero wells GK-129, LKW-019, and LKM-061 for engineering soundness
+- [ ] **[C8.1 · Impl]** `[A]` Update `backend/tests/golden/{routes,capture}.py` to Barmer targets (`MNG-042`, `BHG-019`, `ASH-023`) and recapture `backend/tests/golden/*.schema.json`.
+- [ ] **[C8.1 · Verify]** `[O]` Confirm `python -m tests.golden.capture` exits `0` and zero `GK-`/`LKW-`/`LKM-`/`Assam` strings remain in `tests/golden/`. · *Evidence:* `pending`
 
-#### Gate NN (demo)
-- [x] Top 3 render for all producing wells via TC-030 `recommend_interventions` — *`test_top3_shape_and_bounds`*
-- [x] p_success is strictly in [0.05, 0.95] and stable across calls — *`test_top3_shape_and_bounds`, `test_deterministic`*
-- [x] Analog counts recompute exactly from data (TC-031 `similar_wells`, k=5) — *`test_analogs_recompute_from_index`*
-- [x] The explanation panel shows all four elements: evidence chain, look-alike analogs, top drivers (SHAP), and multimodal NN architecture diagram (with Vertex AI custom job + Model Registry described as production path)
-- [ ] Plausibility review of GK-129, LKW-019, and LKM-061 outputs passes orchestrator inspection
+- [ ] **[C8.2 · Impl]** `[A]` Migrate all 41 unit test modules in `backend/tests/unit/` (incl. `test_contracts_mangala.py` & `test_ed6_cairn_assets.py`) from Assam fixtures to Barmer equivalents (`[O]` review).
+- [ ] **[C8.2 · Verify]** `[O]` Run `pytest tests/unit/ --ignore=tests/unit/test_bl12_all_wells.py -q` (`0` failures). · *Evidence:* `pending`
 
----
+- [ ] **[C8.3 · Impl]** `[O]` Update & run `backend/tests/unit/test_bl12_all_wells.py` across all **460 Barmer wells**.
+- [ ] **[C8.3 · Verify]** `[O]` Confirm `pytest tests/unit/test_bl12_all_wells.py -q` passes `460/460` wells (`0.05 <= p_success <= 0.95`, zero currency tokens). · *Evidence:* `pending`
 
-### Milestone MS-18 · Stage FR — Field report (HTML)
-**Anchor:** brief §1 U-6; §7 (D-30)
+- [ ] **[C8.4 · Impl]** `[A]` Migrate `backend/tests/integration/{test_backend_parity,test_demo_flow}.py` and `backend/tests/bdd/{test_agent_bdd.py,features/*.feature}` to Barmer fields & hero wells (`[O]` review).
+- [ ] **[C8.4 · Verify]** `[O]` Run `pytest tests/integration/ tests/bdd/ -q` (`0` failures, including BigQuery parity against `urvi_cairn_silver`). · *Evidence:* `pending`
 
-#### Tasks
-- [x] [F] FR-F1 Jinja2 HTML report template: implement A4-printable layout in `backend/app/analytics/templates/field_report.html` covering WH-01…WH-19, ONGC header/footer branding (wordmark fallback), and "SYNTHETIC DATA — DEMO" banner — *built as Python HTML rendering in `field_report.py` (no Jinja2 template file); commit `ff9573d`*
-- [x] [F] FR-F2 Wellbore SVG generator: dynamic schematic rendering casing, tubing, perforations, and formation tops with placeholders for missing data per WH-05 — *`render_wellbore_svg` / `GET /api/wells/{id}/schematic.svg`; native React `CompletionDiagram.tsx` in the UI (D-37)*
-- [x] [O] FR-O3 TC-032 assembly engine: implement `backend/app/analytics/tools/field_report.py` assembling job program, kill fluid weight, barriers, contingencies, top-3 rationale, and `facts.json` sidecar
-- [x] [O] FR-O4 Fact validator & route wiring: implement `GET /api/wells/{id}/report` and `backend/tests/unit/test_tc032_field_report.py` ensuring 100% digits trace to tool returns
-- [x] [F] FR-F5 Canvas iframe view: integrate field report inside expanded middle panel with print/save button and one-line chat link — *`FieldReportOverlay.tsx` (full-screen overlay, Print/Esc) + agent "prepare field report" chip*
+- [ ] **[C8.5 · Impl]** `[F]` Migrate `backend/tests/eval/{README.md,canvas_routing_v05.json,wellpulse-eval.json,datasets/v04-dataset.json}` to Barmer wells & clean legacy ONGC eval results (`[O]` review).
+- [ ] **[C8.5 · Verify]** `[O]` Confirm valid JSON parsing and zero ONGC/Assam tokens across all eval datasets. · *Evidence:* `pending`
 
-#### Gate FR
-- [~] `GET /api/wells/{id}/report` renders for all 412 wells in < 3 s locally (p95) — *`test_renders_for_core_and_random_wells` + `test_render_latency_after_warmup` cover a sample, not all 412*
-- [ ] Clean A4 print layout verified with repeating headers, print-friendly styling, and "SYNTHETIC DATA — DEMO" banner
-- [x] ONGC logo (`frontend/public/brand/ongc_logo.svg`) displayed at top left and print footer, with text wordmark fallback if missing
-- [ ] Wellbore SVG renders dynamically from casing/tubing/perf/formation data (with placeholders for missing data per WH-05)
-- [ ] 100% of digits validated against `facts.json` sidecar; Flash writes template prose only with no hard-coded numerals
-- [x] Chat and voice provide a concise one-line link to open the field report
+- [ ] **[C8.6 · Impl]** `[O]` Execute full backend `pytest` suite and repo-wide zero-ONGC runtime/UI leak audit.
+- [ ] **[C8.6 · Verify]** `[O]` Confirm `uv run pytest -q` (`0` failures) AND repo-wide grep across `backend/app/`, `frontend/src/`, `frontend/public/`, `lakehouse/dataform/` returns `0` hits. · *Evidence:* `pending`
+
+### Gate C8 Sign-Off
+- [ ] **Gate C8 Passed:** Full `pytest` suite green (incl. 460-well stress test & BigQuery parity) and strict zero-ONGC audit passed (`backlog_refinements.md` updated).
 
 ---
 
-### Milestone MS-20 · Stage ED — ED meeting pack (v0.6)
-**Anchor:** [`features.md`](./features.md) §3b F-27…F-33; D-33…D-36 (user, 2026-10-08)
+## Stage C9 · Local Rehearsal, Cloud Run Deployment & CIO Demo Script (Day 3)
 
-#### Tasks
-- [x] [O] ED-1 Showcase mode: `WELLPULSE_RBAC_ENFORCE` switch (default off → every persona FULL); tests force it on; persona menu note "RBAC available" (tooltip explains; was "Role-based access available", shortened 2026-10-08 so the header fits beside the docked agent)
-- [x] [O] ED-2 Completion diagram: shared SVG builder → `GET /api/wells/{id}/schematic.svg`; Wellbore view shows it (casing, cement, tubing, packer/pump, perforations by status, formation tops, TD)
-- [x] [O] ED-3 TC-033 offset decline compare + verdict (`WELL_SPECIFIC` / `RESERVOIR_WIDE` / `WATER` / `RESTORED` / `MIXED`); route; Offsets view; thresholds pinned
-- [x] [O] ED-4 TC-034 anomaly scan (rate drop, WC jump / trend, THP shift, downtime, linked workover); route; timeline in "History & Wax/Sand" view
-- [x] [O] ED-5 TC-035 wax/sand behaviour (job count, interval, next due, field norm; no sand rate stated); route; card in well panel
-- [x] [O] ED-6 India map: `ongc_assets.py` (13 assets, public approximate locations, position-only well tags); map opens on India; Assam drill-down unchanged
-- [x] [O] ED-7 Agent: TC-033…035 wired into ADK + Live; "What's wrong with GK-129?" opens Offsets; ED rehearsal script in `demo_flow.md`
-- [x] [O] ED-8 Native completion diagram (D-37): `CompletionDiagram.tsx` from profile data (casing + cement, tubing, pump / anchor / packer, perforations by status, formation tops, PBTD / TD, hover, non-overlapping labels) + perforation table; fix `&` in server SVG; valid-XML test
-- [x] [O] ED-9 Three health tags (D-38): Healthy (green) / Needs attention (amber = at risk + underperforming) / Not producing (red) on map markers, cluster pies, legend, health card, field comparison, selector, nearby list, well badge; EN / Hinglish / Hindi labels
-- [x] [O] ED-10 Map follows the agent (F-41): agent-picked well zooms to 14 from India / cluster zoom; field request always drills into Assam
-- [x] [O] ED-11 `ui_control` hands-off (F-41, D-39, D-40): allow-listed map / panel / app actions; browser parser (EN / Hinglish / Hindi) runs plain commands with no model call + chat chip; ADK tool + runner `kind: "ui"`; Live 13th tool; tests
-- [x] [O] ED-12 Agent docks in full screen (F-41): full screen / expanded panel opens the agent docked; exit restores; the agent opens docked on the right by default (undock is remembered)
-- [x] [O] ED-13 GGS well buttons (F-41): popup well tags are health-coloured buttons that open the well + zoom; `focus_cluster` ("show GGS-01"); `report print`
-- [x] [O] ED-14 Health filter + voice-first (F-41, D-41): `health_filter` all / healthy / attention / not_producing; browser phrases EN / Hinglish / Hindi; clickable legend + header KPIs; no Health & priority screen for display requests; Live prompt phrasings + spoken numbers; Live check over the socket; tests
-- [x] [O] ED-15 Polish (2026-10-08): header fits beside the docked agent (compact KPI ribbon, "RBAC available", "ONLINE", narrower search); ED rehearsal script updated with Part A hands-off + voice
-- [x] [O] ED-16 Urvi AI Agent (D-42): full name "Urvi AI Agent" in the top-left wordmark, launcher, panel and greetings (EN / Hinglish / Hindi), Urvi mark (`UrviMark.tsx`) + favicon + tab title, personality in `prompt.py` / `live_prompt.md`, Live voice stays Aoede, greetings only greet (no screen change); mic "listening" states are green with a normal mic icon ("Listening · tap to stop"), not a red crossed-out mic that looked muted — deployed V 1.0 (`wellpulse-app-00008-g49`, image `v1-4b8463d`), smoke 6/6, real-mic rehearsal passed 2026-10-08
-- [x] [O] Hands-off script (India → Geleki → GK-129 wellbore → full screen → satellite / SCADA → flowlines off → Hindi → close panel → India) passes with no clicks (headless check)
+- [ ] **[C9.1 · Impl]** `[O]` Update `deploy/selfcheck.py` & `run_local.sh` for Cairn Barmer endpoints (`460` wells, `MNG-042` recommendations & Cairn report, `/ws/live`).
+- [ ] **[C9.1 · Verify]** `[O]` Start local uvicorn server on `:8002`, pass 7/7 `selfcheck.py` checks, and stop cleanly. · *Evidence:* `pending`
 
-#### Gate ED
-- [x] Each step approved by the user, then committed + pushed (`v0.6(ED-n): …`) — *`2037bc5`, `93faff4`, `229116e`, `4b8463d`*
-- [x] Unit tests green (baseline 527 + new); `tsc` + `vite build` green — *718 passed / 24 skipped; `tsc` green (2026-11-15)*
-- [x] Numbers only from tools; no currency — *`callbacks.check_numbers` guardrail; `test_field_engineer_has_no_cost_band`*
-- [x] ED script rehearsed locally — *real-mic rehearsal passed 2026-10-08 (ED-16)*
+- [ ] **[C9.2 · Impl]** `[F]` Author pinned 7-act Cairn CIO Demo Script (`docs/demo_flow.md`) and `docs/pinned_values.md` (`[O]` number-pin audit against live tool outputs).
+- [ ] **[C9.2 · Verify]** `[O]` Confirm `demo_flow.md` & `pinned_values.md` contain `MNG-042` / `BHG-019` / `RAG-014` pinned numbers and zero ONGC/Assam strings. · *Evidence:* `pending`
 
-#### CMD backlog (logged, not in v0.6; tracked as BL-2 in [`backlog_refinements.md`](../backlog_refinements.md))
-- [ ] F-34 Asset comparisons · F-35 Field-wise production per asset · F-36 Asset DPR · F-37 Where it hurts · F-38 Sand rate (no data) · F-39 Service cost (deferred) · F-40 New locations (no data)
+- [ ] **[C9.3 · Impl]** `[O]` **`[USER GATE]`** After explicit user OK, run `bash deploy/deploy.sh build` and `bash deploy/deploy.sh deploy` to deploy `urvi-cairn-app` (`us-central1`, `urvi-cairn-barmer-ai-agent`).
+- [ ] **[C9.3 · Verify]** `[O]` Confirm `gcloud run services describe urvi-cairn-app` shows ready URL & revision in `us-central1`. · *Evidence:* `pending`
 
----
+- [ ] **[C9.4 · Impl]** `[O]` Run live Cloud Run smoke test (`bash deploy/deploy.sh smoke`) and record live URL & revision in `APP_LINK.md` and `backlog_refinements.md`.
+- [ ] **[C9.4 · Verify]** `[O]` Confirm `deploy.sh smoke` passes 7/7 against live `https://urvi-cairn-app-...` URL and `APP_LINK.md` is updated. · *Evidence:* `pending`
 
-### Milestone MS-22 · Stage AR — Architecture tab (BL-8) + English-first voice (R-6) — built locally 2026-11-15
-**Anchor:** [`backlog_refinements.md`](../backlog_refinements.md) BL-8, R-6
+- [ ] **[C9.5 · Impl]** `[O]` **`[USER GATE]`** After explicit user OK, perform final audit of `docs/checklist.md` + `../wellpulse` untouched check, commit, and push to `origin/main`.
+- [ ] **[C9.5 · Verify]** `[O]` Confirm 100% of `C0`–`C9` steps checked `[x]`, `../wellpulse` untouched, and `origin/main` up to date. · *Evidence:* `pending`
 
-#### Tasks
-- [x] [O] AR-1 R-6: `DEFAULT_LANGUAGE=english` (settings, voice panel, Live fallback); English-first greetings + switching rule in `prompt.py` / `live_prompt.md`; `test_r6_language_default.py`
-- [x] [O] AR-2 Diagram generator `frontend/scripts/build_architecture.py` → `frontend/public/architecture/{current,target}.html` (architecture-diagram skill style; official Google Cloud icons `@iconify-json/gcp@1.2.3` + `@iconify-json/logos@1.2.20` inline; CSS hover tooltips on all 26 / 30 components; no ONGC logo)
-- [x] [O] AR-3 `ArchitectureView.tsx` (Current ↔ Target toggle, New tab, Esc) + visible **Architecture** header button; navigation commands close it
-- [x] [O] AR-4 `ui_control architecture open|current|target|close` (backend allow-list + aliases, ADK + Live tool descriptions, prompts) and browser phrases EN / Hinglish / Hindi; tests in `test_ed11_ui_control.py` / `test_ed11_ui_parser.py`
-- [x] [O] AR-5 Headless check: button → tab → Target toggle → tooltip → Esc closes (CDP script, 2026-11-15)
-
-#### Gate AR
-- [x] `tsc --noEmit` green; targeted tests 49 passed; full suite: see `backlog_refinements.md` §1
-- [ ] User test at http://localhost:5180: button, toggle, hover, voice "show me the architecture", first reply in English
-- [ ] User approval → commit (+ push / deploy only on request)
-
----
-
-### Milestone MS-21 · Stage RB — Hierarchy-based access (reopened 2026-11-15; **scope pending user confirmation**)
-**Anchor:** user, 2026-11-15: *"the persona drop down menu doesn't work. I wanted hierarchy based access as in CMD and Director will have access to all the PII but the junior employees E1 to E4 should not have all the access. This should be demonstrable when E3 officer will ask to generate a named list of employees in Delhi for more than 5 years, it will not generate while if CMD will ask it will."*
-
-#### Findings (2026-11-15)
-- The dropdown sets `X-Persona` on every `/api` call (`state/persona.tsx`), but showcase mode (D-33, `WELLPULSE_RBAC_ENFORCE=0`) returns FULL access for every persona (`rbac.py`), so nothing visibly changes.
-- `frontend/src/api/decision.ts` hard-codes `X-Persona: ASSET_MANAGER` on two calls.
-- The current personas are ED / ASSET_MANAGER / FIELD_ENGINEER. The requested hierarchy (CMD, Director, E1–E4) does not exist in WellPulse.
-- WellPulse has **no employee or PII dataset**. The example question (a named list of employees in Delhi with > 5 years' service) matches the Yukti HR & Finance app (`../HR and Finance_ONGC`), which already enforces CMD / Director / E1–E4 RBAC.
-
-#### Tasks (to be confirmed before build)
-- [ ] [O] RB-0 Confirm scope with the user: which app (Urvi or Yukti), the persona ladder, the PII data scope and the demo script
-- [ ] RB-1…n to be written after RB-0
-
----
-
-### Milestone MS-19 · Stage W2 — Redeploy
-**Anchor:** brief §2; §8
-
-#### Tasks
-- [ ] [O] W2-O1 Container build configuration: update Dockerfile and `deploy/selfcheck.py` for v0.5 assets (DG tables, NN scores, report templates) — *still open: `selfcheck.py` REQUIRED list is the v0.4 set (no DG tables); the image builds and runs, so this is hardening, not a blocker*
-- [x] [O] W2-O2 Local container validation: execute `deploy/deploy.sh build` and run local smoke test
-- [x] [O] W2-O3 Cloud Run deployment: execute `deploy/deploy.sh deploy` with zero-downtime revision rollout — *V 1.0 = `wellpulse-app-00008-g49`, image `v1-4b8463d` (2026-10-08)*
-- [x] [O] W2-O4 Post-deployment smoke test: execute `deploy/deploy.sh smoke` against live Cloud Run URL (7/7 checks) — *smoke 6/6 (the `/report` check was never added to `smoke_test.py`)*
-
-#### Gate W2
-- [x] Local container validation passes via `deploy/deploy.sh build`
-- [x] Cloud Run deployment completes successfully via `deploy/deploy.sh deploy` with min-instances=1 and session affinity
-- [~] `deploy/deploy.sh smoke` passes 7/7 checks (including new endpoint `/api/wells/GK-129/report`) — *6/6 passed; the 7th (`/report`) is not in `smoke_test.py`*
-- [ ] End-to-end 11-step demo script verified on public Cloud Run URL
-
----
-
-## Verbatim §8 Gates → v0.4 stages
-
-| Verbatim §8 gate | Stages | Done when |
-|---|---|---|
-| Gate 1: Specification & Transcript Alignment | docs v3.0.0 (this doc set) | BRD, features, BDD, SDD, build, and checklist v3.0.0 are reviewed by the user. |
-| Gate 2: Multi-Field Telemetry & Cluster Generation | N (+ T for field aggregation) | Gate N + Gate T |
-| Gate 3: Medallion Lakehouse & BigQuery Schema Ingestion | X | Gate X |
-| Gate 4: Synthetic PDF Dossiers & SOP RAG Knowledge Base | O + S | Gate O + Gate S |
-| Gate 5: Multi-Class ML Diagnostic & Counterfactual NBA Engine | P + Q + R | Gates P, Q, R |
-| Gate 6: Gemini Live Stabilization | U | Gate U |
-| Gate 7: End-to-End Hierarchical Demo Script Validation | Y + V + W | Gates Y, V, W |
-
-> [!NOTE]
-> Verbatim §7 and §8 well counts (Lakwa 25, Lakhmani 20) are illustrative; decision D-2 sets production-grade counts at 160 for Lakwa and 110 for Lakhmani.
-
----
-
-## Definition of done (v0.4)
-
-- [ ] Every verbatim §1–§3 requirement maps to a passing BDD scenario ([`features.md`](./features.md) traceability)
-- [ ] The 5-level demo flow L1–L5 (verbatim §4) passes as automated tests and in a manual rehearsal on the Cloud Run URL
-- [ ] Every number on screen or in speech traces to a tool return, table row or cited PDF; no ₹/USD point estimates (D-1)
-- [x] The agent refuses at least once in each new field (LKM-090) and explains why
-- [x] Live survives ~~a forced reconnect~~ and a forced fallback — *reconnect starts a fresh session by design (D-43)*
-- [ ] The baseline UI (map, telemetry, timeline, reports, export, language toggle) is not regressed
-- [x] Deployed (authorised 2026-10-07) and smoke-tested; the URL is rehearsed; one commit + push to `origin main` per passed stage gate (13 `v0.4(<stage>):` commits) — *some stages share a commit, e.g. `v0.4(R,Y)`*
-
----
-
-## Former open items (all resolved 2026-10-07)
-
-| # | Item | Owner | Blocks | Status |
-|---|---|---|---|---|
-| 1 | Meeting date with Ajay Ratan (Q-1) | Orchestrator | Unknown: build all stages; if time-boxed, cut Y first, then X | Resolved |
-| 2 | Lakehouse bucket | Orchestrator | Stage X | Resolved: existing `gs://workover-operations-agentic-ai-datalake` (`bronze/`, `documents/`, `silver_exports/`) |
-| 3 | Verbatim §4 T3 ranks by NPV / payback (conflicts with D-1) | Orchestrator | Stages R, T | Resolved: deferred bbl × p_success ÷ rig-days, shown with cost band (K-7) |
-| 4 | Untrack the committed `frontend/dist` | Orchestrator | Stage W | Resolved: untracked in Stage W |
-| — | D-15…D-20, Q-2 | — | — | Resolved 2026-10-07 ([`SDD.md`](./SDD.md) §19.2) |
-| — | Autonomy: DDL apply, Cloud Run deploy, commit + push per gate | — | — | Authorised by user 2026-10-07 19:52 |
-| — | D-4 project = `workover-operations-agentic-ai` | — | — | Resolved 2026-10-07 |
-| — | D-13 text model = `gemini-3.8-flash` on Vertex ADC | — | — | Resolved 2026-10-07 |
-| — | Stray `v0.4-build` branch on GitHub | — | — | Deleted 2026-10-07 |
-
----
-
-## Key decisions (v0.5)
-
-| ID | Decision | Status | Resolution / detail |
-|---|---|---|---|
-| **D-25** | Answer canvas replaces Deep Dive | Accepted | Question-driven views (`overview`, `production`, `interventions`, `wellbore`, `pressures`, `diagnosis`, `recommendation`, `compare`, `nearby`, `report`); chat answers ≤ 3 sentences; full well history accessible only via field report (brief §1, §3). |
-| **D-26** | Success label definition | Accepted | P(success) from `workover_history.outcome`: `SUCCESS` = 1; `PARTIAL`, `FAILED` = 0; `CENSORED`, `NO_ACTION`, `IN_PROGRESS` excluded (~3.6k labelled jobs across 393 wells, 15 classes; brief §5). |
-| **D-27** | Production path: Vertex AI custom training + Model Registry | Accepted | Described in architecture diagram panel as production path; not built in v0.5 per D-32 (brief §5). |
-| **D-28** | HGB mechanism probabilities used by demo scorer | Accepted | `ic-hgb-v1` mechanism probabilities used by demo scorer; no model trained in v0.5 per D-32 (brief §5). |
-| **D-29** | DG synthetic tables flagged `is_synthetic` | Accepted | All 6 generated DG tables flagged `is_synthetic=true`, `_source_system='wellpulse_dg_v1'`, deterministic seed `20261008` (brief §4). |
-| **D-30** | ONGC logo branding | Accepted | ONGC logo (`frontend/public/brand/ongc_logo.svg`) supplied by user, with text wordmark "ONGC" fallback if asset is missing; "SYNTHETIC DATA — DEMO" banner on every report page (brief §7). |
-| **D-31** | Argon tier for data generation | Accepted | Argon = `gemini-3.8-flash-high` via `swarm add` for data generation and consistency test suites; orchestrator owns architecture, leakage rules, and gates; Flash handles prose and templates (brief §8). |
-| **D-32** | No model training or data regeneration in v0.5 | Accepted | Multimodal NN presented as engine (art-of-the-possible demo); numbers from deterministic demo scorer in `backend/app/analytics/tools/success_engine.py`; Vertex custom job & Model Registry kept as production path in architecture diagram; supersedes training parts of D-26/D-27/D-28 (brief §5). |
-
-
-## Key decisions (v0.6)
-
-| ID | Decision | Status | Resolution / detail |
-|---|---|---|---|
-| **D-33** | Showcase mode | Accepted (user, 2026-10-08) | Nothing hidden for any persona; RBAC kept behind `WELLPULSE_RBAC_ENFORCE=1` and presented as a capability |
-| **D-34** | India map tags | Accepted (user, 2026-10-08) | 13 ONGC assets at approximate public locations; position-only, non-interactive well tags; no data for other assets; Assam is live |
-| **D-35** | Service cost deferred | Accepted (user, 2026-10-08) | Tangible / intangible cost not built in v0.6 |
-| **D-36** | Persona model | Accepted (user, 2026-10-08) | CMD = all India; ED = one asset, technical; FE = execution documents; v0.6 builds the ED set, CMD backlog F-34…F-40 |
-| **D-37** | Native completion diagram | Accepted (user, 2026-10-08) | Drawn in React from structured construction data; server SVG only for the printable report |
-| **D-38** | Three health tags | Accepted (user, 2026-10-08) | Healthy (green) = PRODUCING_OK; Needs attention (amber) = AT_RISK + UNDERPERFORMING; Not producing (red) = NOT_PRODUCING; display-only |
-| **D-39** | Live voice cap 12 → 13 | Accepted (user, 2026-10-08) | Adds `ui_control` to Live voice; SDD §11.3 cap is our own rule |
-| **D-41** | Health filter is a display action | Accepted (user, 2026-10-08) | `ui_control health_filter`; display requests never open Health & priority; runner drops health navigation when `ui_control` ran |
-| **D-42** | Urvi AI Agent | Accepted (user, 2026-10-08) | Full name "Urvi AI Agent"; senior engineer colleague personality; Live voice stays Aoede (Charon too harsh); small talk never changes the screen; Urvi is the front-facing brand, WellPulse the platform; Urvi mark everywhere |
-| **D-40** | Hands-off control | Accepted (user, 2026-10-08) | Plain UI commands run in the browser (no model call); everything else goes to the agent, which can call `ui_control`; allow-listed actions only |
-
-## Key decisions (V 1.0+)
-
-| ID | Decision | Status | Resolution / detail |
-|---|---|---|---|
-| **D-43** | Every demo starts fresh | Accepted (user, 2026-11-15) | A Live reconnect does not need to restore context; losing context on reconnect is intended. Removed "reconnect keeps context" from Gates U, W and the DoD. Live voice quality (latency, barge-in, open mic) accepted by the user without measurement. |
-
----
-
-## Backlog
-
-Moved to [`backlog_refinements.md`](../backlog_refinements.md) (2026-11-15): the single reference sheet for latest changes, user refinements (R-n) and backlog items (BL-n).
+### Gate C9 Sign-Off
+- [ ] **Gate C9 Passed:** `urvi-cairn-app` live on Cloud Run, 7/7 smoke green, CIO demo script rehearsed & pinned, and repo synced.

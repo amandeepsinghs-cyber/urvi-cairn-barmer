@@ -1,7 +1,7 @@
 """Silver doc_chunks loader (SDD §15.1, D-17).
 
 Mirrors the TF-IDF retrieval index over D1-D11 PDFs and SOPs into BigQuery
-table ``wellpulse_silver.doc_chunks``. Re-buildable mirror: loaded with WRITE_TRUNCATE.
+table ``urvi_cairn_silver.doc_chunks``. Re-buildable mirror: loaded with WRITE_TRUNCATE.
 
     uv run --project backend python lakehouse/load/doc_chunks.py [--dry-run]
 """

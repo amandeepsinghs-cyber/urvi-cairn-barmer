@@ -76,7 +76,7 @@ svg.diagram{display:block;width:100%;height:auto}
 </defs>
 <rect width="1460" height="960" fill="url(#grid)"/>
 <rect x="452" y="28" width="990" height="902" rx="12" fill="rgba(251,188,4,.04)" stroke="#e37400" stroke-width="1" stroke-dasharray="8,4"/>
-<text x="464" y="48" fill="#e37400" font-size="10" font-weight="600">Google Cloud · project workover-operations-agentic-ai (demo: us-central1)</text>
+<text x="464" y="48" fill="#e37400" font-size="10" font-weight="600">Google Cloud · project urvi-cairn-barmer-ai-agent (demo: us-central1)</text>
 <rect x="190" y="215" width="242" height="470" rx="10" fill="rgba(241,243,244,.35)" stroke="#12b5cb" stroke-width="1" stroke-dasharray="4,4"/>
 <text x="202" y="235" fill="#12b5cb" font-size="10" font-weight="600">Browser · Urvi web app</text>
 <rect x="550" y="60" width="520" height="125" rx="10" fill="rgba(241,243,244,.35)" stroke="#1a73e8" stroke-width="1" stroke-dasharray="4,4"/>
@@ -123,7 +123,7 @@ svg.diagram{display:block;width:100%;height:auto}
     <path fill="#4285f4" d="M414.5,256l-197.7,141.2,54.1-135.3c.8-2,1.1-4,1.1-5.9h-33.2l-72,180c-2.6,6.6-.6,14.1,5,18.5,2.9,2.3,6.4,3.4,9.9,3.4s6.5-1,9.3-3l260.4-186c4.4-3.1,6.7-8,6.7-13h-43.6Z"/>
   </g>
 </svg>
-<text x="586" y="651" fill="#188038" font-size="10" font-weight="600">Cloud Run · us-central1 · wellpulse-app · 1 instance</text>
+<text x="586" y="651" fill="#188038" font-size="10" font-weight="600">Cloud Run · us-central1 · urvi-cairn-app · 1 instance</text>
 <rect x="1100" y="60" width="330" height="185" rx="10" fill="rgba(241,243,244,.35)" stroke="#e37400" stroke-width="1" stroke-dasharray="4,4"/>
 <text x="1112" y="80" fill="#e37400" font-size="10" font-weight="600">Build &amp; deploy</text>
 <rect x="1100" y="340" width="330" height="310" rx="10" fill="rgba(241,243,244,.35)" stroke="#d93025" stroke-width="1" stroke-dasharray="4,4"/>
@@ -469,7 +469,7 @@ svg.diagram{display:block;width:100%;height:auto}
   </g>
 </svg>
 <text x="1178" y="207.0" fill="#202124" font-size="12" font-weight="600">Artifact Registry</text>
-<text x="1178" y="222.0" fill="#5f6368" font-size="9">wellpulse-app images</text>
+<text x="1178" y="222.0" fill="#5f6368" font-size="9">urvi-cairn-app images</text>
 </g>
 <g class="node">
 <rect x="1120" y="380" width="290" height="60" rx="6" fill="#ffffff"/>
@@ -567,9 +567,9 @@ svg.diagram{display:block;width:100%;height:auto}
 <div class="hot up" style="left:57.192%;top:58.333%;width:14.726%;height:6.250%" tabindex="0" aria-label="In-memory sessions"><div class="tip"><b>In-memory sessions</b><span>Chat and voice sessions live in memory, hence one Cloud Run instance with session affinity (D-16).</span></div></div>
 <div class="hot up" style="left:14.041%;top:79.167%;width:14.521%;height:8.333%" tabindex="0" aria-label="Data generator"><div class="tip"><b>Data generator</b><span>Deterministic generator for Geleki, Lakwa and Lakhmani (2021-10 → 2026-09). Also baked into the image.</span></div></div>
 <div class="hot up" style="left:39.041%;top:79.167%;width:13.014%;height:8.333%" tabindex="0" aria-label="Cloud Storage"><div class="tip"><b>Cloud Storage</b><span>Raw generator drops, the 20,966 PDFs and Silver exports.</span></div></div>
-<div class="hot up" style="left:55.137%;top:79.167%;width:12.329%;height:8.333%" tabindex="0" aria-label="BigQuery Bronze"><div class="tip"><b>BigQuery Bronze</b><span>Dataset wellpulse_bronze: external tables over the bucket.</span></div></div>
-<div class="hot up right" style="left:70.548%;top:79.167%;width:12.329%;height:8.333%" tabindex="0" aria-label="BigQuery Silver"><div class="tip"><b>BigQuery Silver</b><span>Dataset wellpulse_silver: typed, de-duplicated tables loaded by MERGE.</span></div></div>
-<div class="hot up right" style="left:85.959%;top:79.167%;width:11.644%;height:8.333%" tabindex="0" aria-label="BigQuery Gold"><div class="tip"><b>BigQuery Gold</b><span>Dataset wellpulse_gold built by Dataform: field KPIs and dossier facts.</span></div></div>
+<div class="hot up" style="left:55.137%;top:79.167%;width:12.329%;height:8.333%" tabindex="0" aria-label="BigQuery Bronze"><div class="tip"><b>BigQuery Bronze</b><span>Dataset urvi_cairn_bronze: external tables over the bucket.</span></div></div>
+<div class="hot up right" style="left:70.548%;top:79.167%;width:12.329%;height:8.333%" tabindex="0" aria-label="BigQuery Silver"><div class="tip"><b>BigQuery Silver</b><span>Dataset urvi_cairn_silver: typed, de-duplicated tables loaded by MERGE.</span></div></div>
+<div class="hot up right" style="left:85.959%;top:79.167%;width:11.644%;height:8.333%" tabindex="0" aria-label="BigQuery Gold"><div class="tip"><b>BigQuery Gold</b><span>Dataset urvi_cairn_gold built by Dataform: field KPIs and dossier facts.</span></div></div>
 <div class="hot down right" style="left:76.712%;top:10.417%;width:19.863%;height:6.250%" tabindex="0" aria-label="Cloud Build"><div class="tip"><b>Cloud Build</b><span>Builds the image: web app, Python dependencies, document corpus and a self-check.</span></div></div>
 <div class="hot down right" style="left:76.712%;top:18.750%;width:19.863%;height:6.250%" tabindex="0" aria-label="Artifact Registry"><div class="tip"><b>Artifact Registry</b><span>Stores versioned images (V 1.0 = v1-4b8463d); rollback = shift traffic to an earlier revision.</span></div></div>
 <div class="hot down right" style="left:76.712%;top:39.583%;width:19.863%;height:6.250%" tabindex="0" aria-label="Runtime service account"><div class="tip"><b>Runtime service account</b><span>Cloud Run runs as a dedicated service account; Vertex AI and BigQuery via Application Default Credentials.</span></div></div>
@@ -578,7 +578,7 @@ svg.diagram{display:block;width:100%;height:auto}
   <div class="cards"><div class="card"><div class="card-header"><div class="card-dot" style="background:#12b5cb"></div><h3>Agent &amp; voice</h3></div><ul><li>• Chat: ADK agent on Gemini 3.8 Flash, 34 tools</li><li>• Voice: Gemini 3.8 Live via a server WebSocket proxy, 13 tools</li><li>• Hands-off screen control in English, Hinglish and Hindi</li><li>• English by default; Hindi / Hinglish on request</li></ul></div>
 <div class="card"><div class="card-header"><div class="card-dot" style="background:#9334e6"></div><h3>Data &amp; ML</h3></div><ul><li>• 412 synthetic wells · 3 fields · 60 months</li><li>• Medallion lakehouse: Bronze → Silver → Gold (BigQuery, asia-south1)</li><li>• Intervention classifier + physics checks + success engine</li><li>• Top 3 next best actions with P(success) and look-alike wells</li></ul></div>
 <div class="card"><div class="card-header"><div class="card-dot" style="background:#d93025"></div><h3>Trust &amp; guardrails</h3></div><ul><li>• Every number comes from a tool result</li><li>• No currency: cost band + rig-days only</li><li>• No API keys: Vertex AI via the runtime service account</li><li>• All data is synthetic and labelled as such</li></ul></div></div>
-  <p class="footer">Urvi AI Agent on WellPulse · V 1.0 · Cloud Run wellpulse-app · official Google Cloud icons (go/cloud-icons) · <a href="current.html" style="color:inherit">Dark version</a></p>
+  <p class="footer">Urvi AI Agent on WellPulse · V 1.0 · Cloud Run urvi-cairn-app · official Google Cloud icons (go/cloud-icons) · <a href="current.html" style="color:inherit">Dark version</a></p>
 </div>
 </body>
 </html>

@@ -1,7 +1,7 @@
 """BRONZE external tables -> SILVER contract tables, with reconciliation (X-F2, SDD §15.1).
 
 For every landing table:
-  MERGE wellpulse_silver.<t> USING (de-duplicated Bronze) ON <natural key>
+  MERGE urvi_cairn_silver.<t> USING (de-duplicated Bronze) ON <natural key>
     WHEN MATCHED THEN UPDATE every column   (re-delivered rows replace in place)
     WHEN NOT MATCHED THEN INSERT
 De-duplication keeps the latest batch (``dt`` DESC, ``_ingested_at`` DESC, ``_source_row`` DESC)

@@ -1,6 +1,6 @@
 """WellPulse post-deploy smoke test (Stage W.4, SDD §17).
 
-    cd backend && uv run --frozen --no-dev python ../deploy/smoke_test.py https://wellpulse-app-bowxi5445q-uc.a.run.app
+    cd backend && uv run --frozen --no-dev python ../deploy/smoke_test.py https://<urvi-cairn-app URL>
     cd backend && uv run --frozen python ../deploy/smoke_test.py http://localhost:8002 --ws-timeout 30
 
 Checks (each prints PASS/FAIL with latency; exit code = number of failures):
@@ -136,7 +136,7 @@ def check_spa(base: str) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("base_url", help="e.g. https://wellpulse-app-bowxi5445q-uc.a.run.app")
+    ap.add_argument("base_url", help="e.g. https://<urvi-cairn-app URL>")
     ap.add_argument("--ws-timeout", type=float, default=25.0)
     ap.add_argument("--skip-ws", action="store_true")
     a = ap.parse_args(argv)

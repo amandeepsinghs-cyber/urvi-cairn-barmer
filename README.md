@@ -1,3 +1,12 @@
+> [!IMPORTANT]
+> **This repository is the Cairn / Vedanta Oil and Gas (Barmer Basin) replica of the ONGC WellPulse / Urvi demo.**
+> Created 2026-11-15 from the ONGC repo at commit `c8fc208` (V 1.1), with full git history so the two can be merged later
+> if ever needed. **It must never touch the ONGC demo:** the GitHub remote is `amandeepsinghs-cyber/urvi-cairn-barmer`,
+> every Google Cloud target is a Cairn placeholder (`urvi-cairn-barmer-ai-agent`, service `urvi-cairn-app`, datasets
+> `urvi_cairn_*`), and `deploy/deploy.sh` refuses to run against the ONGC project / service or while the project is a
+> placeholder. Start with [`plan_prompt.md`](./plan_prompt.md) (kickoff prompt) and [`backlog_refinements.md`](./backlog_refinements.md). The ONGC content below is the inherited
+> baseline and will be replaced as the Barmer version is built.
+
 # WellPulse: Energy Well Operations & Voice AI Platform
 ## Geleki Brownfield Asset (Assam, India • ONGC)
 

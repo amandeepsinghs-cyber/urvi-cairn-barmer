@@ -1,7 +1,7 @@
 """Gold dossier_facts loader (SDD §15.1, D-17).
 
 Extracts and flattens grounding facts from Stage O generated documents and dossiers
-into BigQuery table ``wellpulse_gold.dossier_facts``.
+into BigQuery table ``urvi_cairn_gold.dossier_facts``.
 
     uv run --project backend python lakehouse/load/dossier_facts.py [--dry-run]
 """

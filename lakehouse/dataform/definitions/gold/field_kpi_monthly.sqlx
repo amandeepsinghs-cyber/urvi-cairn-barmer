@@ -1,6 +1,6 @@
 config {
   type: "table",
-  schema: "wellpulse_gold",
+  schema: "urvi_cairn_gold",
   name: "field_kpi_monthly",
   description: "GOLD 5-year field KPI roll-up, one row per (field, month) up to AS_OF. Feeds TC-028 (field production history) and TC-024 (field comparison). Volumes treat each daily allocated rate as one day of production; non-producing days (NULL rates, DC-014) contribute zero volume.",
   bigquery: {

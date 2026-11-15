@@ -1,6 +1,6 @@
 """Parquet vs. BigQuery backend parity + lakehouse gate checks (Stage X, BDD F-15 S01/S03, SDD §15.3).
 
-Runs against the live lakehouse in ``workover-operations-agentic-ai`` / ``asia-south1``. Skips
+Runs against the live lakehouse in ``urvi-cairn-barmer-ai-agent`` / ``asia-south1``. Skips
 cleanly when Application Default Credentials are unavailable or the Silver layer has not been
 loaded (CI without GCP); on a developer box with ADC it must pass.
 
@@ -28,7 +28,7 @@ from app import settings
 from app.data_access import repository as r
 from app.data_access.parquet_repo import ParquetRepository
 
-PROJECT = os.getenv("WELLPULSE_BQ_PROJECT", "workover-operations-agentic-ai")
+PROJECT = os.getenv("WELLPULSE_BQ_PROJECT", "urvi-cairn-barmer-ai-agent")
 LOCATION = os.getenv("WELLPULSE_BQ_LOCATION", "asia-south1")
 FIXTURE_WELLS = ["GK-129", "GK-101", "LKW-047", "LKW-112", "LKW-088", "LKM-023", "LKM-061", "LKM-090"]
 FIELDS = ["Geleki", "Lakwa", "Lakhmani"]
@@ -41,7 +41,7 @@ def _bq_client_or_skip():
 
         google.auth.default()
         client = bigquery.Client(project=PROJECT, location=LOCATION)
-        client.get_table(f"{PROJECT}.wellpulse_silver.daily_production")
+        client.get_table(f"{PROJECT}.urvi_cairn_silver.daily_production")
         return client
     except Exception as exc:  # noqa: BLE001 - any auth/NotFound/import problem means "no lakehouse here"
         pytest.skip(f"BigQuery lakehouse unavailable ({type(exc).__name__}: {str(exc)[:120]})")
@@ -156,17 +156,17 @@ def test_silver_row_counts_equal_parquet(bq_client):
     for p in landing.glob("*/*.parquet"):
         counts[p.stem] = counts.get(p.stem, 0) + pq.read_metadata(p).num_rows
     sql = " UNION ALL ".join(
-        f"SELECT '{t}' AS t, COUNT(*) AS n FROM `{PROJECT}.wellpulse_silver.{t}`" for t in sorted(counts))
+        f"SELECT '{t}' AS t, COUNT(*) AS n FROM `{PROJECT}.urvi_cairn_silver.{t}`" for t in sorted(counts))
     got = {row["t"]: row["n"] for row in bq_client.query(sql, location=LOCATION).result()}
     assert got == counts
 
 
 def test_silver_daily_production_physical_design(bq_client):
-    t = bq_client.get_table(f"{PROJECT}.wellpulse_silver.daily_production")
+    t = bq_client.get_table(f"{PROJECT}.urvi_cairn_silver.daily_production")
     assert t.time_partitioning is not None and t.time_partitioning.field == "production_date"
     assert t.clustering_fields == ["field", "well_id"]
     assert t.location == LOCATION
-    for ds in ("wellpulse_bronze", "wellpulse_silver", "wellpulse_gold"):
+    for ds in ("urvi_cairn_bronze", "urvi_cairn_silver", "urvi_cairn_gold"):
         assert bq_client.get_dataset(f"{PROJECT}.{ds}").location == LOCATION
 
 
@@ -179,7 +179,7 @@ def test_gold_field_kpi_monthly_reconciles_to_repository(pq_repo, bq_client):
     repo["oil_bopd"] = repo["oil_bbl"] / repo["days"]
     gold = bq_client.query(
         f"SELECT field, month, oil_bbl, water_bbl, gas_mscf, days_in_period AS days, oil_bopd "
-        f"FROM `{PROJECT}.wellpulse_gold.field_kpi_monthly`", location=LOCATION).result().to_arrow().to_pandas()
+        f"FROM `{PROJECT}.urvi_cairn_gold.field_kpi_monthly`", location=LOCATION).result().to_arrow().to_pandas()
     m = repo.merge(gold, on=["field", "month"], how="outer", suffixes=("_repo", "_gold"), indicator=True)
     assert (m["_merge"] == "both").all(), m[m["_merge"] != "both"][["field", "month", "_merge"]]
     assert len(m) == 3 * 60  # 3 fields x 60 months (2021-10 .. 2026-09, Sept partial to AS_OF)

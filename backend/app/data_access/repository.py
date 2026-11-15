@@ -1,7 +1,7 @@
 """``WellRepository`` protocol and the process-wide repository accessor (SDD §5.7).
 
 ``DATA_BACKEND`` selects the implementation: ``parquet`` (default, D-11 local) reads the Stage N
-landing files; ``bigquery`` (Stage X) reads the same frames from ``wellpulse_silver`` (``bigquery_repo.py``).
+landing files; ``bigquery`` (Stage X) reads the same frames from ``urvi_cairn_silver`` (``bigquery_repo.py``).
 """
 
 from __future__ import annotations

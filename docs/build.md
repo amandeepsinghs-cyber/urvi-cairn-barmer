@@ -1,1081 +1,776 @@
-# Build & Local Run Guide (`build.md`)
-## WellPulse: Energy Well Operations & Voice AI Platform
+# Cairn Oil & Gas (Barmer Basin) — Deep Research & Granular Build Guide (`build.md`)
+## Urvi AI Agent for Cairn Oil & Gas · Vedanta Limited (Block RJ-ON-90/1, Rajasthan)
 
-**Document Version:** 3.1.0 (v0.5 answer canvas & multimodal model) · **Date:** 2026-10-08
-**Target Environment:** Local workstation (Linux, macOS, Windows WSL) and Cloud Run
-**Requirements source:** [`verbatim.md`](../verbatim.md) and [`v05_change_brief.md`](./v05_change_brief.md). Companion docs: [`BRD.md`](./BRD.md) · [`features.md`](./features.md) · [`BDD.md`](./BDD.md) · [`SDD.md`](./SDD.md) · [`checklist.md`](./checklist.md)
-
-> [!IMPORTANT]
-> **This file has two parts.**
-> - **[Part I](#part-i--run-wellpulse-today-baseline)** explains how to run the WellPulse that exists today (the v2 baseline). It has been corrected against the code as of 2026-10-07. The earlier ports 8000/8001/5173/5175 were wrong.
-> - **[Part II](#part-ii--v04-verbatim-expansion-build)** is the build for v0.4 (Stages M…W) and v0.5 (Stages AC, DF, DG, NN, FR, W2), each with commands, owner and a gate, delivering every requirement in `verbatim.md` and `v05_change_brief.md`.
->
-> **Citation rule.** Every Part II stage cites its verbatim anchor or v0.5 change brief: §, then a short quote. Anything without an anchor is marked **derived**, with the reason. The numbers in verbatim §4–§8 (GK-104, "+180 bopd", "₹18 Lakhs", "142 bar", "25 wells"…) are **illustrative only, not data**. Design targets look like «target ± tol» and are pinned after Stage N.
+**Document Version:** 4.0.0 (Cairn Barmer Replica — Research-Governed Granular Build) · **Date:** 2026-11-15  
+**Deadline:** Cairn CIO Meeting — **2026-11-18 (3 days)**  
+**Working Directory:** `/usr/local/google/home/amandeepsinghs/o&g agentic transformation/Oil & Gas Agent Portfolio/cloud_run_apps/urvi_cairn_barmer`  
+**GitHub Remote:** `git@github.com:amandeepsinghs-cyber/urvi-cairn-barmer.git` (`main`)  
+**Google Cloud Target:** Project `urvi-cairn-barmer-ai-agent` · Cloud Run `urvi-cairn-app` (`us-central1`) · GCS `gs://urvi-cairn-barmer-ai-agent-datalake` (`asia-south1`) · BigQuery `urvi_cairn_{bronze,silver,gold}` (`asia-south1`) · SA `urvi-cairn-run@urvi-cairn-barmer-ai-agent.iam.gserviceaccount.com`  
+**Companion Tracker:** [`checklist.md`](./checklist.md) · [`backlog_refinements.md`](../backlog_refinements.md) · [`plan_prompt.md`](../plan_prompt.md) · [`DELEGATION.md`](./DELEGATION.md)  
+*(Inherited ONGC baseline build remains permanently preserved in git history at `git show c8fc208:docs/build.md`.)*
 
 ---
 
-# Part I · Run WellPulse today (baseline)
-
-## 1. Prerequisites
-
-| Tool | Version | Check | Notes |
-|---|---|---|---|
-| Python | 3.11 (Docker uses `python:3.11-slim`) | `python3 --version` | 3.10+ works locally |
-| Node.js / npm | 20.x LTS / 10.x | `node --version && npm --version` | Vite 5 needs Node 18 or later |
-| `uv` | latest | `uv --version` | Not needed for Part I. **Required from Stage M onward** (D-14) |
-| `gcloud` | latest | `gcloud --version` | Only for deploy or Vertex AI |
-| Browser | Chrome or Edge, latest | — | MediaRecorder and Web Speech API |
-
-## 2. Repository structure (as-is)
-
-```
-wellpulse/
-├── archive/                 # legacy prototypes + LEARNINGS.md (excluded from Docker)
-├── docs/                    # BRD, BDD, SDD, features, build (this), checklist, verbatim
-├── backend/
-│   ├── app/
-│   │   ├── main.py          # FastAPI app; serves frontend/dist + router
-│   │   ├── api/wells.py     # all REST + WS routes
-│   │   ├── services/
-│   │   │   ├── data_generator.py   # writes data/wells_data.json (50 GLK wells, 730 days)
-│   │   │   └── ai_agent.py         # prompt-stuffing chat, keyword fallback, recommendations
-│   │   └── data/wells_data.json    # 7.6 MB, generated
-│   ├── requirements.txt     # pip (incomplete: missing `requests`, see §7)
-│   └── run.py               # uvicorn launcher, default port 8002
-├── frontend/                # React 18 + Vite 5 + Tailwind + Leaflet + Recharts
-│   ├── src/{App.tsx, main.tsx, components/{agent,common,map,reports,telemetry,timeline}, types/well.ts}
-│   ├── vite.config.ts       # dev port 5180, proxies /api → localhost:8002
-│   └── dist/                # committed build, copied by the Dockerfile
-├── Dockerfile               # single stage, python:3.11-slim (NOT multi-stage)
-├── run_local.sh             # one-command launcher
-└── README.md
-```
-
-> [!NOTE]
-> The earlier version of this file listed `backend/app/core/`, `frontend/src/context/`, `frontend/public/` and `scripts/`. **None of these exist.**
-
-## 3. Environment (`backend/.env`, optional)
-
-```bash
-GEMINI_API_KEY="..."        # optional today; if unset, the keyword fallback engine answers
-BACKEND_HOST="0.0.0.0"
-BACKEND_PORT=8002           # run.py default; PORT wins if set (Cloud Run sets PORT=8080)
-```
-
-> [!WARNING]
-> Today `ai_agent.py` calls the **Generative Language REST API with an API key**, using model `gemini-3.8-flash`. Stage V moves the calls to **Vertex AI with ADC**, keeps the model name (decision D-13), and **removes `GEMINI_API_KEY`**.
-
-## 4. Manual setup
-
-```bash
-# Terminal 1: backend
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt requests    # requests is imported by ai_agent.py but not listed
-python app/services/data_generator.py       # only if app/data/wells_data.json is missing
-python run.py                               # http://localhost:8002  (docs: /docs)
-
-# Terminal 2: frontend
-cd frontend
-npm install
-npm run dev                                 # http://localhost:5180  (proxies /api → :8002)
-```
-
-## 5. One command: `./run_local.sh`
-
-```bash
-chmod +x run_local.sh && ./run_local.sh
-```
-
-The script:
-1. Checks for python3, node and npm.
-2. Creates `backend/.venv` with pip.
-3. Generates `wells_data.json` if it is missing.
-4. Runs `npm install` if needed.
-5. Starts the backend on **:8002** and waits for `/api/health`.
-6. Starts Vite on **:5180**.
-7. Cleans up on Ctrl+C.
-
-## 6. Verify
-
-| Check | URL |
-|---|---|
-| Dashboard | http://localhost:5180 |
-| Health | http://localhost:8002/api/health |
-| Wells | http://localhost:8002/api/wells |
-| Swagger | http://localhost:8002/docs |
-| Production (public) | https://wellpulse-app-bowxi5445q-uc.a.run.app |
-
-## 7. Troubleshooting
-
-| Issue | Cause | Fix |
-|---|---|---|
-| Port 8002 or 5180 busy | Another process is using it | Run `lsof -i :8002` (or `:5180`) and kill it, or set `BACKEND_PORT` (and update `vite.config.ts` proxy) |
-| `ModuleNotFoundError: requests` on chat | Missing from `requirements.txt` | `pip install requests` (fixed for good in Stage M via `pyproject.toml`) |
-| Chat gives canned answers | No `GEMINI_API_KEY`, so the keyword fallback answers | Expected today; replaced by tool calling in Stage V |
-| "Gemini Live" sounds robotic or doesn't stream | The WS is a text-chat wrapper and voice is browser `speechSynthesis` | Known defect; rebuilt in Stage U |
-| Dates shift between runs | Generator dates are relative to `datetime.now()` | Fixed in Stage N (fixed window 2021-10-01…2026-09-30) |
-| Mic not capturing | Permission blocked or page is not on localhost/HTTPS | Use `http://localhost:5180` and allow the mic |
-
----
----
-
-# Part II · v0.4 verbatim expansion build
-
-**Drives:** [`features.md`](./features.md) · [`BDD.md`](./BDD.md) · [`SDD.md`](./SDD.md) (authoritative for routes, §13, and layout, §4) · execution policy in [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) · source [`verbatim.md`](../verbatim.md). **Working dir:** `cloud_run_apps/wellpulse/`. **Branch:** `main`.
-
-> [!IMPORTANT]
-> **Answer first: WellPulse stays the product and the UI.** The proven analytics from `../workover_well_intervention/` are ported into `backend/app/analytics/` (decision D-10). A repository layer replaces `wells_data.json` without breaking the React UI (D-11). The prompt-stuffing chat is replaced by tool calling through an in-process ADK `Runner` (D-12). A real Gemini Live proxy is ported from `../Drilling-Intelligence-2.0`. The stages are ordered **by data dependency, not priority**: every verbatim requirement is in scope.
-
-### Rules that override convenience
+## 0. Non-Negotiable Execution, Approval & Step-Verification Protocol
 
 > [!CAUTION]
-> 1. **`uv` only for Python** (D-14): no global `pip install`. **`npm` only for the frontend.**
-> 2. **Never fabricate a number** (derived: integrity rule; verbatim §1 *"why did the production decline?"* needs traceable answers). Every number on screen or in speech comes from a tool return, a table row or a cited PDF. Costs are **band + rig-days**, never ₹ or USD point values (D-1).
-> 3. **BigQuery DDL apply and Cloud Run deploy of `wellpulse-app`: Authorised by user (2026-10-07) — dry-run / local-test first, then apply; never delete existing resources.** If a gate fails 3 times, mark the stage BLOCKED in [`checklist.md`](./checklist.md) and continue with independent stages; never fake a gate; never change the model.
-> 4. **USER RULE: "During the build, do a git commit and push to origin main after every major milestone (each passed stage gate)."** Every stage ends with the commit step below its gate. The message prefix is `v0.4(<stage>): `. Never commit with a red gate, and never commit secrets (`.env`) or git-ignored baselines.
-> 5. **Flash never types digits** (derived: F-19 delegation). Flash output that contains numbers uses fact slots filled from data, and lands only after its deterministic gate passes and the orchestrator has reviewed it.
+> **Hard Isolation & Safety Rules**
+> 1. **NEVER touch the ONGC repository or GCP project:** `../wellpulse` and GCP project `workover-operations-agentic-ai` / service `wellpulse-app` are strictly off-limits (enforced by `deploy/deploy.sh` `guard_targets()`).
+> 2. **Verify & Tick After EVERY Single Step:** Every atomic step `Ck.m` in **Part II** has an **Implementation** block and a **Mandatory Verification Command**. You MUST NOT start step `Ck.(m+1)` until:
+>    - Step `Ck.m`'s verification command exits `0` and meets all pass criteria.
+>    - Both `**[Ck.m · Impl]**` and `**[Ck.m · Verify]**` are ticked `[x]` in [`docs/checklist.md`](./checklist.md) with concrete measured evidence (row counts, metric values, exit code).
+>    - Stage completions and refinements are logged at the top of [`backlog_refinements.md`](../backlog_refinements.md) §1.
+> 3. **Explicit User Approval Gates (`[USER GATE]`):** Pause and obtain explicit user OK before executing any `git commit`, `git push`, `gcloud services enable`, IAM creation, GCS/BQ creation, or Cloud Run deployment.
+> 4. **Honest ML Gates — Never Tune to Pass:** Retrained Barmer models must pass the exact evaluation gates honestly (`Gate Q` classifier, `Gate E` survival model, `Leakage Gate`, `Success Engine Gate`). If any gate fails, stop and report the exact failure diagnostics to the user; **never relax thresholds or leak features to force a pass**.
+> 5. **Zero Fabricated Currency & 100% Synthetic Labelling:** Every generated table row carries `is_synthetic = True`. Costs remain strictly **Cost Bands (`LOW` / `MEDIUM` / `HIGH` / `CAPITAL_WORKOVER`) + Rig-Days** (Decision D-1). All PDF narrative text generated by Flash passes the 100% deterministic digit validator (`docs_pdf/validate.py` — zero unauthorized numbers).
+> 6. **Tooling:** Python uses `uv` exclusively (`uv run` from `backend/` or `uv run --project backend` from repo root). Frontend uses `npm` in `frontend/`. Stop any process on `:8002` or `:5180` before local runs.
 
-### Fixed parameters (resolved decisions)
+### 0.1 Delegation Architecture (`[O]` Orchestrator · `[A]` Argon · `[F]` Gemini Flash)
 
-| Key | Value | Source |
-|---|---|---|
-| `PROJECT_ID` | `workover-operations-agentic-ai` | D-4 (resolved 2026-10-07) |
-| Cloud Run region | `us-central1` | D-4 |
-| BigQuery location | `asia-south1` | D-9 |
-| Text model | `gemini-3.8-flash` on **Vertex AI + ADC** (no API key) | D-13 (resolved) |
-| Live model | **from the listing in U.2**, never guessed | D-12 |
-| Fields | Geleki 142 `GK-` · Lakwa 160 `LKW-` / 3 GGS · Lakhmani 110 `LKM-` / 2 GGS | D-2, D-11 (verbatim §7's "25 / 20 wells" is illustrative) |
-| Window | 2021-10-01 … 2026-09-30 (60 months, all fields) | D-2; verbatim §3 *"past let's say 5 year production data field-wise"* |
-| Hero wells | GK-129 (squeeze vs. wax removal); LKM-061 as back-up (GLV) | D-7; verbatim §3 *"why not just wax removal?"* |
-| `AS_OF` | 2026-09-23 (data runs to 2026-09-30) | D-15 |
-| Lakehouse bucket | existing `gs://workover-operations-agentic-ai-datalake` (prefixes `bronze/`, `documents/`, `silver_exports/`) | Resolved 2026-10-07 |
-| Doc search | TF-IDF index in v0.4; Vertex AI Search optional later | D-17 |
-| Sessions | In-memory; Cloud Run max-instances=1 + session affinity (Vertex AI sessions later) | D-16 |
+| Tag | Actor / Model | Scope Owned | Hard Guardrails |
+|---|---|---|---|
+| **`[O]`** | **Orchestrator** (Lead model) | Deep research spec (Part I), `FieldConfig` base & hero-well contracts, ML feature refactor (`features.py`), model retraining & gates (`train_classifier.py`, `train.py`, `success_engine.py`), prompts/voice/RBAC guardrails, GCP/Lakehouse/Cloud Run execution, code review, `checklist.md` verification sign-off | Reviews every worker diff; runs every verification gate in the main workspace before ticking `checklist.md` |
+| **`[A]`** | **Argon Workers** (`gemini-launch-candidate-high` *Gemini 4 Argon High*, fallback `gemini-3.8-flash-high`, via `swarm add` `workspace="share"`) | Disjoint data-generator & test modules: `argon-fields` (Barmer field configs & depth/construction/stratigraphy generators), `argon-dg` (6 Stage-DG wellbore/integrity generators + consistency tests), `argon-tests` (GeoJSON boundaries + Assam→Barmer test/fixture port) | Fixed deterministic seeds; disjoint file ownership; must pass `generator.validate` & `pytest` before merge; never commits/pushes to remote |
+| **`[F]`** | **Gemini Flash Workers** (`Model="flash"` via `invoke_subagent` `Workspace="share"`) | Disjoint prose/template/UI tasks: `flash-docs` (D01–D11 PDF fact-slot templates, SOP YAMLs `IC-01..14`, `hero_text.yaml`), `flash-ui` (Cairn report branding, India Vedanta asset map, Architecture diagram scripts), `flash-docs-md` (`README.md`, `how_urvi_works.md`, `ml_recommendation_engine.md`, `demo_flow.md`) | **Zero raw numeric literals in prose** (verified by `docs_pdf/validate.py`); `tsc --noEmit && npm run build`; zero-ONGC leak audit |
 
-```bash
-export PROJECT_ID=workover-operations-agentic-ai
-export REGION=us-central1
-export BQ_LOCATION=asia-south1
-export AS_OF=2026-09-23
-export LAKEHOUSE_BUCKET=gs://workover-operations-agentic-ai-datalake
-export ADK_REPO="../workover_well_intervention"     # port source (read-only)
-export DI2_REPO="../Drilling-Intelligence-2.0"      # Live reference (read-only)
-```
+---
 
-### Stage map (Part II)
+# Part I · Deep Research Engineering Specification: Cairn Oil & Gas (Barmer Basin)
 
-| Stage | Name | Verbatim anchor | Est. | Owner [O]=orchestrator [A]=Argon [F]=Flash |
+> [!IMPORTANT]
+> **Governance Rule:** Every synthetic parameter in Stages `C1`–`C3` (well counts, completion dates, pad coordinates, TVDSS/MD depths, casing/tubing sizes, fluid viscosities, pour points, WAT, polymer flood concentrations, artificial lift mixes, pressures, temperatures, rates, and workover interventions) **MUST** conform to the public-domain Cairn Oil & Gas (Vedanta Limited) & SPE technical bounds documented in this Part. Non-public operational specifics are explicitly marked **`[verify]`** and synthesized conservatively within published basin envelopes.
+
+## 1. Basin Overview & Real-World Operational Context
+
+* **Operator & Block:** **Cairn Oil & Gas (a vertical of Vedanta Limited)** operating **Block RJ-ON-90/1** in the **Barmer Basin** (intracratonic Tertiary-Cretaceous rift basin in Thar Desert, Barmer & Jalore districts, western Rajasthan, India; JV partner ONGC is never branded in the UI—this app is built exclusively for Cairn / Vedanta).
+* **Core Assets Modeled (4 Fields, 460 Synthetic Wells, 60-Month Window `2021-10-01` → `2026-09-30`, `AS_OF = 2026-09-23`):**
+  1. **Mangala (`MNG-`, 180 wells):** Discovered Jan 2004 (India's largest onshore oil discovery in decades; first oil Aug 2009). Prolific multi-Darcy **Fatehgarh** fluvial sands under the **world's largest full-field HPAM Polymer Flood** and **commercial Alkaline-Surfactant-Polymer (ASP) flood**, lifted primarily by **Hydraulic Jet Pumps** (world's largest jet-pump network) and **ESPs**, tied into **MPT (Mangala Processing Terminal, Nagana)**.
+  2. **Bhagyam (`BHG-`, 120 wells):** Discovered 2004 (first oil Jan 2010), 2nd largest MBA field north-west of Mangala. **Shallow Fatehgarh** reservoir (`OWC at 448 m TVDSS`) containing biodegraded, higher-viscosity heavy waxy crude (`15–50 cP` rising steeply toward OWC), lifted via **PCP, ESP, Jet Pump, and SRP** under full-field polymer flood; carries the executive **`-16%` production-vs-target gap story** driven by trace-heater wax choking, PCP elastomer/rod wear, and rig wait drift.
+  3. **Aishwariya (`ASH-`, 100 wells):** Discovered 2004 (first oil Mar 2013), 3rd MBA field south-east of Mangala, combining deeper **Aishwariya Fatehgarh (AF)** high-perm oil pads (polymer flooded, ESP + Jet Pump) and **Aishwariya Barmer Hill (ABH)** tight siliceous porcellanite/diatomite horizontal wells (`0.1–4 mD`, `10–18` cemented-sleeve hydraulic frac stages, lifted by ESP and SRP/HSRP).
+  4. **Raageshwari (`RAG-`, 60 wells):** Southern Barmer Basin **Raageshwari Deep Gas (RDG)** & shallow satellite oil hub tied to **RGT (Raageshwari Gas Terminal)**. Deep (`~2,700–3,450 m TVDSS`) tight Fatehgarh clastics + **Raageshwari Volcanic Complex (`Prithvi` basalt & `Agni` felsic pyroclastics, `0.01–1 mD`)**, unlocked via high-proppant multi-stage hydraulic fracturing (`>400k lbs/stage`), producing tight gas + retrograde condensate on `NATURAL` (velocity strings) and `GAS_LIFT` / plunger assist.
+* **Signature Evacuation Infrastructure:** **Mangala Development Pipeline (MDP)** — the world's longest (`~670 km`, 24-inch) continuously skin-effect **heated and insulated waxy-crude pipeline** from MPT (Barmer) to Salaya / Viramgam / coastal refineries in Gujarat, supported by skin-effect / trace-heated infield pad flowlines.
+
+---
+
+## 2. Subsurface Stratigraphy & Lithology Law (`formation_tops.py`)
+
+Ground elevation across Barmer desert pads ranges **`145–185 m AMSL`**. All 460 wells generate continuous, non-overlapping stratigraphic columns (`top_md_m`, `bottom_md_m`) ordered top-to-bottom from this 7-unit Barmer Basin column (replacing Assam's `Alluvium/Namsang/Girujan/Tipam/Barail/Kopili/Lakadong`):
+
+| Order | Formation Code | Geological Age & Real Lithology Description | Porosity / Perm | Thickness Envelope (`m` MD) & Field Presence |
 |---|---|---|---|---|
-| **M** | Preflight & baseline | derived: safe migration (D-14), no tests exist today | 0.5 d | O |
-| **N** | Data foundation v2 | §1 *"Lakwa… Lakhmani… three areas, with their individual cluster"*; §1 *"generate more data"* | 3 d | O + F×2 |
-| **O** | PDF corpus + SOPs | §1 *"generate the documents of PDF files of… well interventions"*; §3 *"The SOPs"* | 2 d | O + F×11 |
-| **P** | Analytics port + attribution + health | §1 *"why did the production decline? Was it human factor, controllable factor"*; §1 *"which of the wells are doing okay… not producing now"* | 2.5 d | O + F×1 |
-| **Q** | ML classifier | §1 *"run a classification algorithm… 5 to 10… or 15 type of interventions"* | 2 d | O |
-| **R** | NBA + counterfactual | §1 *"recommend what is the next best action"*; §3 *"Why are you recommending this against an alternative?"* | 1.5 d | O |
-| **S** | Dossier | §1 *"aggregate all the history and give it to the person who is going to the field"* | 1 d | O + F×1 |
-| **T** | Asset view & drill-down | §1 *"Which particular field is not performing?"*; §3 *"Can you give me a plot?"*, *"drill down to one particular well"*, *"information of nearby wells"* | 2.5 d | O + F×3 |
-| **X** | Medallion Lakehouse | §3 *"showcase that in the Medallion architecture… Lakehouse"*; *"whether it should go ultimately into BigQuery or… a better database"* | 1.5 d | F×3 + O |
-| **U** | Real Gemini Live | §1 *"Gemini Live is not working well… working very good in Drilling Intelligence 2.0"* | 2.5 d | O + F×2 |
-| **Y** | RBAC + multi-field GIS | §3 *"role-based access… Executive Director… versus a field engineer"*; §3 *"they can see different fields… and the wells"* | 1.5 d | O + F×1 |
-| **V** | Agent wiring & eval | §3 *"do you see the hierarchy of question and answering?"* (5-level flow, §4 L1–L5) | 2 d | O + F×3 |
-| **W** | Deploy | derived: demo must run on the existing public URL | 0.5 d | O (authorised 2026-10-07; local test first) |
-| **AC** | Answer canvas | brief §1 U-1, U-2, U-3; §3 (views, router, expandable middle panel) | 1 d | O + F |
-| **DF** | Demo flow & eval | brief §6 (11-step demo script Lakwa → LKW-019, +12 eval cases) | 1 d | F + O |
-| **DG** | Data gaps (synthetic) | brief §4 (6 tables for 100% of wells, WH-06, WH-08, WH-10, WH-13, WH-14) — **DONE** | 1.5 d | A×3 + O |
-| **NN** | Multimodal success engine (demo scorer) | brief §1 U-4, U-5; §5 (D-32 demo scorer, P(success), analogs, drivers, architecture panel) | 1 d | O + F |
-| **FR** | Field report HTML | brief §1 U-6; §7 (Jinja2, wellbore SVG, job program, A4 print) | 1.5 d | F + O |
-| **W2** | Redeploy | brief §2; §8 (Cloud Run v0.5, smoke 7/7) | 0.5 d | O |
+| 1 | `Thar_Alluvium_Kapurdi` | Quaternary aeolian Thar dune sand, calcrete & Eocene Kapurdi fuller's earth clay | Non-reservoir | `40–130 m` (all 4 fields) |
+| 2 | `Akli_Thumbli` | Palaeocene–Eocene lignite-bearing carbonaceous shale & friable Thumbli sandstone | Minor shallow aquifer | `90–320 m` (thinnest in `Bhagyam`, thicker south toward `Raageshwari`) |
+| 3 | `Dharvi_Dungar` | Palaeocene lacustrine grey claystone & regional top-seal shale | Regional seal | `80–340 m` (all 4 fields) |
+| 4 | `Barmer_Hill` | Palaeocene lacustrine siliceous porcellanite, diatomite & laminated mudstone | `25–35%` $\phi$, **`0.1–4 mD`** | `60–260 m` (**Producing tight-oil zone in `Aishwariya` `ASH-ABH-3`**; caprock/secondary in `Mangala`/`Bhagyam`/`Raageshwari`) |
+| 5 | `Fatehgarh_Upper` | Upper Fatehgarh (`FM1–FM2`) sinuous meandering fluvial channel sandstone & siltstone | `22–28%` $\phi$, **`500 mD–4 D`** | `70–190 m` (**Primary producing zone in `Bhagyam`, `Mangala`, `Aishwariya`**) |
+| 6 | `Fatehgarh_Lower` | Lower Fatehgarh (`FM3–FM5`) stacked multi-storey braided channel & sheetflood sandstone | `23–30%` $\phi$, **`2–10+ D`** (`0.05–2 mD` tight in deep `Raageshwari`) | `110–320 m` (**Prolific main pay in `Mangala`, `Bhagyam`, `Aishwariya`**; deep tight clastic pay in `Raageshwari`) |
+| 7 | `Raageshwari_Volcanics` | Late Cretaceous Prithvi basaltic lava flows & Agni silicic pyroclastics / felsic ignimbrites | `4–12%` $\phi$, **`0.01–1 mD`** | `150–650 m` drilled penetration (**Primary tight-gas zone in `Raageshwari` RDG**; economic basement under MBA) |
 
-**Parallelism (derived from data dependencies):**
-- **N** gates everything in v0.4.
-- **O** can start once N's `workover_history` and construction tables exist.
-- **U** (transport and audio client) can run in parallel with P–T, using TC-025 as its first voice tool.
-- **Q** needs N; **R** needs P and Q; **S** needs O and R; **T** needs P.
-- **X** can run any time after N.
-- **V** comes after T, U and Y. **W** comes last in v0.4.
-- **v0.5 Order & Parallelism (brief §2, §8):**
-  - **AC** builds the answer canvas and expandable panel.
-  - **DF** follows AC (validates the 11-step flow on canvas).
-  - **DG** (DONE): Argon workers generated 6 synthetic gap tables (412 wells); tests and API routes green.
-  - **NN** follows DG and Q (implements `success_engine.py` demo scorer and recommendation contracts TC-030/031 with architecture diagram panel showing production Vertex AI path; D-32).
-  - **FR** follows DG and NN (HTML field report with SVG wellbore, DG tables, and NN recommendations; layout scaffold may start after DG).
-  - **W2** redeploys all v0.5 features to Cloud Run and verifies smoke checks (adds `/api/wells/GK-129/report`).
-
-**Target layout after v0.4:** authoritative tree in [`SDD.md`](./SDD.md) §4. Key paths: `backend/app/analytics/generator/docs_pdf/` (O), `analytics/tools/{attribution,health,intervention_classifier,nba,counterfactual,dossier,field_performance,hierarchy,well_profile,document_search}.py` (P–T), `analytics/model/{features,train,train_classifier}.py` + `intervention_classifier_v1.pkl` / `intervention_classifier_metrics.json` (N, Q), `analytics/config/{factor_map,ic_map,sla}.yaml`, `agent/{runner,adk_tools,prompt,callbacks,rbac}.py` (V, Y), `live/{session,voice_tools,fallback}.py` + `live_prompt.md` (U), `data/index/{doc_chunks.parquet,tfidf.pkl}` (O), `data/geodata/<field>.geojson` (T), `lakehouse/` (X); frontend `components/{common,field,well,map,telemetry,agent}/` and `live/{liveClient,micCapture,audioPlayer}.ts` + `pcm-worklet.js` (T, U, Y).
+**Active `current_zone` Values (`ZONES` in `features.py`, 4 canonical producing reservoirs):**
+* `Fatehgarh_Upper` (`FM1–FM2` meandering channel sands)
+* `Fatehgarh_Lower` (`FM3–FM5` high-perm braided sands / deep tight clastics)
+* `Barmer_Hill` (tight porcellanite/diatomite multi-stage frac oil)
+* `Raageshwari_Volcanics` (`Prithvi` / `Agni` fractured tight gas-condensate)
 
 ---
 
-## Stage M · Preflight & baseline
-
-**Goal:** move to `uv`, freeze today's API shapes and UI build as a regression baseline, and add pytest. *Anchor: derived (D-14; there are no tests today, so nothing else can be gated without them).*
-**Owner:** [O] all.
-**Files:** `backend/pyproject.toml`, `backend/uv.lock` (new); `backend/requirements.txt` (deleted at the end of M); `run_local.sh` (uv); `backend/tests/{conftest.py, golden/capture.py, golden/*.schema.json, test_api_shapes.py}` (new); `.gitignore` (+ `backend/tests/baseline/`).
-
-```bash
-# 0. Auth: mandatory Step 0
-gcloud auth list
-gcloud auth application-default print-access-token >/dev/null && echo "ADC OK"
-gcloud config set project ${PROJECT_ID}
-
-# 1. uv project for the backend
-cd backend
-uv init --app --no-readme --python 3.11 .           # creates pyproject.toml; delete the generated hello.py/main.py stub if any
-uv add "fastapi>=0.110" "uvicorn[standard]>=0.28" "pydantic>=2.6" python-dotenv google-genai requests
-uv add --dev pytest httpx pytest-asyncio ruff
-uv lock && uv sync
-
-# 2. Golden snapshots of today's API (SHAPES, not values: today's data is relative to now())
-uv run python -m tests.golden.capture --wells GLK-101,GLK-120,GLK-150   # writes tests/golden/*.schema.json
-uv run pytest -q                                                          # test_api_shapes.py green on baseline
-
-# 3. UI build baseline
-cd ../frontend && npm ci && npm run build && du -sh dist
-
-# 4. Port-source baseline (read-only copy, git-ignored)
-cd .. && mkdir -p backend/tests/baseline
-cp -r "${ADK_REPO}/data/landing" backend/tests/baseline/landing_v030      # Geleki hash reference for Gate N
-(cd "${ADK_REPO}" && uv run pytest tests/test_contracts.py -q && uv run python -m generator.validate)
-```
-
-### ✅ Gate M
-- [ ] ADC valid; `gcloud config get-value project` = `workover-operations-agentic-ai`
-- [ ] `backend/pyproject.toml` and `uv.lock` committed; `uv sync --frozen` works from clean; `requests` resolved
-- [ ] `./run_local.sh` uses `uv run` and still serves :8002 / :5180
-- [ ] Golden schema files exist for every existing `/api` route, and `test_api_shapes.py` is green
-- [ ] `npm run build` succeeds; bundle size logged
-- [ ] ADK repo baseline: contract tests green, validator 0 violations; `landing_v030/` copied (git-ignored)
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(M): preflight & baseline — Gate M passed" && git push origin main
-```
-
----
-
-## Stage N · Data foundation v2
-
-**Goal:** 3 fields × 60 months of reproducible data, behind a repository layer that keeps today's REST shapes. *Anchors:*
-- §1 *"currently we have Geleki… similarly you can have Lakwa, you can have Lakhmani. So that there are three areas, with their individual cluster"*
-- §1 *"generate more data… build those wells as well"*
-- §2 WS6 *"rate, pressure, temperature, water cut, GOR, artificial lift metrics"*
-- §1 *"well history, the construction"*
-
-**Owners:**
-- [O] `FieldConfig` numbers, fixtures, labels (K-1, K-2), validators, repository and adapters.
-- [F] N-F1 port boilerplate (moving modules, import rewrites).
-- [F] N-F2 frontend type and label updates (`types/well.ts`, `WorkoverTimeline.tsx`: `cost_usd` → `cost_band` + `rig_days`).
-
-**Files:**
-- `backend/app/analytics/generator/**` (ported from `${ADK_REPO}/generator/`)
-- `backend/app/analytics/model/train.py` (CoxPH, ported)
-- `backend/app/data_access/{repository.py, parquet_repo.py, adapters.py}`
-- `backend/app/api/wells.py` reads from the repository
-- `backend/app/services/data_generator.py` → deprecated, kept until Gate N, then deleted
-- `backend/app/data/landing/**`
-
-### N.1 Port and refactor to `FieldConfig`
-```
-analytics/generator/fields/__init__.py   # FIELD_CONFIGS = {"Geleki", "Lakwa", "Lakhmani"}
-analytics/generator/fields/geleki.py     # ADK v0.3.0 params, seed 42: DO NOT change draws; + 24-month prepend (seed 4242)
-analytics/generator/fields/lakwa.py      # 160 wells, 3 GGS; fixtures LKW-047 (41 d wait-on-rig + 12 d wait-on-material → pump change), LKW-088 (GGS-II power), LKW-112 (channelling)
-analytics/generator/fields/lakhmani.py   # 110 wells, 2 GGS; fixtures LKM-023 (sand), LKM-061 (GLV + wax), LKM-090 (reservoir decline → no job)
-analytics/generator/{hierarchy.py, construction.py, operations_events.py, targets.py}   # new tables: field_master, cluster_master, casing_tally, tubing_string, perforation_intervals, operations_events, field_targets, pressure_surveys, formation_tops (D-19, append-only)
-```
-
-### N.2 Labels and catalogue (K-1, K-2)
-- Add `GLV_REPLACE` and a `cost_band` column to `job_catalogue`. *Anchor: §2 WS3 "Gas Lift Valve Replacement".*
-- In `workover_history`, add `catalogue_job_code` and `intervention_class` (IC-01…IC-15). `job_code` is kept.
-
-### N.3 Telemetry columns
-**Verbatim gap:** WS6 asks for **temperature**, and the ADK `daily_production` has none. Add `wht_degc` (wellhead temperature), `gl_inj_rate_mscfd` and `gl_inj_pressure_kgcm2` (D-19), with «target ± tol» ranges pinned in N.5; GOR is `gor_scf_bbl`; SPM stays for SRP wells. Add `pressure_surveys` (counterfactual row 1, D7) and `formation_tops` (dossier lithology). *Anchor: §4 T4 "gas-lift injection pressure" on the chart.*
-
-### N.4 Generate, validate, repository
-```bash
-cd backend
-uv add pandas pyarrow numpy scipy lifelines scikit-learn
-uv run python -m app.analytics.generator.generate --field all --start 2021-10-01 --end 2026-09-30
-uv run python -m app.analytics.generator.validate --field all                     # V-N1..V-N7
-uv run python -m app.analytics.generator.validate --compare-baseline tests/baseline/landing_v030
-uv run python -m app.analytics.model.train --exclude-prepend                      # Gate E reproduces
-DATA_BACKEND=parquet uv run pytest tests/test_api_shapes.py tests/unit/test_repository.py -q
-cd ../frontend && npm run build                                                   # types still compile
-```
-
-### N.5 Pin design targets
-```bash
-cd backend && uv run python -m app.analytics.generator.pin_targets > ../docs/pinned_values.md
-```
-Then replace every «target ± tol» in [`BDD.md`](./BDD.md) with the pinned value.
-
-### ✅ Gate N
-- [ ] Validator 0 violations for Geleki, Lakwa and Lakhmani; well counts 142 / 160 / 110
-- [ ] Geleki's pre-existing columns are hash-identical to `landing_v030`; the Geleki join at the prepend boundary is continuous (±3%)
-- [ ] All fields cover 2021-10-01 → 2026-09-30, and two runs produce byte-identical parquet (reproducible; fixes the `now()` defect)
-- [ ] CoxPH C-index reproduces 0.7128 with the prepend excluded (Gate E)
-- [ ] Every IC-01…IC-15 has ≥ 30 `workover_history` rows; `GLV_REPLACE` exists
-- [ ] Lakwa gap vs. target inside −18% ± 3 pp; LKW-047 has 41 `WAIT_ON_RIG` days and 12 `WAIT_ON_MATERIAL` days
-- [ ] `wht_degc`, `gor_scf_bbl`, `gl_inj_rate_mscfd`, `gl_inj_pressure_kgcm2` present; `pressure_surveys` and `formation_tops` populated (verbatim WS6, D-19)
-- [ ] `test_api_shapes.py` green against the repository (React UI unchanged except for the N-F2 cost-band fields); `npm run build` green
-- [ ] No `cost_usd` remains in API responses (D-1)
-- [ ] `docs/pinned_values.md` written; BDD targets replaced
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(N): data foundation v2 — Gate N passed" && git push origin main
-```
-
----
-
-## Stage O · PDF corpus + SOPs
-
-**Goal:** a synthetic document corpus, D1–D11, whose every number is a data-filled fact slot, served to the UI and to tools. *Anchors:*
-- §1 *"generate the documents of PDF files of… well interventions and other documents"*
-- §2 WS6 *"Well Intervention Reports, Daily Workover Logs, Well Completion Schematics, Chemical Treatment Logs"*
-- §3 *"we need to generate a lot of documents… The SOPs"*
-
-**Owners:**
-- [O] O-O1: fact-slot framework, `facts.json`, validator, index, API route. This must exist **before** any worker starts.
-- [F] O-F1…O-F11: one Flash worker per document type:
-  - D1 WCR
-  - D2 Workover Completion
-  - D3 DWR
-  - D4 Schematic
-  - D5 CBL
-  - D6 Chemical Treatment Log
-  - D7 Well Test
-  - D8 RCA
-  - D9 Field Studies
-  - D10 Monthly Field Performance
-  - D11 SOP library (IC-01…IC-14)
-- [F] Hero narrative prose (GK-129, LKW-047, LKW-112, LKM-090): drafted by Flash and **reviewed by [O]**.
-
-**Files:**
-- `backend/app/analytics/generator/docs_pdf/**`
-- `backend/app/data/docs_pdf/<field>/<Dxx>/*.pdf`
-- `backend/app/data/index/doc_chunks.parquet`, `backend/app/data/index/tfidf.pkl` (TF-IDF, D-17)
-- `backend/app/api/docs.py` (`GET /api/docs/{doc_id}.pdf`, `GET /api/wells/{id}/documents`)
-- `frontend/src/components/reports/WellReportsTab.tsx`: the 4 hard-coded tabs become document-index-driven, and the JSON export is kept
-
-```bash
-cd backend
-uv add reportlab pypdf matplotlib
-uv run python -m app.analytics.generator.docs_pdf.render --field all
-uv run python -m app.analytics.generator.docs_pdf.scanify --fraction 0.10 --types D1,D5
-uv run python -m app.analytics.generator.docs_pdf.validate                 # 100% facts found; zero stray digits in prose
-uv run python -m app.analytics.generator.docs_pdf.index
-uv run pytest tests/unit/test_docs_route.py -q
-# Flash worker gate (one per type): uv run python -m app.analytics.generator.docs_pdf.validate --type D06
-```
-
-### ✅ Gate O
-- [ ] D1…D11 present for all 3 fields; every IC-01…IC-14 has an SOP (D11)
-- [ ] Fact validation 100%; no digit in template prose outside a fact slot
-- [ ] Every `document_index` row resolves; `GET /api/docs/{id}.pdf` returns `application/pdf`
-- [ ] The scanned subset is flagged `has_text_layer=false` and is still retrievable
-- [ ] GK-129 has the 1998 CBL (D5) and the 2019 failed water-shut-off report (D2)
-- [ ] WellReportsTab shows real documents for the selected well; `npm run build` green
-- [ ] Corpus size logged (target ≤ 200 MB, so it fits in the image)
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(O): PDF corpus + SOPs — Gate O passed" && git push origin main
-```
-
----
-
-## Stage P · Analytics port + attribution + health
-
-**Goal:**
-- Port the 18 deterministic tools (TC-001…TC-018), making them field-aware.
-- Add decline attribution (TC-019).
-- Add data-driven health (TC-020), replacing the hard-coded 32 / 12 / 6 status.
-
-*Anchors:*
-- §1 *"why did the production decline? Was it human factor, controllable factor, what kind of factors"*
-- §2 WS2 *"Controllable… subsurface/reservoir… human/operational"*
-- §1 *"which of the wells are doing okay, which… not doing okay, which… not producing now"*
-- §3 *"how many wells in Geleki are… either sick or they have lost production?"*
-
-**Owners:**
-- [O] tool port, `field_of()`, the TC-019 algorithm, TC-020 thresholds, `factor_map.yaml`.
-- [F] P-F1: unit-test scaffolds from the TC signatures.
-
-**Files:**
-- `backend/app/analytics/tools/{common,arps_decline,chan_diagnostic,candidate_ranking,render_well_map}.py` (port of `${ADK_REPO}/tools/`, 18 functions exported by `__init__.py`)
-- `tools/{hierarchy.py (field_of), attribution.py, health.py}`
-- `backend/app/analytics/config/factor_map.yaml`
-- `backend/app/api/wells.py`: `/api/wells/kpis` and `status` come from TC-020
-
-```bash
-cd backend
-uv run pytest tests/unit/test_tools_port.py tests/unit/test_tc019_attribution.py tests/unit/test_tc020_health.py tests/test_api_shapes.py -q
-```
-
-### ✅ Gate P
-- [ ] All 18 ported tools pass the ADK contract tests (ported to `tests/unit/test_tools_port.py`); no `GK-129` / `Geleki` defaults remain (K-6)
-- [ ] The attribution waterfall sums to the total loss within 0.5% for every well in all 3 fields
-- [ ] LKW-047's largest class is `HUMAN_PROCESS`; LKM-090 is ≥ 80% `SUBSURFACE`; LKW-088 shows `EXTERNAL` (`GRID_POWER_OUTAGE`)
-- [ ] TC-020 buckets come from data; `random.seed(42)` status removed; `/api/wells/kpis` = TC-020 counts
-- [ ] Geleki trigger results are unchanged from the ADK baseline
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(P): analytics port + attribution + health — Gate P passed" && git push origin main
-```
-
----
-
-## Stage Q · ML intervention classifier
-
-**Goal:** a multi-class IC classifier (TC-021) with an honest metric band and SHAP contributions. *Anchors:*
-- §1 *"run a classification algorithm… 5 to 10 type of interventions… or 15"*
-- §1 *"not just the production data, but also of the well history, the construction"*
-
-**Owner:** [O] only: features, training, gate.
-**Files:** `backend/app/analytics/model/{features.py, train_classifier.py, intervention_classifier_v1.pkl, intervention_classifier_metrics.json}`, `analytics/tools/intervention_classifier.py`.
-
-```bash
-cd backend
-uv add shap
-uv run python -m app.analytics.model.train_classifier --as-of 2026-09-23   # asserts Gate Q, writes pkl + metrics
-uv run pytest tests/unit/test_features_no_leakage.py tests/unit/test_tc021_classifier.py -q
-```
-
-### ✅ Gate Q
-- [ ] Holdout **macro-F1 0.70–0.92**
-- [ ] Top-3 accuracy ≥ 0.90
-- [ ] Beats the TC-008 rule baseline by ≥ 0.05 macro-F1
-- [ ] ECE ≤ 0.08
-- [ ] Leakage test green (no post-event features); LKM-023 → IC-06, LKM-061 → IC-07
-- [ ] Features include construction tables (casing, tubing, perforations) and prior-job history (verbatim §1)
+## 3. Field-by-Field Master Depth, Trajectory, Completion & Tubular Calibration (`wells_native.py`, `construction.py`, `dg/`)
 
 > [!WARNING]
-> **Macro-F1 > 0.92 is a failure, not a win.** It means leakage or generator signatures that are too clean. Fix them in the generator and retrain. The discipline is the same as Gate E's honest band.
+> **Critical Realism Guardrails vs. Inherited ONGC Generator:**
+> 1. **Completion Dates:** ONGC used `1966–2018`. Barmer discoveries occurred in **2004+** (first oil **Aug 2009**). All Barmer `completion_date` values MUST fall within field-authentic windows (`Mangala: 2008-06-01..2021-06-30`, `Bhagyam: 2009-06-01..2021-08-31`, `Aishwariya: 2012-01-01..2021-09-15`, `Raageshwari: 2010-03-01..2021-09-15`), with `spud_date` 25–95 days prior (shallow MBA pads drill in 18–45 days; deep RDG volcanics in 55–110 days).
+> 2. **Shallow Casing Shoes:** `construction.py` previously drew `SURFACE` casing at `450–750 m`, which would penetrate `perf_top_m` in shallow **Bhagyam** wells (`OWC 448 m TVDSS` / `480–820 m MD`)! Surface shoe MUST scale dynamically as `min(perf_top_m - 95.0, field_surface_shoe_range)`.
+> 3. **Pad Deviation (`MD` vs `TVD`):** Barmer wells are drilled from compact desert **Well Pads** (`8–24` slots/pad) as S-shaped directional wells (`inclination 18°–48°`, `MD/TVD = 1.10–1.28`), while `Barmer_Hill` (`ASH-ABH-3`) uses horizontal cemented-sleeve laterals (`TVD 950–1,220 m`, `MD 2,100–2,800 m`, `MD/TVD = 1.95–2.35`).
 
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(Q): ML classifier — Gate Q passed" && git push origin main
-```
+| Field & Well IDs | Discovery / Completion Window | Pad Clusters (`ClusterConfig`) & Approx. Coordinates `[verify pad offsets]` | Producing `zones` Split | Zone Depth Bounds: `perf_top_m` (`m MD`) & `TVD` (`m`) | Casing & Tubing Program (`od_in`, Grade) |
+|---|---|---|---|---|---|
+| **Mangala** `MNG-001`..`MNG-180` (**180 wells**, seed `5101`) | Completed `2008-06-01` → `2021-06-30` | Centroid `(25.958, 71.508)` near Nagana / MPT:<br/>• `MNG-PAD-A` North Crest `(25.982, 71.498)` wt `0.28`<br/>• `MNG-PAD-B` Polymer Core `(25.960, 71.512)` wt `0.32`<br/>• `MNG-PAD-C` ASP Sector `(25.946, 71.522)` wt `0.22`<br/>• `MNG-PAD-D` South Flank `(25.932, 71.496)` wt `0.18` | `Fatehgarh_Lower`: `0.62`<br/>`Fatehgarh_Upper`: `0.33`<br/>`Barmer_Hill`: `0.05` | • `Fatehgarh_Upper`: `760–1,020 m MD` (`630–840 m TVD`)<br/>• `Fatehgarh_Lower`: `920–1,320 m MD` (`760–1,080 m TVD`, OWC `~960 m TVDSS`)<br/>• `Barmer_Hill`: `720–940 m MD` (`620–800 m TVD`) | Surf `13.375"` J-55 @ `240–380 m`;<br/>Prod `9.625"` (35%) or `7.0"` (65%) L-80/N-80;<br/>Tubing **`3.5"`** (85%) / `2.875"` (15%) L-80 |
+| **Bhagyam** `BHG-001`..`BHG-120` (**120 wells**, seed `5202`) | Completed `2009-06-01` → `2021-08-31` | Centroid `(26.068, 71.428)` NW of MPT:<br/>• `BHG-PAD-1` West Crest `(26.080, 71.414)` wt `0.36`<br/>• `BHG-PAD-2` Central Polymer `(26.068, 71.430)` wt `0.36`<br/>• `BHG-PAD-3` East Flank `(26.055, 71.444)` wt `0.28` | `Fatehgarh_Upper`: `0.55`<br/>`Fatehgarh_Lower`: `0.45` | • `Fatehgarh_Upper`: `470–640 m MD` (`410–540 m TVD`, `~270–390 m TVDSS`)<br/>• `Fatehgarh_Lower`: `560–780 m MD` (`480–620 m TVD`, OWC **`448 m TVDSS`**) | Surf `13.375"` or `9.625"` J-55 @ **`150–250 m`**;<br/>Prod `7.0"` (80%) / `9.625"` (20%) J-55/L-80;<br/>Tubing **`3.5"`** (80%) / `2.875"` (20%) |
+| **Aishwariya** `ASH-001`..`ASH-100` (**100 wells**, seed `5303`) | Completed `2012-01-01` → `2021-09-15` | Centroid `(25.862, 71.564)` SE of MPT:<br/>• `ASH-PAD-1` AF North `(25.875, 71.555)` wt `0.38`<br/>• `ASH-PAD-2` AF South `(25.854, 71.562)` wt `0.34`<br/>• `ASH-ABH-3` Barmer Hill Tight `(25.860, 71.580)` wt `0.28` | `Fatehgarh_Lower`: `0.44`<br/>`Fatehgarh_Upper`: `0.28`<br/>`Barmer_Hill`: `0.28` | • `Fatehgarh_Upper`: `1,120–1,380 m MD` (`960–1,180 m TVD`)<br/>• `Fatehgarh_Lower`: `1,280–1,680 m MD` (`1,100–1,420 m TVD`)<br/>• `Barmer_Hill` (horiz/deviated): **`1,850–2,750 m MD`** (`950–1,220 m TVD`) | Surf `13.375"` @ `300–480 m`;<br/>Prod `7.0"` L-80 (AF) or **`5.5"` P-110** cemented frac-sleeve (ABH);<br/>Tubing `3.5"` (AF) / `2.875"` (ABH) |
+| **Raageshwari** `RAG-001`..`RAG-060` (**60 wells**, seed `5404`) | Completed `2010-03-01` → `2021-09-15` | Centroid `(25.322, 71.718)` near RGT:<br/>• `RAG-RDG-N` Deep Gas North `(25.336, 71.710)` wt `0.45`<br/>• `RAG-RDG-S` Deep Gas South `(25.308, 71.726)` wt `0.40`<br/>• `RAG-OIL-1` Shallow Oil Pad `(25.326, 71.702)` wt `0.15` | `Raageshwari_Volcanics`: `0.65`<br/>`Fatehgarh_Lower`: `0.25`<br/>`Fatehgarh_Upper`: `0.10` | • `Raageshwari_Volcanics`: **`2,950–3,720 m MD`** (`2,750–3,380 m TVD`)<br/>• `Fatehgarh_Lower` (RDG tight): `2,680–3,050 m MD` (`2,520–2,850 m TVD`)<br/>• `Fatehgarh_Upper` (shallow oil): `1,180–1,450 m MD` (`1,050–1,280 m TVD`) | Surf `13.375"` @ `620–880 m` (+ `9.625"` intermed @ `2,200 m` for RDG);<br/>Prod **`5.5"` P-110** (RDG) / `7.0"` L-80;<br/>Tubing **`2.875"`** L-80/13Cr velocity string |
 
----
-
-## Stage R · Next best action + counterfactual
-
-**Goal:**
-- A ranked NBA (TC-022) with uplift, cost band, rig-days, risk and an SOP link.
-- A counterfactual comparison (TC-027) that defends a pick against an alternative.
-- Replace `generate_structured_recommendation`'s fabricated USD, uplift and payback.
-
-*Anchors:*
-- §1 *"recommend what is the next best action"*
-- §2 WS3 *"expected uplift (bopd), estimated cost, and risk profile"*
-- §3 *"'Why are you recommending this against an alternative?'… 'why not just wax removal?'… something that is super deep"*
-- §4 T5's three dimensions: reservoir pressure / IPR, historical efficacy, cost & downtime delta
-
-**Owner:** [O] only (numeric logic and guardrails).
-**Files:** `analytics/tools/{nba.py, counterfactual.py}`; `backend/app/services/ai_agent.py::generate_structured_recommendation` → delegates to TC-022 (fabricated fields deleted); `POST /api/wells/{id}/recommendations` keeps its shape, with `estimated_cost_usd` → `cost_band` + `rig_days`.
-
-```bash
-cd backend
-uv run pytest tests/unit/test_tc022_nba.py tests/unit/test_tc027_counterfactual.py tests/test_api_shapes.py -q
-```
-
-### ✅ Gate R
-- [ ] LKW-047 action 1 = `PUMP_OVERHAUL`; LKM-090 action 1 = `NO_JOB_JUSTIFIED`
-- [ ] Hero GK-129: `compare_interventions(squeeze vs. wax removal)` returns the verdict, the deciding dimension and a cited prior-job document (D5 1998 CBL / D2 2019 WSO)
-- [ ] The counterfactual covers the reservoir/IPR, historical-efficacy and cost-band + rig-days dimensions (verbatim §4 T5)
-- [ ] A Chan-negative fixture yields `CHOKE_BACK` with `MODEL_PHYSICS_DISAGREEMENT`
-- [ ] Priority ranking = deferred bbl × p_success ÷ rig-days, shown with the cost band (K-7); `GET /api/fields/{field}/priority` and `GET /api/wells/{id}/compare?recommended=&alternative=` serve it
-- [ ] Counterfactual row 1 (diagnostic fit) uses `pressure_surveys`
-- [ ] **No ₹, USD or payback point value** in any response (D-1); `grep -rn "estimated_cost_usd\|payback" backend/app` returns nothing
-- [ ] Every action has a resolving `sop_doc_id` (D11) and SOP steps, unit type and duration band (verbatim §4 T5)
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(R): NBA + counterfactual — Gate R passed" && git push origin main
-```
+### 3.1 Surface Processing Facilities (`FacilityConfig` in `facility_master`)
+* **Mangala:** Pad manifolds `MNG-MP-A..D` (`GGS` role, `12,000–18,000 BOPD` oil cap) feeding **`MPT-NAGANA` (`CDP`, "Mangala Processing Terminal & Central Polymer Facility, Nagana", `capacity_bopd=150000`, `water_handling_bwpd=650000`, `compressor_capacity_mmscfd=18.0`)**.
+* **Bhagyam:** Pad manifolds `BHG-MP-1..3` feeding **`BHG-CPF` (`CDP`, "Bhagyam Processing & Polymer Satellite Facility — MPT Trunkline", `capacity_bopd=45000`, `water_handling_bwpd=190000`)**.
+* **Aishwariya:** Pad manifolds `ASH-MP-1..3` feeding **`ASH-CPF` (`CDP`, "Aishwariya Terminal Manifold — MPT Tie-Back", `capacity_bopd=35000`, `water_handling_bwpd=130000`)**.
+* **Raageshwari:** `RAG-MP-N`, `RAG-MP-S`, `RAG-MP-OIL` feeding **`RGT-TERMINAL` (`CDP`, "Raageshwari Gas Terminal (RGT)", `capacity_bopd=12000`, `compressor_capacity_mmscfd=95.0`, `water_handling_bwpd=18000`)**.
 
 ---
 
-## Stage S · Field-engineer dossier
+## 4. Fluid Rheology, Waxy Crude Thermal Rules & EOR Regimes (`fluid_props` & `ReservoirRanges`)
 
-**Goal:** a 2–4 page pre-job PDF built only from tables and tool returns. It upgrades `/api/wells/{id}/export`. *Anchors:*
-- §1 *"when a person is going to the field, the previous history is not there… aggregate all the history and give it to the person"*
-- §2 WS4 *"past intervention histories, well architecture, casing/tubing tallies, and lithology"*
-
-**Owners:**
-- [O] TC-023 assembly and trace rules.
-- [F] S-F1: layout, styles and section templates (no digits).
-
-**Files:** `analytics/tools/dossier.py`; `backend/app/api/wells.py` export route (JSON adds `pdf_url`; `?format=pdf` returns the PDF) and `POST /api/wells/{id}/dossier`; English-only (Q-2); lithology from `formation_tops`; the export button in `WellReportsTab.tsx`.
-
-```bash
-cd backend
-uv run python -c "from app.analytics.tools.dossier import build_well_dossier; print(build_well_dossier('LKW-047'))"
-uv run pytest tests/unit/test_tc023_dossier.py -q
-curl -sf -o /tmp/gk129.pdf "http://localhost:8002/api/wells/GK-129/export?format=pdf"
-```
-
-### ✅ Gate S
-- [ ] 2–4 pages, ≤ 10 s, all 9 sections, including lithology and casing/tubing tallies (verbatim WS4)
-- [ ] Every number traces to a table or tool return; missing sections render `UNAVAILABLE — <table>`
-- [ ] GK-129 cites the 1998 CBL and the 2019 WSO
-- [ ] The JSON export still works (baseline FEAT kept)
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(S): dossier — Gate S passed" && git push origin main
-```
-
----
-
-## Stage T · Asset view & drill-down
-
-**Goal:** field-level APIs and React screens for the L1→L4 drill-down. *Anchors:*
-- §1 *"Which particular field is not performing?… performance at a field level"*
-- §2 WS1 *"production vs. targets, uptime, water cut, and active intervention counts"*
-- §3 *"past… 5 year production data field-wise… Can you give me a plot?"*
-- §3 *"drill down to one particular well… production history… what are the different interventions happened in the past"*
-- §3 *"also give information of nearby wells"*
-- §4 T4 *"reservoir formation… casing/tubing sizes"*
-
-**Owners:**
-- [O] TC-024 `compare_fields`, TC-025 `query_hierarchy`, TC-028 `field_history`, TC-029 `well_profile` (with neighbours), TC-017 v2 markers, `/api/fields*` routes.
-- [F] T-F1: field + GGS boundary GeoJSON (approximate synthetic, D-3).
-- [F] T-F2: Recharts components (field 5-year history: oil, water cut, gas; field comparison; attribution waterfall; health donut; NBA table).
-- [F] T-F3: React screen scaffolds (field selector, field view, well deep-dive with nearby wells, intervention markers on `TelemetryCharts`).
-
-**Files:**
-- `analytics/tools/{field_performance,hierarchy,well_profile}.py` (TC-028 lives in `field_performance.py`)
-- `backend/app/api/fields.py`: `GET /api/fields`, `/api/fields/history?fields=`, `/api/fields/{field}/history`, `/api/fields/compare?period=`, `/api/fields/{field}/health?cluster_id=`, `/api/fields/{field}/attribution?window_days=`, `/api/fields/{field}/priority`
-- `backend/app/api/wells.py`: `/api/wells/{id}/profile`, `/api/wells/{id}/production` (job markers + `wht_degc`, `gor_scf_bbl`, `gl_inj_rate_mscfd`, `gl_inj_pressure_kgcm2`)
-- `backend/app/data/geodata/{geleki,lakwa,lakhmani}.geojson`
-- `frontend/src/components/common/FieldSelector.tsx`, `components/field/{FieldHistoryChart,FieldComparisonTable,HealthBucketsCard,AttributionWaterfall,PriorityQueueTable}.tsx`, `components/well/{WellDeepDive,NearbyWellsTable,NbaCard,CounterfactualTable}.tsx`
-- `TelemetryCharts.tsx` (markers, WHT, GOR, gas-lift injection rate + pressure), `App.tsx`, `types/well.ts`
-
-```bash
-cd backend
-uv run pytest tests/unit/test_tc024_fields.py tests/unit/test_tc025_hierarchy.py tests/unit/test_tc028_field_history.py tests/unit/test_tc029_well_profile.py -q
-cd ../frontend && npm run build && npm run dev    # walk L1→L4 manually at http://localhost:5180
-```
-
-### ✅ Gate T
-- [ ] `compare_fields` ranks Lakwa worst, inside the pinned band, with a controllable top driver; the rows include target, uptime, water cut and `active_interventions` counts (TC-024, verbatim WS1)
-- [ ] TC-028 returns 60 monthly points per field for oil, water cut and gas; aggregation reconciles with well sums within 0.1%
-- [ ] TC-029 returns formation, casing/tubing, lift type and ≥ 3 neighbours on the same cluster; TC-017 v2 shows all in-window job markers
-- [ ] `TelemetryCharts` shows WHT, GOR and gas-lift injection rate + pressure from `GET /api/wells/{id}/production` (verbatim WS6, T4)
-- [ ] UI: field selector, 5-year field chart, comparison, well deep-dive with markers and nearby wells all render from the APIs (no hard-coded values)
-- [ ] `npm run build` green; Part I screens are not regressed
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(T): asset view & drill-down — Gate T passed" && git push origin main
-```
-
----
-
-## Stage X · Medallion Lakehouse
-
-**Goal:** Bronze/Silver/Gold in BigQuery (`asia-south1`), plus a `DATA_BACKEND=parquet|bigquery` switch with a parity test. *Anchors:*
-- §3 *"showcase that in the Medallion architecture… a Lakehouse"*
-- §3 *"whether it should go ultimately into BigQuery or if there is a better database"*
-- §5 topology: Silver *"partitioned… clustered by `field_id, well_id`"*; Silver vector store; Gold KPIs / NBA features / grounding cache
-
-**Owners:**
-- [F] X-F1 DDL; X-F2 loaders; X-F3 Dataform.
-- [O] X-O4: review, `bigquery_repo.py`, parity test, production-store decision record.
-
-**Files:** `lakehouse/ddl/*.sql`, `lakehouse/load/*.py`, `lakehouse/dataform/**` (repo root), `backend/app/data_access/bigquery_repo.py`, `backend/tests/integration/test_backend_parity.py`.
-
-```bash
-export LAKEHOUSE_BUCKET=gs://workover-operations-agentic-ai-datalake   # existing bucket (resolved 2026-10-07); prefixes bronze/, documents/, silver_exports/
-cd backend && uv add google-cloud-bigquery google-cloud-storage
-gcloud storage buckets describe ${LAKEHOUSE_BUCKET} >/dev/null   # must exist; never delete or recreate it
-gcloud storage cp -r app/data/landing  ${LAKEHOUSE_BUCKET}/bronze/
-gcloud storage cp -r app/data/docs_pdf ${LAKEHOUSE_BUCKET}/documents/
-for f in ../lakehouse/ddl/*.sql; do bq query --project_id=${PROJECT_ID} --location=${BQ_LOCATION} --use_legacy_sql=false --dry_run < "$f"; done
-# Authorised by user (2026-10-07): apply only after every dry-run above is clean; never drop existing tables
-for f in ../lakehouse/ddl/*.sql; do bq query --project_id=${PROJECT_ID} --location=${BQ_LOCATION} --use_legacy_sql=false --label=app:wellpulse < "$f"; done
-uv run python -m lakehouse.load.bronze_to_silver
-(cd ../lakehouse/dataform && npx @dataform/cli compile && npx @dataform/cli run)
-DATA_BACKEND=bigquery uv run pytest tests/integration/test_backend_parity.py -q
-```
-
-### ✅ Gate X
-- [ ] `wellpulse_bronze`, `wellpulse_silver` and `wellpulse_gold` exist in `asia-south1`; Silver `daily_production` is partitioned by `production_date` and clustered by `field, well_id`
-- [ ] Silver row counts = Bronze; Gold `field_kpi_monthly` = TC-028 output
-- [ ] Parquet vs. BigQuery parity test green; the app runs with `DATA_BACKEND=bigquery`
-- [ ] Silver `doc_chunks` table mirrors the TF-IDF index from D1–D11 (D-17; Vertex AI Search optional later, verbatim §5)
-- [ ] Exports written to `${LAKEHOUSE_BUCKET}/silver_exports/`
-- [ ] Production-store decision record (BigQuery vs. alternatives) recorded in [`SDD.md`](./SDD.md) §15.2 (verbatim §3)
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(X): medallion lakehouse — Gate X passed" && git push origin main
-```
-
----
-
-## Stage U · Real Gemini Live
-
-**Goal:** replace the fake `WS /api/wells/{id}/live` with a google-genai Live proxy ported from Drilling Intelligence 2.0, calling the **same** tool functions. *Anchors:*
-- §1 *"Gemini Live is not working well in the current build. It is working very good in Drilling Intelligence 2.0. So check how it is built"*
-- §2 WS5 *"live_session.py, ws_live.py, ADR-003… liveClient.ts"*
-
-**Owners:**
-- [O] `session.py` (resumption, context compression, recap, 3-failure fallback to text), voice tool declarations, model verification.
-- [F] U-F1: AudioWorklet client (16 kHz up / 24 kHz down) and the player.
-- [F] U-F2: VoiceAgentPanel UI states (connecting, listening, speaking, fallback), keeping the Hinglish / English / Hindi toggle; push-to-talk plus an open-mic hands-free option. Audio-only (no camera/image).
-
-**Files:**
-- `backend/app/live/{session.py, voice_tools.py, live_prompt.md, fallback.py}`
-- `backend/app/api/live.py`: `WS /ws/live` (field/well context message) plus the legacy `WS /api/wells/{id}/live` shim, kept until Gate V (D-20)
-- `frontend/src/live/{liveClient.ts, micCapture.ts, pcm-worklet.js, audioPlayer.ts}`
-- `components/agent/VoiceAgentPanel.tsx`: `speechSynthesis` removed from the Live path
-
-### U.1 Study the reference (read before writing)
-```
-${DI2_REPO}/backend/app/agent/live_session.py     # lifecycle, resumption, fallback
-${DI2_REPO}/backend/app/api/ws_live.py            # WS proxy
-${DI2_REPO}/frontend/src/live/{liveClient,micCapture,audioPlayer}.ts
-${DI2_REPO}/docs/adr/ADR-003-gemini-live-adk-proxy.md
-```
-
-### U.2 Live model verification: list, never guess
-```bash
-cd backend
-uv run python - <<'EOF'
-from google import genai
-c = genai.Client(vertexai=True, project="workover-operations-agentic-ai", location="us-central1")
-names = [m.name for m in c.models.list()]
-print("LIVE:", [n for n in names if "live" in n.lower() or "native-audio" in n.lower()])
-print("TEXT:", [n for n in names if "gemini-3.8-flash" in n])   # D-13: confirm the text model exists on Vertex
-EOF
-```
-Write the exact names from that output into `backend/.env`: `LIVE_MODEL=…`, `LIVE_LOCATION=…`, `TEXT_MODEL=gemini-3.8-flash`. If a model is missing in `us-central1`, try the other listed locations; if none has it after 3 attempts, mark Stage U **BLOCKED** in [`checklist.md`](./checklist.md) and continue with independent stages. Never substitute or change the model.
-
-### U.3 Test locally
-```bash
-cd backend
-uv add websockets
-uv run pytest tests/integration/test_ws_live.py -q     # fake session: reconnect, recap, 3-failure fallback
-./run_local.sh                                        # push-to-talk at http://localhost:5180: "Which field is underperforming?"
-```
-
-### ✅ Gate U
-- [ ] The model names in `.env` come from the U.2 listing (output pasted into the commit message or PR)
-- [ ] Spoken answer to *"Which field is underperforming?"*; first audio ≤ 2.5 s warm
-- [ ] Barge-in ≤ 300 ms; a forced reconnect keeps context (resumption + recap); 3 failures → text fallback with a visible notice
-- [ ] Spoken numbers equal tool returns (same functions as the text path)
-- [ ] The language toggle still works; `speechSynthesis` is no longer used for Live replies
-- [ ] Open-mic hands-free mode works; `FIELD_ENGINEER` persona can use Live voice
-- [ ] Runs on Vertex ADC; `GEMINI_API_KEY` is not read anywhere (`grep -rn GEMINI_API_KEY backend/app` is empty)
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(U): real Gemini Live — Gate U passed" && git push origin main
-```
-
----
-
-## Stage Y · RBAC + multi-field GIS
-
-**Goal:** a minimal three-persona RBAC (ED, ASSET_MANAGER, FIELD_ENGINEER), gated at the tool layer, and a multi-field WellMap. *Anchors:*
-- §3 *"if an Executive Director is asking for a particular data versus a field engineer… If it is overcomplicating, we can leave it"*
-- §6 matrix (allowed and restricted views)
-- §3 *"on the interface they can see different fields, right, clearly, and the wells"*
-
-**Owners:**
-- [O] Y-O1: `agent/rbac.py` capability matrix and `require()` in each tool wrapper; persona in session state. Built last (D-8).
-- [F] Y-F2: persona picker, WellMap multi-field (boundaries, GGS clusters, health colours, field filter) against the T APIs, keeping the Esri basemap (D-5).
-
-**Files:** `backend/app/agent/rbac.py` (capability matrix in code, no YAML), `backend/app/agent/adk_tools.py` (`require()`); `frontend/src/components/common/PersonaPicker.tsx`, `components/map/WellMap.tsx`, `components/common/Header.tsx`.
-
-```bash
-cd backend && uv run pytest tests/unit/test_rbac.py tests/bdd -k "rbac or gis" -q
-cd ../frontend && npm run build
-```
-
-### ✅ Gate Y
-- [ ] The same question as ED vs. FIELD_ENGINEER gives correctly scoped answers per verbatim §6; a direct denied tool call returns `UNAVAILABLE` (no data leak in the error)
-- [ ] The map shows 3 fields with boundaries, GGS markers and a field filter; header counts = TC-020; the well drawer = TC-029
-- [ ] Synthetic coordinates are labelled as synthetic on the map (D-3)
-- [ ] Persona switch works in both text and Live
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(Y): RBAC + multi-field GIS — Gate Y passed" && git push origin main
-```
-
----
-
-## Stage V · Agent wiring & eval
-
-**Goal:** an in-process ADK `Runner` with about 30 tool wrappers behind `POST /api/chat` and the existing per-well chat route; BDD tests for the 5-level flow; an eval dataset. *Anchors:*
-- §3 *"do you see the hierarchy of question and answering? … generate some documents, give some aggregated data… drill down to a particular well… nearby wells"*
-- §4 L1–L5
-- §8 Milestone 6 *"Automated pytest execution covering all 5 demo turns"*
-
-**Owners:**
-- [O] `runner.py`, wrapper contracts, prompt guardrails (numbers only from tool returns; no ₹/USD; ML disclosure), eval iteration.
-- [F] V-F1: Gherkin → `tests/bdd/features/*.feature` and step glue.
-- [F] V-F2: eval JSON (≥ 30 cases: every L1–L5 turn × 3 personas + refusals, every 🎤 scenario).
-- [F] V-F3: Playwright UI specs.
-
-**Files:**
-- `backend/app/agent/{runner.py, adk_tools.py, prompt.py, callbacks.py}`
-- `backend/app/api/chat.py` (`POST /api/chat {persona, field, well_id?, message}`)
-- `api/wells.py` `/chat` and `/audio` → Runner; legacy `WS /api/wells/{id}/live` and `/audio` shims removed at the end of V (D-20)
-- `services/ai_agent.py`: `build_well_context`, `call_gemini_api` and `query_local_petroleum_expert` deleted
-- `backend/tests/{bdd/, eval/wellpulse-eval.json}`, `frontend/tests/e2e/*.spec.ts`
-
-```bash
-cd backend
-uv add google-adk
-uv add --dev pytest-bdd
-uv run pytest tests/ -q                                   # golden + unit + integration + bdd
-uvx google-agents-cli eval run                            # or `agents-cli eval run` if installed; iterate 5–10×
-cd ../frontend && npm i -D @playwright/test && npx playwright install chromium && npx playwright test
-```
-
-### ✅ Gate V
-- [ ] All BDD scenarios green, including one automated test per demo turn L1–L5 (verbatim §8 M6)
-- [ ] Eval tool-selection accuracy ≥ 90% on `tests/eval/wellpulse-eval.json` (≥ 30 cases); if it is lower, apply the SDD sub-agent split and re-run
-- [ ] No answer contains a number missing from that turn's tool returns (number-trace test)
-- [ ] The agent refuses at least once per new field (LKM-090 → no job justified) and explains why
-- [ ] The prompt-stuffing code and the keyword fallback are removed; text runs on Vertex ADC with `gemini-3.8-flash` (D-13)
-- [ ] Playwright: L1→L5 click-through passes against `npm run build` served by FastAPI
-- [ ] Legacy `/api/wells/{id}/live` and `/audio` shims removed; `WS /ws/live` is the only Live route (D-20)
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(V): agent wiring & eval — Gate V passed" && git push origin main
-```
-
----
-
-## Stage W · Deploy (authorised by user, 2026-10-07)
-
-**Goal:** update Cloud Run service `wellpulse-app` in `workover-operations-agentic-ai` with the multi-stage image, then smoke test. *Anchor: derived (the demo runs on the existing public URL).*
-**Owner:** [O] only. Authorised by user (2026-10-07) — dry-run / local-test first, then apply; never delete existing resources. Smoke test after deploy.
-
-### W.1 Multi-stage Dockerfile plan (D-14; authoritative version in [`SDD.md`](./SDD.md) §17.1)
-```dockerfile
-# Stage 1: frontend
-FROM node:20-slim AS web
-WORKDIR /web
-COPY frontend/package*.json ./
-RUN npm ci
-COPY frontend/ ./
-RUN npm run build                      # → /web/dist
-
-# Stage 2: Python deps with uv
-FROM python:3.11-slim AS deps
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-WORKDIR /app/backend
-COPY backend/pyproject.toml backend/uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
-
-# Stage 3: runtime
-FROM python:3.11-slim
-ENV PYTHONUNBUFFERED=1 PORT=8080 PATH="/app/backend/.venv/bin:$PATH"
-WORKDIR /app/backend
-COPY --from=deps /app/backend/.venv ./.venv
-COPY backend/ ./                        # app/, incl. data/landing, data/docs_pdf, data/index, data/geodata, analytics/model/*.pkl, analytics/config/ (D-18: regenerated here if git-ignored)
-RUN python -m app.analytics.tools.selfcheck   # fails the build if data/model artifacts are missing
-COPY --from=web /web/dist /app/frontend/dist
-EXPOSE 8080
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--ws-ping-interval", "20"]
-```
-- Keep `.dockerignore` excluding `archive`, `node_modules` and `.venv`. Add `backend/tests`.
-- **Resolved:** untrack `frontend/dist` (`git rm -r --cached frontend/dist`, add to `.gitignore`) in the same commit that lands this Dockerfile.
-
-### W.2 Local first
-```bash
-docker build -t wellpulse:v04 . && docker run --rm -p 8080:8080 \
-  -e GOOGLE_GENAI_USE_VERTEXAI=true -e GOOGLE_CLOUD_PROJECT=${PROJECT_ID} -e GOOGLE_CLOUD_LOCATION=${REGION} \
-  -v ~/.config/gcloud:/root/.config/gcloud:ro wellpulse:v04
-curl -sf localhost:8080/api/healthz && curl -sf localhost:8080/api/fields
-```
-
-### W.3 Authorised (user, 2026-10-07)
-Proceed only if W.2 passed locally. Never delete the existing service or revisions.
-
-### W.4 Cloud Run
-```bash
-gcloud run deploy wellpulse-app --source . \
-  --project workover-operations-agentic-ai --region us-central1 \
-  --memory 4Gi --cpu 2 --min-instances 1 --max-instances 1 \
-  --timeout 3600 --session-affinity --no-cpu-throttling \
-  --set-env-vars GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_CLOUD_PROJECT=workover-operations-agentic-ai,GOOGLE_CLOUD_LOCATION=us-central1,TEXT_MODEL=gemini-3.8-flash,LIVE_MODEL=<from U.2>,LIVE_LOCATION=<from U.2>,DATA_BACKEND=parquet,AS_OF=2026-09-23,BQ_LOCATION=asia-south1 \
-  --labels app=wellpulse,stage=v04
-# The runtime SA needs roles/aiplatform.user (Phase 6) and, if DATA_BACKEND=bigquery, roles/bigquery.dataViewer + jobUser.
-# Remove any GEMINI_API_KEY env/secret from the service:
-gcloud run services update wellpulse-app --project workover-operations-agentic-ai --region us-central1 --remove-env-vars GEMINI_API_KEY
-scripts/smoke.sh https://wellpulse-app-bowxi5445q-uc.a.run.app   # /api/healthz, one route per screen, one chat turn, WS connect
-```
-- `--max-instances 1` is **D-16**: ADK sessions and Live sessions are held in memory, so a single instance plus session affinity avoids split sessions during the demo.
-- `--no-traffic` plus a tagged revision is the safer alternative if the user wants to keep the current revision live until the smoke test passes.
-
-### ✅ Gate W
-- [ ] https://wellpulse-app-bowxi5445q-uc.a.run.app serves v0.4: `/api/healthz`, `/api/fields`, a dossier PDF, `/api/docs/{id}.pdf`
-- [ ] Text L1–L5 and Live (*"Which field is underperforming?"*) work end to end on the URL; forced reconnect and fallback both work
-- [ ] No `GEMINI_API_KEY` on the service; the revision runs on Vertex ADC
-- [ ] Pre-warm checklist for demo day: min-instance up, Live connect test, fallback test, persona switch
-
-**Commit (gate passed):**
-```bash
-git add -A && git commit -m "v0.4(W): deploy — Gate W passed" && git push origin main
-```
-
----
-
-## Stage AC · Answer canvas
-
-**Goal:** Turn WellPulse from an all-in-one well history dump into a question-driven answer canvas. The middle panel shows only the specific view matching the user's question; the chat provides concise replies (≤ 3 sentences plus an optional collapsed card); the middle panel can expand to full width hiding the map (ESC or restore button restores map); the agent remains as the command center on the right. *Anchor: brief §1 U-1, U-2, U-3; §3 (D-25).*
-**Owner:** [O] Orchestrator (routing architecture, action contracts, review), [F] Flash (view components in `WellDeepDiveDrawer.tsx`, expandable middle panel, hotkeys, brevity guardrails).
-**Files:** `frontend/src/api/chat.ts`, `frontend/src/components/well/WellDeepDiveDrawer.tsx`, `frontend/src/App.tsx`, `frontend/src/components/agent/VoiceAgentPanel.tsx`.
-
-```bash
-# Frontend build & typecheck
-cd frontend && npm run build
-```
-
-### ✅ Gate AC
-- [ ] 10 demo phrases route to the correct canvas view via `pickCanvasView` (`overview`, `production`, `interventions`, `wellbore`, `pressures`, `diagnosis`, `recommendation`, `compare`, `nearby`, `report`)
-- [ ] Chat replies are strictly concise (≤ 3 sentences plus optional collapsed card); no full-history dump in chat
-- [ ] Expandable middle panel hides the map; ESC key and restore button return to standard split layout
-- [ ] Interventions table and compare view auto-open on counterfactual questions
-- [ ] `cd frontend && npm run build` and `tsc` green; user UI sign-off
-
-**Commit (gate passed and user approved, orchestrator only):**
-```bash
-git add -A && git commit -m "v0.5(AC): answer canvas — Gate AC passed" && git push origin main
-```
-
----
-
-## Stage DF · Demo flow & eval
-
-**Goal:** Standardize and automate the 11-step Lakwa → LKW-019 demo sequence in chat and voice, and expand the evaluation dataset with canvas-routing assertions. *Anchor: brief §1 U-1..U-4; §6.*
-**Owner:** [F] Flash (demo script documentation, eval dataset additions), [O] Orchestrator (rehearsal runner, evaluation verification).
-**Files:** `docs/demo_flow.md`, `backend/tests/eval/wellpulse-eval.json`, `backend/tests/integration/test_demo_flow.py`.
-
-```bash
-# Run backend tests and eval suite
-cd backend && uv run pytest -q
-uv run python -m tests.eval.run_eval
-```
-
-### ✅ Gate DF
-- [ ] 11-step demo script (`docs/demo_flow.md`: Lakwa → LKW-019) passes end-to-end in chat and voice
-- [ ] Eval dataset includes +12 canvas-routing test cases with ≥ 90% routing and tool selection accuracy
-- [ ] Every turn asserts correct canvas view, chat response ≤ 3 sentences, and 0 history dumps
-
-**Commit (gate passed and user approved, orchestrator only):**
-```bash
-git add -A && git commit -m "v0.5(DF): demo flow & eval — Gate DF passed" && git push origin main
-```
-
----
-
-## Stage DG · Synthetic data gaps — **DONE**
-
-**Goal:** Generate 6 new synthetic tables for 100% of wells (412 wells across 3 fields) to fill critical well integrity, survey, hazard, and completion data gaps, with deterministic seed `20261008`, `is_synthetic=true` flag on every row, and full lakehouse parity. *Anchor: brief §4; WH-06, WH-08, WH-10, WH-13, WH-14 (D-29, D-31).*
-**Status:** **DONE**. Argon workers completed 6 tables for 412 wells; tests green (`backend/tests/unit/test_dg_*.py` and `backend/tests/unit/test_tc033_dg_tables.py`). DG integration (routes `/tubing-tally`, `/deviation`, `/integrity`, lakehouse DDL regenerated, not applied) is done.
-**Owner:** [A] Argon (`gemini-3.8-flash-high` via `swarm add`) for table generators and consistency tests:
-- Worker 1: `tubing_tally` (WH-06), `deviation_survey` (WH-08)
-- Worker 2: `barrier_tests` (WH-14), `wellhead_rating` (WH-14)
-- Worker 3: `fluid_hazards` (WH-13), `fishing_records` (WH-10)
-[O] Orchestrator (landing integration, Lakehouse Bronze/Silver ingestion, gap register updates).
-**Files:** `backend/app/analytics/generator/dg.py`, `backend/app/analytics/generator/fields/{tubing,deviation,integrity,hazards}.py`, `backend/tests/unit/test_dg_consistency.py`, `lakehouse/ddl/dg_tables.sql`, `lakehouse/load/bronze_to_silver.py`.
-
-```bash
-# Generate all 6 DG tables across all fields and run consistency validation
-cd backend && uv run python -m app.analytics.generator.dg --field all
-uv run pytest tests/unit/test_dg_*.py tests/unit/test_tc033_dg_tables.py -q
-uv run pytest -q
-```
-
-### ✅ Gate DG
-- [x] 6 new tables generated for 100% of wells (412 wells), written to `backend/app/data/landing/<field>/<table>.parquet`
-- [x] Every row tagged with `is_synthetic=true`, `_source_system='wellpulse_dg_v1'`, deterministic seed `20261008`
-- [x] Consistency tests green: `tests/unit/test_dg_*.py` and `tests/unit/test_tc033_dg_tables.py` (tally length within ±1 joint of tubing depth, TVD monotonic and ≤ MD, barrier dates in valid range with FAIL ≤ 5%, wellhead class ≥ 1.5 × max THP, fishing records only where failure codes allow)
-- [x] DG integration complete: routes `/tubing-tally`, `/deviation`, `/integrity` implemented; lakehouse DDL regenerated (not applied); `well_history_template.md` data gap register updated from GAP to AVAILABLE (synthetic)
-
-**Commit (gate passed and user approved, orchestrator only):**
-```bash
-git add -A && git commit -m "v0.5(DG): synthetic data gaps — Gate DG passed" && git push origin main
-```
-
----
-
-## Stage NN · Multimodal success engine (demo scorer)
-
-**Goal:** Present a multimodal neural network as the intervention ranking engine with an architecture diagram panel showing the production path (Vertex AI custom job + Model Registry). Per Decision D-32, no model is trained in v0.5; compute stable, believable P(success) numbers using the deterministic demo scorer in `backend/app/analytics/tools/success_engine.py` (formula in brief §5); rank top 3 interventions + `NO_JOB_JUSTIFIED` with expected uplift, analogs, and top drivers; provide "How did you decide?" explanation panel with architecture diagram. *Anchor: brief §1 U-4, U-5; §5 (D-32).*
-**Owner:** [O] Orchestrator (demo scorer formula in `success_engine.py`, recommendation contract TC-030, analog search TC-031, architecture panel, plausibility reviews), [F] Flash (explanation card UI, architecture SVG/diagram, documentation).
-**Files:** `backend/app/analytics/tools/success_engine.py`, `backend/app/analytics/tools/recommendations.py`, `backend/app/analytics/tools/similar_wells.py`, `backend/tests/unit/test_tc030_recommend.py`, `backend/tests/unit/test_success_engine.py`.
-
-```bash
-# Run success engine and recommendation unit tests
-cd backend && uv run pytest tests/unit/test_success_engine.py tests/unit/test_tc030_recommend.py -q
-uv run pytest -q
-```
-
-### ✅ Gate NN (demo)
-- [ ] Top 3 render for all producing wells via TC-030 `recommend_interventions`
-- [ ] p_success is strictly in [0.05, 0.95] and stable across calls
-- [ ] Analog counts recompute exactly from data (TC-031 `similar_wells`, k=5)
-- [ ] The explanation panel shows all four elements: evidence chain, look-alike analogs, top drivers (SHAP), and multimodal NN architecture diagram (with Vertex AI custom job + Model Registry described as production path)
-- [ ] Plausibility review of GK-129, LKW-019, and LKM-061 outputs passes orchestrator inspection
-
-**Commit (gate passed and user approved, orchestrator only):**
-```bash
-git add -A && git commit -m "v0.5(NN): multimodal success engine — Gate NN passed" && git push origin main
-```
-
----
-
-## Stage FR · Field report (HTML)
-
-**Goal:** Server-side rendered A4-printable HTML field report (`GET /api/wells/{id}/report?intervention=<class>`) with ONGC branding, wellbore schematic SVG, complete job program, top-3 rationale, and 100% fact-checked tool provenance. *Anchor: brief §1 U-6; §7 (D-30).*
-**Owner:** [F] Flash (Jinja2 HTML template prose, wellbore SVG drawing component, A4 print CSS, canvas iframe viewer), [O] Orchestrator (TC-032 report data assembly engine, job program synthesis, fact validator, route registration).
-**Files:** `backend/app/analytics/tools/field_report.py`, `backend/app/analytics/templates/field_report.html`, `backend/app/api/wells.py`, `frontend/src/components/well/FieldReportView.tsx`, `backend/tests/unit/test_tc032_field_report.py`.
-
-```bash
-# Run field report unit tests and fact validator
-cd backend && uv run pytest tests/unit/test_tc032_field_report.py -q
-uv run pytest -q
-```
-
-### ✅ Gate FR
-- [ ] `GET /api/wells/{id}/report` renders for all 412 wells in < 3 s locally (p95)
-- [ ] Clean A4 print layout verified with repeating headers, print-friendly styling, and "SYNTHETIC DATA — DEMO" banner
-- [ ] ONGC logo (`frontend/public/brand/ongc_logo.svg`) displayed at top left and print footer, with text wordmark fallback if missing
-- [ ] Wellbore SVG renders dynamically from casing/tubing/perf/formation data (with placeholders for missing data per WH-05)
-- [ ] 100% of digits validated against `facts.json` sidecar; Flash writes template prose only with no hard-coded numerals
-- [ ] Chat and voice provide a concise one-line link to open the field report
-
-**Commit (gate passed and user approved, orchestrator only):**
-```bash
-git add -A && git commit -m "v0.5(FR): field report HTML — Gate FR passed" && git push origin main
-```
-
----
-
-## Stage ED · ED meeting pack (v0.6, Ajay Ratan) — in progress 2026-10-08
-
-**Goal:** Everything an ED (one asset, technical) asks about production, shown to everyone (showcase mode), on an India map that drills down to the Assam Asset. *Anchor: [`features.md`](./features.md) §3b F-27…F-33; D-33…D-36.*
-**Owner:** [O] Orchestrator, step by step. Each step is shown to the user, then committed and pushed after approval (X-7).
-
-| Step | Feature | Files | Done when |
-|---|---|---|---|
-| ED-1 | F-27 Showcase mode | `backend/app/agent/rbac.py`, `backend/tests/conftest.py`, `frontend/src/components/persona/PersonaPicker.tsx` | Switch off → every persona FULL; tests run with the switch on and stay green |
-| ED-2 | F-28 Completion diagram | `backend/app/analytics/tools/field_report.py` (shared SVG), `backend/app/api/analytics_wells.py` (`/schematic.svg`), `WellDeepDiveDrawer.tsx` (Wellbore view) | Diagram with casing, cement, tubing, packer/pump, perforations, formation tops, TD for hero + random wells |
-| ED-3 | F-29 Offset decline verdict | `backend/app/analytics/tools/offset_decline.py` (TC-033), route `/offset-decline`, `OffsetDeclineView.tsx`, `docs/pinned_values.md` | Verdict + curves for GK-129, LKW-019, LKM-061; unit tests |
-| ED-4 | F-30 Anomaly scan | `backend/app/analytics/tools/anomalies.py` (TC-034), route `/anomalies`, `WellHistoryView.tsx` ("History & Wax/Sand" view: dated timeline) | ≤ 12 dated events, deterministic; unit tests |
-| ED-5 | F-31 Wax & sand behaviour | `backend/app/analytics/tools/wax_sand.py` (TC-035), route `/wax-sand`, `WellHistoryView.tsx` (wax / sand panels) | Counts, own cycle vs. field norm, next-due only from own cycle, downtime; "no sand-rate data" stated; unit tests |
-| ED-6 | F-32 India map | `backend/app/analytics/tools/ongc_assets.py` (seeded), `/api/geo/ongc-assets` (`api/asset.py`), `WellMap.tsx` (India / Assam toggle) | India view on login with non-interactive tags for 13 assets; Assam drill-down unchanged |
-| ED-7 | F-33 Agent + script | `backend/app/agent/adk_tools_ext.py` (+3 tools → 33), `runner.py` (artifacts → well view), `rbac.py`, `prompt.py`, `live/voice_tools.py` (`well_profile.data.checks`, 12-tool cap kept), `frontend/src/api/chat.ts` + `VoiceAgentPanel.tsx` (offsets / history views), `docs/demo_flow.md` | "What's wrong with GK-129?" uses TC-033…035 and opens Offsets; ED script rehearsed |
-| ED-8 | F-28 rev. Native completion diagram (D-37) | `frontend/src/components/well/CompletionDiagram.tsx` (new), `WellDeepDiveDrawer.tsx` (Wellbore view), `field_report.py` (escape `&` in SVG text), `test_ed2_schematic.py` (valid-XML check) | Diagram + perforation table render from profile data for hero + random wells; no image request; server SVG parses as XML |
-| ED-9 | Three health tags (D-38) | `frontend/src/api/asset.ts` (display groups + colours), `i18n/strings.ts`, `WellMap.tsx` (markers, cluster pies, legend), `HealthBucketsCard.tsx`, `FieldComparison.tsx`, `FieldSelector.tsx`, `NearbyWellsList.tsx`, `WellDeepDiveDrawer.tsx` | Every screen shows Healthy / Needs attention / Not producing in green / amber / red; counts = backend buckets merged |
-| ED-10 | F-41 Map follows the agent | `WellMap.tsx` (well focus zooms to 14 from India / cluster zoom; field request always drills in via a nonce), `App.tsx` | Agent-picked well zooms in from India view; same-field request leaves India |
-| ED-11 | F-41 `ui_control` hands-off (D-39, D-40) | `frontend/src/agent/uiCommands.ts` (new: allowed list, browser parser EN / Hinglish / Hindi, event bus), `WellMap.tsx`, `App.tsx`, `FloatingAgent.tsx`, `VoiceAgentPanel.tsx` (local commands + chips, `kind: 'ui'` actions, Live `ui_control` action), `api/chat.ts`; backend `adk_tools_ext.py` (`ui_control`), `runner.py` (`kind: "ui"` actions), `rbac.py`, `prompt.py`, `live/voice_tools.py` (13th tool), `live/live_prompt.md`; tests `test_ed11_ui_control.py`, `test_ws_live.py` (cap 13) | Hands-off script runs with no clicks; only allow-listed actions run; unknown text still reaches the agent |
-| ED-13 | F-41 GGS well buttons + `focus_cluster` + report print | `WellMap.tsx` (GGS popup well buttons by health tag → `open_well`; `focus_cluster` fits the station's wells and opens its popup), `FieldReportOverlay.tsx` (`report print`), `uiCommands.ts` / `ui_control.py` (allow-list) | Each GGS well button opens its well; "show GGS-01" zooms + opens the popup; "print report" prints |
-| ED-14 | F-41 Health filter + voice-first (D-41) | `uiCommands.ts` / `ui_control.py` (`health_filter`, spoken numbers), `WellMap.tsx` (filter markers / pies / legend counts, filter chip, clickable legend), `App.tsx` (header KPI click), `runner.py` (drop health navigation when `ui_control` ran), `prompt.py`, `live/live_prompt.md`, `adk_tools_ext.py` docstring; tests `test_ed11_ui_control.py`, `test_ed11_ui_parser.py`; scratch Live check over `/ws/live` | "Only show non producing wells" by text and Live voice → only red wells, no middle screen; "show all wells" clears |
-| ED-16 | Urvi AI Agent (D-42) | `common/UrviMark.tsx` (new SVG mark), `Header.tsx` (wordmark "Urvi AI Agent / on WellPulse"), `agent/uiCommands.ts` (`isSmallTalk`), test `test_ed11_ui_parser.py` (small talk), `index.html` (favicon, tab title), `FloatingAgent.tsx` (launcher name, aria labels, "D" badge), `VoiceAgentPanel.tsx` (title, badge, greetings EN / Hinglish / Hindi), `prompt.py` (IDENTITY + personality), `live/live_prompt.md` (identity + personality), `live/session.py` (fallback prompt), `runner.py` (description) | Header, launcher and panel read "Urvi AI Agent"; "who are you?" / "aap kaun ho?" answers as Urvi AI Agent in chat and Live; a greeting only greets (no screen change); mic on / hold-to-talk show green "Listening" (not red / crossed-out); Live voice Aoede; screen control unchanged |
-| ED-12 | F-41 Agent docks in full screen | `FloatingAgent.tsx` (auto-open while full screen / panel expanded, restore on exit) | Full screen or expand → agent docked on the right; exit restores the previous state |
-
-```bash
-# per step
-cd backend && uv run pytest -q tests/unit -p no:warnings
-cd ../frontend && npx tsc --noEmit -p . && npx vite build
-```
-
-### ✅ Gate ED
-- [ ] ED-1 … ED-14 done and each approved by the user
-- [ ] Unit tests green (current baseline 527 + new TC-033…035 / schematic tests)
-- [ ] `tsc` + `vite build` green
-- [ ] Every new number traces to a tool return (X-1/X-2); no currency (X-3)
-- [ ] ED rehearsal script passes on the local app
-
-**Commit (per step, user approved):**
-```bash
-git commit -m "v0.6(ED-n): <name>" && git push origin main
-```
-
----
-
-## Stage W2 · Redeploy
-
-**Goal:** Redeploy WellPulse v0.5 container to Cloud Run with zero-downtime revision rollout, verifying answer canvas, multimodal success scoring, data gap tables, and field report via 7/7 smoke tests. *Anchor: brief §2; §8.*
-**Owner:** [O] Orchestrator all (container configuration, deployment, smoke verification).
-**Files:** `Dockerfile`, `deploy/deploy.sh`, `deploy/smoke_test.py`, `deploy/selfcheck.py`.
-
-```bash
-# Build, deploy, and smoke test Cloud Run deployment
-deploy/deploy.sh build
-deploy/deploy.sh deploy
-deploy/deploy.sh smoke
-```
-
-### ✅ Gate W2
-- [ ] Local container validation passes via `deploy/deploy.sh build`
-- [ ] Cloud Run deployment completes successfully via `deploy/deploy.sh deploy` with min-instances=1 and session affinity
-- [ ] `deploy/deploy.sh smoke` passes 7/7 checks (including new endpoint `/api/wells/GK-129/report`)
-- [ ] End-to-end 11-step demo script verified on public Cloud Run URL
-
-**Commit (gate passed and user approved, orchestrator only):**
-```bash
-git add -A && git commit -m "v0.5(W2): redeploy — Gate W2 passed" && git push origin main
-```
-
----
-
-## Definition of done (v0.4)
-- [ ] Every verbatim §1–§3 requirement maps to a passing BDD scenario ([`features.md`](./features.md) traceability)
-- [ ] The 5-level demo flow L1–L5 (verbatim §4) passes as automated tests and in a manual rehearsal on the Cloud Run URL
-- [ ] Every number on screen or in speech traces to a tool return, table row or cited PDF; no ₹/USD point estimates (D-1)
-- [ ] The agent refuses at least once in each new field (LKM-090) and explains why
-- [ ] Live survives a forced reconnect and a forced fallback
-- [ ] The baseline UI (map, telemetry, timeline, reports, export, language toggle) is not regressed
-- [ ] Deployed (authorised 2026-10-07) and smoke-tested; the URL is rehearsed; one commit + push to `origin main` per passed stage gate (13 `v0.4(<stage>):` commits)
-
----
-
-## Definition of done (v0.5)
-- [ ] Answer canvas active: chat replies ≤ 3 sentences, no full-history dumps, 10 key phrases route correctly via `pickCanvasView` (F-20, F-21)
-- [ ] Middle panel expandable with map hiding, ESC hotkey and restore button (F-21)
-- [x] 6 synthetic data gap tables generated for 100% of wells (412 wells), `is_synthetic=true`, consistency tests 100% green (F-22)
-- [ ] Multimodal success engine implemented (demo scorer in `success_engine.py`, D-32), top 3 recommendations + `NO_JOB_JUSTIFIED` served with P(success), analogs, drivers, and architecture diagram panel (F-23, F-24)
-- [ ] Printable HTML field report (`GET /api/wells/{id}/report`) renders for all 412 wells < 3 s with ONGC branding, wellbore SVG, job program, and 100% fact validation (F-25)
-- [ ] 11-step demo script (Lakwa → LKW-019) passes in chat and voice with canvas routing and brevity (F-26)
-- [ ] Deployed to Cloud Run with `deploy/deploy.sh deploy` and smoke test 7/7 green
-- [ ] One commit + push to `origin main` per passed stage gate with user sign-off (orchestrator only)
-
----
-
-## Definition of done (v0.6, ED meeting)
-- [ ] Showcase mode: nothing hidden for any persona; RBAC presented as a switchable capability (D-33)
-- [ ] Completion diagram with perforations in the dashboard (F-28)
-- [ ] "What is wrong" answered by the offset decline verdict, anomaly scan and wax/sand behaviour (F-29…F-31)
-- [ ] India map with 13 ONGC asset tags; Assam drill-down (F-32)
-- [ ] ED rehearsal script passes; CMD features logged as backlog F-34…F-40
-- [ ] One commit + push per approved step
-
----
-
-## Former open items (all resolved 2026-10-07)
-
-| # | Item | Owner | Blocks | Status |
+| Property | Mangala (`MNG`) | Bhagyam (`BHG`) | Aishwariya (`ASH`) | Raageshwari (`RAG`) |
 |---|---|---|---|---|
-| 1 | Meeting date with Ajay Ratan (Q-1) | Orchestrator | Unknown: build all stages; if time-boxed, cut Y first, then X | Resolved |
-| 2 | Lakehouse bucket | Orchestrator | Stage X | Resolved: existing `gs://workover-operations-agentic-ai-datalake` (`bronze/`, `documents/`, `silver_exports/`) |
-| 3 | Verbatim §4 T3 ranks by NPV / payback (conflicts with D-1) | Orchestrator | Stages R, T | Resolved: deferred bbl × p_success ÷ rig-days, shown with cost band (K-7) |
-| 4 | Untrack the committed `frontend/dist` | Orchestrator | Stage W | Resolved: untracked in Stage W |
-| — | D-15…D-20, Q-2 (AS_OF, sessions, TF-IDF, artefacts, telemetry columns, WS shims, English-only dossier) | — | — | Resolved 2026-10-07 ([`SDD.md`](./SDD.md) §19.2) |
-| — | Autonomy: DDL apply, Cloud Run deploy, commit + push per gate | — | — | Authorised by user 2026-10-07 19:52 |
-| — | D-4 project = `workover-operations-agentic-ai` | — | — | Resolved 2026-10-07 |
-| — | D-13 text model = `gemini-3.8-flash` on Vertex ADC | — | — | Resolved 2026-10-07 |
-| — | Stray `v0.4-build` branch on GitHub | — | — | Deleted 2026-10-07 |
+| **API Gravity (`°API`)** | `26.8` (`24–28°`) | `21.4` (`19–23°`, biodegraded) | `28.4` (`27–30°`) | `50.5` (`48–54°` RDG condensate; `29°` oil pad) |
+| **Pour Point (`°C`)** | **`42.0°C`** | **`43.0°C`** | **`40.5°C`** | `18.0°C` (condensate) / `39.0°C` (oil pad) |
+| **Wax Appearance Temp (`WAT °C`)** | **`59.0°C`** (`20.5 wt%` wax) | **`58.0°C`** (`22.0 wt%` wax) | **`56.0°C`** (`18.5 wt%` wax) | `31.0°C` (`6.0 wt%` wax) |
+| **In-Situ Viscosity (`cP`)** | `14.5 cP` (`9–22 cP` @ `65°C`) | **`38.0 cP`** (`15–50 cP` main; up to `500 cP` at `448 m` OWC) | `11.0 cP` (`8–15 cP` @ `70°C`) | `0.35 cP` gas-condensate (`4.5 cP` oil pad) |
+| **Reservoir Temp (`°C`)** | `63–69°C` | `52–58°C` (close to WAT!) | `68–75°C` | `122–138°C` (deep volcanic BHT) |
+| **Formation Water TDS (`mg/L`)** | **`6,400`** (`<8,000 ppm` fresh-brackish!) | **`5,900`** | **`7,200`** | `24,500` (deep volcanic brine, halite/CaCO3 tendency) |
+| **EOR / Drive Mechanism** | Full-field **HPAM Polymer Flood** (`20 cP` injected) + **ASP** (`MNG-PAD-C`) | Full-field **HPAM Polymer Flood** (`25–30 cP` injected) | **HPAM Polymer Flood** (AF) + **10–18 Stage Prop-Frac** (ABH) | **Multi-Stage Hydraulic Mega-Frac** (`Prithvi/Agni` tight gas depletion) |
+| **`q_i_bopd` (`ReservoirRanges`)** | **`(140.0, 520.0)`** | **`(65.0, 260.0)`** | **`(80.0, 340.0)`** (`45–190` ABH) | **`(35.0, 165.0)`** condensate/oil + **`1,500–7,500 MCFD`** gas |
+| **`wc_init_pct` / `wc_slope_pp_per_yr`** | `(68.0, 86.0)` / `(1.2, 3.8)` | `(60.0, 80.0)` / `(1.6, 4.4)` | `(52.0, 76.0)` / `(1.4, 3.9)` | `(14.0, 38.0)` / `(0.8, 2.4)` |
+| **`gor_scf_bbl`** | `(110.0, 240.0)` (low-GOR waxy oil) | `(85.0, 190.0)` | `(150.0, 320.0)` | **`(14000.0, 42000.0)`** RDG gas-condensate (`280–550` oil pad) |
+| **`thp_kgcm2` / `chp_kgcm2`** | `(10.5, 18.5)` / `(14.0, 26.0)` | `(8.5, 15.5)` / `(12.0, 22.0)` | `(11.0, 19.5)` / `(15.0, 28.0)` | `(48.0, 115.0)` / `(62.0, 135.0)` (high-pressure gas) |
+| **`wht_degc` (Heated Flowlines)** | **`(53.0, 64.0)`** (drops `<45°C` on heater/wax fault!) | **`(47.0, 56.0)`** (drops `<42°C` → severe wax choke!) | **`(52.0, 65.0)`** | **`(62.0, 88.0)`** |
+| **`target_bias` (Field vs Plan)** | `+0.01` (on plan via polymer/ASP) | **`-0.16`** (deteriorating rig waits & heater/PCP faults) | `-0.03` (steady) | `+0.02` (RDG frac campaign strong) |
+
+---
+
+## 5. Artificial Lift Mix & Telemetry Physics (`LIFT_TYPES`)
+
+Canonical `LIFT_TYPES` across generator, Silver/Gold tables, and `features.py`:  
+**`["ESP", "JET_PUMP", "PCP", "SRP", "GAS_LIFT", "NATURAL"]`**
+
+| Lift Type | Mangala (`180`) | Bhagyam (`120`) | Aishwariya (`100`) | Raageshwari (`60`) | Fleet Total (`460`) | Barmer Physical Telemetry Signature (`telemetry.py` / `daily_production`) |
+|---|---|---|---|---|---|---|
+| **`JET_PUMP`** | `55%` (`99`) | `15%` (`18`) | `35%` (`35`) | `0%` (`0`) | **`152` (`33.0%`)** | Surface triplex power-fluid injection pressure `155–225 kg/cm²` (`2,200–3,200 psi`, stored in `gl_inj_pressure_kgcm2` / lift power pressure), hot power-fluid circulation maintaining WHT `>54°C`; wireline-retrievable nozzle/throat fouls under polymer-scale co-precipitation. |
+| **`ESP`** | `35%` (`63`) | `35%` (`42`) | `45%` (`45`) | `15%` (`9`, oil pad) | **`159` (`34.6%`)** | High-liquid lift (`1,200–5,500 BFPD`), VSD frequency `46–62 Hz`, motor current `38–85 A`, intake pressure `28–75 kg/cm²`; viscosity/polymer deration & cable insulation / scale trip failure modes. |
+| **`PCP`** | `5%` (`9`) | `40%` (`48`) | `5%` (`5`) | `0%` (`0`) | **`62` (`13.5%`)** | Shallow viscous/sandy lift (`60–180 RPM` drivehead); elastomer stator swelling if hot-oil/aromatic solvent temperature/concentration exceeds limit or torque spike when WHT `< 43°C` pour point. |
+| **`SRP`** | `5%` (`9`) | `10%` (`12`) | `15%` (`15`, ABH HSRP/SRP) | `0%` (`0`) | **`36` (`7.8%`)** | `4–9 SPM`, `64–100 in` stroke, `1.5–2.0 in` plunger, pump fillage `55–90%`; proppant/sand plunger sticking in ABH & shallow FM1. |
+| **`GAS_LIFT`** | `0%` (`0`) | `0%` (`0`) | `0%` (`0`) | `30%` (`18`) | **`18` (`3.9%`)** | Gas-lift / plunger-assisted dewatering on liquid-loaded RDG tight-gas wells (`300–750 MSCFD` lift gas @ `75–105 kg/cm²`). |
+| **`NATURAL`** | `0%` (`0`) | `0%` (`0`) | `0%` (`0`) | `55%` (`33`) | **`33` (`7.2%`)** | High-pressure RDG fractured volcanic/tight-clastic gas-condensate producers on `2-7/8"` velocity strings. |
+
+---
+
+## 6. Barmer Workover & Intervention Catalogue (`IC-01..IC-15` Preserved)
+
+> [!IMPORTANT]
+> **Why `IC-01..IC-15` Is Preserved:** Keeping the 15 canonical `intervention_class` IDs (`IC-01..IC-15`) preserves 100% compatibility with `train_classifier.py` (Gate Q), `nba.py`, `counterfactual.py`, `success_engine.py`, and the 14 SOP YAMLs (`IC-01.yaml..IC-14.yaml`), while tailoring job descriptions, SOP procedures, and mechanism weights to authentic Cairn Barmer physics. **Generator target:** every class `IC-01..IC-15` is weighted to produce **`>= 45` in-scope training episodes** (comfortably clearing Gate Q's `min_support >= 30` floor without synthetic inflation).
+
+| Class | Barmer Class Label | Job Codes (`job_catalogue.parquet`) | Primary Barmer Field / Lift Context | Cost Band & Typical Rig-Days |
+|---|---|---|---|---|
+| **`IC-01`** | Artificial Lift Pump Overhaul / ESP & PCP Changeout | `PUMP_OVERHAUL` (covers ESP wet-end replace, PCP stator/rotor change, SRP insert overhaul) | `ESP`, `PCP`, `SRP` across MBA (`MNG`, `BHG`, `ASH`) | `MEDIUM` · `3–6 d` (workover rig) |
+| **`IC-02`** | Rod / Drive-String / ESP Power-Cable Remediation | `ROD_REPLACE` (covers PCP drive-rod, SRP rod string, ESP MLE/cable splice) | `PCP` (`BHG` high wax torque), `ESP` cable fault, `SRP` | `LOW`–`MEDIUM` · `2–4 d` |
+| **`IC-03`** | Production Tubing Replacement / Descaling | `TUBING_REPLACE` | Corroded/wax-choked `3-1/2"` MBA strings & `2-7/8"` RDG velocity strings | `MEDIUM` · `4–7 d` |
+| **`IC-04`** | Waxy Crude Thermal & Solvent Flow Assurance | `WAX_HOTOIL`, `WAX_SOLVENT`, `WAX_SCRAPE`, `WAX_INHIBITOR`, `WAX_HEATER` | **Signature Barmer class:** `42°C` pour point / `59°C` WAT paraffin choking + flowline skin-effect trace-heater repair | `LOW` · `0.5–2 d` (rigless HOCU / slickline) |
+| **`IC-05`** | Inorganic & Polymer Co-Precipitated Scale Treatment | `SCALE_ACID_BULLHEAD`, `SCALE_INHIBITOR` | MBA polymer-carbonate co-deposition in ESP/JP intakes & RDG halite/CaCO3 scale | `LOW` · `1–2 d` (rigless pumping) |
+| **`IC-06`** | Unconsolidated Sand & Proppant Cleanout / Control | `SAND_CLEANOUT`, `SAND_CONTROL` | Friable `Fatehgarh FM1/FM2` sand fill (`MNG`, `BHG`) & `ABH` frac-proppant flowback | `MEDIUM` · `2–5 d` (CTU / workover rig) |
+| **`IC-07`** | Hydraulic Jet-Pump Insert & Lift-Valve Changeout | `GLV_REPLACE` (relabelled in Barmer display/SOP as *Jet-Pump Nozzle/Throat Wireline Insert & Gas-Lift Valve Changeout*) | **Signature Mangala/Aishwariya `JET_PUMP` wireline retrieval** + `RAG` `GAS_LIFT` valves | `LOW` · `1–2 d` (slickline / wireline) |
+| **`IC-08`** | Lift Optimization & ESP $\leftrightarrow$ Jet-Pump Conversion | `LIFT_OPTIM`, `GAS_SEP_INSTALL`, `LIFT_CONVERSION` | VSD Hz / JP power-fluid tuning; converting polymer-fouled ESPs to wireline Jet Pumps (`SPE-200174`) | `LOW`–`HIGH` · `1–6 d` |
+| **`IC-09`** | Hydraulic Proppant Fracturing & Matrix Stimulation | `HYDRAULIC_FRAC`, `MATRIX_ACID` | **Signature `Barmer_Hill` (`ASH-ABH-3`) 10–18 stage frac & `Raageshwari` volcanic mega-frac** | `CAPITAL_WORKOVER` / `HIGH` · `5–12 d` |
+| **`IC-10`** | Stacked Fatehgarh Perforation / Re-Perforation | `RE_PERFORATION`, `ADD_PERFORATION` | Adding bypassed `FM1/FM2` channel lobes in `MNG`, `BHG`, `ASH` | `MEDIUM` · `2–4 d` (wireline guns) |
+| **`IC-11`** | Polymer / Water Breakthrough Conformance & Squeeze | `POLYMER_GEL`, `CEMENT_SQUEEZE` | **Signature MBA EOR conformance:** HPAM polymer/water thief-zone shutoff (`RPM` crosslinked gel / cement squeeze) | `HIGH` · `4–8 d` |
+| **`IC-12`** | Zonal Isolation & Up-Hole Fatehgarh Zone Transfer | `STRADDLE_PACKER`, `ZONE_TRANSFER` | Isolating watered-out `FM4/FM5` (>90% WC) to produce upper `FM1/FM2` | `MEDIUM`–`HIGH` · `4–7 d` |
+| **`IC-13`** | Conformance Choke & Drawdown Management | `CHOKE_BACK` | Suppressing viscous fingering / coning in Bhagyam & RDG condensate banking | `LOW` · `0.5 d` (surface) |
+| **`IC-14`** | Wellhead, Heated Flowline & Casing Barrier Repair | `SURFACE_REPAIR`, `CASING_REPAIR` | Wellhead seal / casing patch before high-pressure RDG/ABH frac or thermal cycling | `HIGH` / `CAPITAL_WORKOVER` · `5–14 d` |
+| **`IC-15`** | Sub-Economic / No Intervention Justified | `NO_JOB_JUSTIFIED`, `PLUG_ABANDON` | Watered-out flank wells (`WC > 95%`, low remaining kh) held from rig spend | `LOW` · `0 d` |
+
+---
+
+## 7. Pinned Hero / Demo Wells & Storylines (1-for-1 Replacement of Assam Fixtures)
+
+| Barmer Hero ID | Replaces | Field · Pad · Zone · Lift · Depth | Scripted Telemetry & Document Signature (`AS_OF = 2026-09-23`) | Expected Model / NBA / Counterfactual Output |
+|---|---|---|---|---|
+| **`MNG-042`** *(Primary CIO Hero)* | `GK-129` | Mangala · `MNG-PAD-B` · `Fatehgarh_Lower` (`FM3`) · `JET_PUMP` · `1,085 m MD` (`885 m TVD`) | Oil dropped `385 → 112 BOPD` over 90d as WC rose `72% → 91.5%` with `485 ppm` HPAM polymer breakthrough; Chan WOR derivative positive channelling slope; scanned legacy CBL (`DOC-CBL-MNG042-2014` & `DOC-SCAN-MNG-042-2019`) confirms poor cement bond across `FM4/FM3` shale break; `WAX_HOTOIL` 120d ago gave only 6d transient bump while WHT stays `59.4°C` (`> 42°C` pour point). | **NBA Top-1:** `IC-11` (`POLYMER_GEL` / `CEMENT_SQUEEZE` conformance). **Counterfactual ("Why not hot-oil wax removal?"):** Deterministically **VETOED / REJECTED** (WHT above pour point/WAT, Chan channelling signature, prior `WAX_HOTOIL` rapid relapse). |
+| **`BHG-019`** *(Waxy Flow-Assurance Hero)* | `LKW-019` / `LKW-047` | Bhagyam · `BHG-PAD-1` · `Fatehgarh_Upper` (`FM1`) · `PCP` · `585 m MD` (`495 m TVD`) | Flowline skin-effect trace-heater controller degradation dropped WHT from `53°C` to **`40.8°C`** (`< 43°C` pour point!), spiking THP and PCP torque while oil fell `195 → 64 BOPD` at steady `67%` WC; preceded earlier in 2026 by a 38-day `WAIT_ON_RIG` + 11-day `WAIT_ON_MATERIAL` PCP changeout illustrating Bhagyam's `-16%` field target gap. | **NBA Top-1:** `IC-04` (`WAX_HOTOIL` + `WAX_HEATER` trace-heater restoration, `LOW` cost band, rigless `1–2 d`). |
+| **`BHG-088`** *(Cluster Infrastructure Hero)* | `LKW-088` | Bhagyam · `BHG-PAD-2` · `Fatehgarh_Lower` · `ESP` · `660 m MD` | Zero downhole mechanical failures in 180d, yet suffers repeated deferred barrels from `GRID_POWER_OUTAGE:BHG-PAD-2` (`11/yr` desert 33kV overhead feeder trips causing ESP restarts & cold-crude restart wax slugs). | **Attribution (`TC-019`):** Attributes loss to surface/grid cluster events rather than downhole failure; prevents wasted rig workover. |
+| **`ASH-023`** *(Sand Cleanout Classifier Fixture)* | `LKM-023` | Aishwariya · `ASH-PAD-1` · `Fatehgarh_Upper` · `JET_PUMP` · `1,240 m MD` | Unconsolidated `FM1` fluvial sand influx choking Jet Pump intake + acoustic/well-test sand trace `> 0.4%`. | **Gate Q Fixture:** `classify_intervention("ASH-023")` top-1 == **`IC-06`** (`p >= 0.70`). |
+| **`ASH-061`** *(Ambiguous Top-2 Classifier Fixture)* | `LKM-061` | Aishwariya · `ASH-PAD-2` · `Fatehgarh_Lower` · `ESP` · `1,440 m MD` | Overlapping ESP intake oscillation / Jet-valve lift degradation and paraffin deposition near `55°C` WHT. | **Gate Q Fixture:** `classify_intervention("ASH-061")` top-2 set == **`{"IC-07", "IC-04"}`** or **`{"IC-01", "IC-04"}`** (calibrated multi-hypothesis diagnostic). |
+| **`RAG-014`** *(Safety / Barrier Veto Hero)* | `LKM-090` | Raageshwari · `RAG-RDG-S` · `Raageshwari_Volcanics` (`Agni`) · `NATURAL` · `3,280 m MD` (`3,040 m TVD`) | Tight volcanic gas-condensate well declined from `4,800 → 1,150 MCFD` (`135 → 34 BCND`); reservoir physics alone points to `HYDRAULIC_FRAC` (`IC-09`), **but** `barrier_tests` records a `FAIL` on production casing annulus pressure test and `wellhead_rating` margin `< 1.5×` frac treating pressure. | **Gate R Counterfactual Safety Veto:** `HYDRAULIC_FRAC` (`IC-09`) is **HARD-VETOED** on barrier integrity; mandates `IC-14` (`CASING_REPAIR`) first. |
+
+---
+
+## 8. Cairn / Vedanta Identity, Role Hierarchy & India Asset Map Calibration
+
+1. **Agent Identity:** **"Urvi AI Agent for Cairn Oil & Gas, Barmer"** (default language: **English**; Hindi/Hinglish code-switching preserved on request). **Zero mentions of `ONGC`, `Oil and Natural Gas Corporation`, `WellPulse Geleki`, `Sivasagar`, `Nazira`, or `Assam` fields** in UI, prompts, reports, or active docs.
+2. **Report Branding (CB-2):** Replace `frontend/public/brand/ongc_logo.svg` and ONGC header in `field_report.py` / `FieldReportOverlay.tsx` with a crisp, industrial **Cairn Oil & Gas · Vedanta Limited** SVG wordmark (`frontend/public/brand/cairn_vedanta_wordmark.svg`, Vedanta Deep Blue `#0055A5` + Cairn Energy Orange `#E86C1F` + Rajasthan Block `RJ-ON-90/1 · Barmer Basin` subtitle; `[verify]` swap in official corporate vector if provided by user).
+3. **Access Personas (CB-3 — Vedanta Upstream Titles, No PSU `E1–E4` or `CMD`):**
+   - Keep internal enum keys (`ED`, `ASSET_MANAGER`, `FIELD_ENGINEER`) or alias cleanly so wire headers stay backward-compatible while updating all display titles, prompts, and `PersonaPicker.tsx` tooltips to authentic Cairn / Vedanta titles:
+     - `ED` → **"COO / Chief Digital & Information Officer (Executive)"** (full cross-basin & capital workover portfolio view)
+     - `ASSET_MANAGER` → **"Asset Manager — Barmer (MBA & RDG)"** (pad/field KPIs, rig calendar, NBA approvals, A4 dossiers)
+     - `FIELD_ENGINEER` → **"Production / Well Services Engineer"** (well telemetry, lift diagnostics, SOPs, workover execution)
+4. **India Upstream Asset Map (`backend/app/analytics/tools/cairn_assets.py` + `/api/geo/cairn-assets`, replacing `ongc_assets.py`):**
+   - Displays **Vedanta / Cairn Oil & Gas's real Indian operating blocks** (public approximate centroids):
+     1. **Rajasthan Block (`RJ-ON-90/1` — Barmer Basin)** · `(25.96, 71.51)` · **Active Interactive Hub** (click zooms into Mangala, Bhagyam, Aishwariya, Raageshwari pads & MPT/RGT facilities; `DRILL_BOUNDS` around `25.20..26.20°N, 71.30..71.85°E`).
+     2. **Ravva (`PKGM-1` — Krishna-Godavari Offshore, Andhra Pradesh)** · `(16.48, 82.18)` · Mature shallow-offshore oil & gas asset (`[verify]` context marker).
+     3. **Cambay (`CB/OS-2` — Suvali Offshore/Coastal, Gujarat)** · `(21.14, 72.62)` · Lakshmi & Gauri oil/gas fields (`[verify]` context marker).
+     4. **Jorhat / OALP (`AA-ONHP-2017/1` — Assam-Arakan Exploration/Development)** · `(26.75, 94.22)` · North-East OALP acreage (`[verify]` context marker).
+5. **Architecture Tab (`current` vs `target`):**
+   - **Current (Demo):** Synthetic Barmer Lakehouse (`Mangala`, `Bhagyam`, `Aishwariya`, `Raageshwari` → `gs://urvi-cairn-barmer-ai-agent-datalake` → BigQuery `urvi_cairn_{bronze,silver,gold}` in `asia-south1` → Cloud Run `urvi-cairn-app` + Gemini Live).
+   - **Target (Cairn / Vedanta Production in India):** Source connectors updated to generic Cairn/Vedanta upstream enterprise stack **`[verify]`**: **OSISoft / AVEVA PI Historian & Pad SCADA** (MPT, RGT, Jet-Pump/ESP VSD telemetry), **SAP S/4HANA PM/MM** (rig schedule, MRO tubulars/pumps, work orders), **Subsurface & Well-File DMS** (OpenWorks / Petrel / Peloton WellView DWRs, CBLs, completion tallies), landing via **Vedanta Enterprise Data Lakehouse** in **`asia-south1` (Mumbai)** with VPC-SC, CMEK, and IAM RBAC.
+
+---
+---
+
+# Part II · Granular Step-by-Step Build & Verification Instructions (`Stages C0–C9` · 64 Atomic Steps)
+
+> [!IMPORTANT]
+> **Mandatory Execution Loop for Every Single Step (`C0.1` → `C9.5`):**
+> 1. Implement **only** the owned file(s) declared in that step (`[O]`, `[A]`, or `[F]`).
+> 2. Run the step's exact **`Verify:`** command from `/usr/local/google/home/amandeepsinghs/o&g agentic transformation/Oil & Gas Agent Portfolio/cloud_run_apps/urvi_cairn_barmer`.
+> 3. Confirm exit code `0` and all pass assertions.
+> 4. **Immediately update [`docs/checklist.md`](./checklist.md)**: tick `[x] **[Ck.m · Impl]**` and `[x] **[Ck.m · Verify]**` with measured evidence **before** starting the next step.
+
+---
+
+## Stage C0 · Deep Research Lock, Repo Lockdown Commit & GCP Preflight (8 Steps · Day 1 AM)
+
+### Step C0.1 — Lock Barmer Basin Stratigraphy, Field Portfolio & True Depth Envelope (`[O]`)
+* **Files:** `docs/build.md` (Part I §§1–3)
+* **Instructions:** Verify and lock the 4 Barmer fields (`Mangala` 180, `Bhagyam` 120, `Aishwariya` 100, `Raageshwari` 60 = `460` wells), post-2008 completion windows (`2008–2021`), 7-unit Barmer stratigraphy (`Thar_Alluvium_Kapurdi` → `Raageshwari_Volcanics`), pad coordinates (`MPT-NAGANA`, `RGT-TERMINAL`), true depth bounds (including Bhagyam `448 m TVDSS` OWC & horizontal `Barmer_Hill` `1,850–2,750 m MD`), and dynamic shallow surface-casing rules.
+* **Verify:**
+  ```bash
+  python3 -c 'p=open("docs/build.md").read(); assert all(k in p for k in ["Mangala","Bhagyam","Aishwariya","Raageshwari","448 m TVDSS","Raageshwari_Volcanics","MPT-NAGANA","RGT-TERMINAL","2008-06-01"]); print("C0.1 OK")'
+  ```
+
+### Step C0.2 — Lock Waxy Crude Rheology, HPAM/ASP Polymer EOR & 6-Lift Telemetry Physics (`[O]`)
+* **Files:** `docs/build.md` (Part I §§4–5)
+* **Instructions:** Verify and lock crude API gravities (`21.4–50.5°`), pour points (`40.5–43.0°C`), WAT (`56–59°C`), viscosities (`9–22 cP` Mangala, `15–500 cP` biodegraded Bhagyam), `<8,000 ppm` TDS low-salinity aquifer enabling `20 cP` HPAM polymer & ASP floods, heated flowline WHT envelopes, and the 6 lift types (`JET_PUMP`, `ESP`, `PCP`, `SRP`, `GAS_LIFT`, `NATURAL`).
+* **Verify:**
+  ```bash
+  python3 -c 'p=open("docs/build.md").read(); assert all(k in p for k in ["42.0°C","59.0°C","HPAM","JET_PUMP","ESP","PCP","SRP","GAS_LIFT","NATURAL","-0.16"]); print("C0.2 OK")'
+  ```
+
+### Step C0.3 — Lock Barmer Workover Catalogue (`IC-01..IC-15`) & 6 Hero Well Specifications (`[O]`)
+* **Files:** `docs/build.md` (Part I §§6–7)
+* **Instructions:** Verify and lock all 15 intervention classes (`IC-01..IC-15`) with Barmer job codes, cost bands (`LOW`/`MEDIUM`/`HIGH`/`CAPITAL_WORKOVER`), rig-days, `>= 45` training episode floor, and the 6 scripted hero wells (`MNG-042`, `BHG-019`, `BHG-088`, `ASH-023`, `ASH-061`, `RAG-014`) with deterministic NBA & counterfactual veto rules.
+* **Verify:**
+  ```bash
+  python3 -c 'p=open("docs/build.md").read(); assert all(f"IC-{i:02d}" in p for i in range(1,16)) and all(w in p for w in ["MNG-042","BHG-019","BHG-088","ASH-023","ASH-061","RAG-014"]); print("C0.3 OK")'
+  ```
+
+### Step C0.4 — Lock Cairn / Vedanta Branding, Access Personas & India Asset Map Coordinates (`[O]`)
+* **Files:** `docs/build.md` (Part I §8)
+* **Instructions:** Verify and lock agent identity (*"Urvi AI Agent for Cairn Oil & Gas, Barmer"*), `cairn_vedanta_wordmark.svg` specification, Vedanta upstream role titles (*COO / CIO*, *Asset Manager — Barmer*, *Production / Well Services Engineer*), 4 real Cairn India blocks (`RJ-ON-90/1 Barmer`, `Ravva`, `Cambay`, `Jorhat OALP`), and `[verify]` markers on non-public enterprise connectors.
+* **Verify:**
+  ```bash
+  python3 -c 'p=open("docs/build.md").read(); assert all(k in p for k in ["Urvi AI Agent for Cairn Oil & Gas, Barmer","cairn_vedanta_wordmark.svg","Ravva","Cambay","[verify]"]); print("C0.4 OK")'
+  ```
+
+### Step C0.5 — Synchronize 1-to-1 `docs/checklist.md` & Log in `backlog_refinements.md` (`[O]`)
+* **Files:** `docs/checklist.md`, `backlog_refinements.md`
+* **Instructions:** Write `docs/checklist.md` mirroring every atomic step `C0.1`..`C9.5` with dual `Impl` + `Verify` checkboxes and 10 Stage Gates (`Gate C0`..`Gate C9`), and record the update in `backlog_refinements.md` (§1 latest changes, §2 `C-R2`, §3 `CB-1..CB-4`).
+* **Verify:**
+  ```bash
+  python3 -c 'import re; b=set(re.findall(r"### Step (C\d+\.\d+)", open("docs/build.md").read())); ci=set(re.findall(r"\[(C\d+\.\d+) · Impl\]", open("docs/checklist.md").read())); cv=set(re.findall(r"\[(C\d+\.\d+) · Verify\]", open("docs/checklist.md").read())); assert b==ci==cv and len(b)==64, f"build={len(b)} ci={len(ci)} cv={len(cv)} diff={b^ci}"; print("C0.5 OK: 64/64 steps synced")'
+  ```
+
+### Step C0.6 — Local Port Check, Target Guard Check & `uv` Virtualenv Preflight (`[O]`)
+* **Files:** `deploy/deploy.sh`, `backend/pyproject.toml`, `backend/uv.lock`
+* **Instructions:** Confirm ports `:5180` and `:8002` have zero listeners, verify `bash deploy/deploy.sh plan` exits `0` for `urvi-cairn-barmer-ai-agent` while blocking ONGC targets, and sync `backend/.venv` via `uv sync --frozen`.
+* **Verify:**
+  ```bash
+  ! ss -tlnp | grep -E '(:5180|:8002)\b' && bash deploy/deploy.sh plan >/dev/null && (cd backend && uv sync --frozen && uv run python -c "import fastapi, pandas, sklearn; print('C0.6 OK')")
+  ```
+
+### Step C0.7 — `[USER GATE]` Commit & Push Initial Cairn Lockdown + Build Plan (`[O]`)
+* **Files:** Lockdown working tree + `plan_prompt.md`, `docs/build.md`, `docs/checklist.md`, `backlog_refinements.md`
+* **Instructions:** **Pause for explicit user OK.** Confirm `git remote -v` points exclusively to `amandeepsinghs-cyber/urvi-cairn-barmer.git`, ensure no secrets/`.env` are staged, commit as `chore(cairn-lockdown): isolate Cairn Barmer replica, deep-research build.md and checklist.md`, and push `origin main`.
+* **Verify:**
+  ```bash
+  git remote -v | grep -q "amandeepsinghs-cyber/urvi-cairn-barmer.git" && ! git remote -v | grep -qi "workover-operations" && test -z "$(git status --porcelain)" && git log -n 1 --oneline
+  ```
+
+### Step C0.8 — `[USER GATE]` Enable 5 Missing GCP APIs & Create `urvi-cairn-run` Service Account (`[O]`)
+* **Files:** GCP project `urvi-cairn-barmer-ai-agent` (`deploy/deploy.sh iam`)
+* **Instructions:** **Pause for explicit user OK.** Enable `run.googleapis.com`, `cloudbuild.googleapis.com`, `artifactregistry.googleapis.com`, `aiplatform.googleapis.com`, and `iam.googleapis.com` in `urvi-cairn-barmer-ai-agent`, then run `bash deploy/deploy.sh iam` to provision `urvi-cairn-run@urvi-cairn-barmer-ai-agent.iam.gserviceaccount.com`.
+* **Verify:**
+  ```bash
+  gcloud services list --enabled --project=urvi-cairn-barmer-ai-agent --format="value(config.name)" | grep -E "^(run|cloudbuild|artifactregistry|aiplatform|iam)\.googleapis\.com$" | wc -l | grep -qx "5" && gcloud iam service-accounts describe urvi-cairn-run@urvi-cairn-barmer-ai-agent.iam.gserviceaccount.com --project=urvi-cairn-barmer-ai-agent --format="value(email)"
+  ```
+
+---
+
+## Stage C1 · Core Barmer 60-Month Synthetic Data Engine (`460 Wells` · 12 Steps · Day 1)
+
+### Step C1.1 — Extend `FieldConfig` Base Schema for Barmer Depths, Trajectories & Completion Windows (`[O]`)
+* **Files:** `backend/app/analytics/generator/fields/base.py`
+* **Instructions:** Add Barmer-aware fields to `FieldConfig`: `completion_window: tuple[date, date]`, `surface_shoe_m: tuple[float, float]`, `casing_mix_in: dict[float, float]`, `tubing_mix_in: dict[float, float]`, `zone_depths_md: dict[str, tuple[float, float, float, float]]`, and `zone_md_tvd_ratio: dict[str, tuple[float, float]]`; update default `primary_reservoirs` to `("Fatehgarh_Lower", "Fatehgarh_Upper", "Barmer_Hill", "Raageshwari_Volcanics")`.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from app.analytics.generator.fields.base import FieldConfig; assert 'zone_depths_md' in FieldConfig.__dataclass_fields__ and 'completion_window' in FieldConfig.__dataclass_fields__; print('C1.1 OK')")
+  ```
+
+### Step C1.2 — Implement Mangala `FieldConfig` (`mangala.py` · `180` Wells, Seed `5101`) (`[A]` + `[O]` Review)
+* **Files:** `backend/app/analytics/generator/fields/mangala.py`
+* **Instructions:** Implement `MANGALA` (`MNG-001..180`, pads `MNG-PAD-A..D`, `MPT-NAGANA` `150,000 BOPD` CDP, `Fatehgarh_Lower` `0.62` / `Fatehgarh_Upper` `0.33` / `Barmer_Hill` `0.05`, lift `55% JET_PUMP / 35% ESP / 5% PCP / 5% SRP`, `26.8° API`, `42°C` pour point, `59°C` WAT, `6,400 mg/L` TDS, hero `MNG-042`).
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from app.analytics.generator.fields.mangala import MANGALA; assert MANGALA.n_wells==180 and abs(sum(MANGALA.lift_mix.values())-1)<1e-6 and 'MNG-042' in MANGALA.fixtures; print('C1.2 OK')")
+  ```
+
+### Step C1.3 — Implement Bhagyam `FieldConfig` (`bhagyam.py` · `120` Wells, Seed `5202`) (`[A]` + `[O]` Review)
+* **Files:** `backend/app/analytics/generator/fields/bhagyam.py`
+* **Instructions:** Implement `BHAGYAM` (`BHG-001..120`, pads `BHG-PAD-1..3`, `BHG-CPF`, shallow `470–780 m MD` / `OWC 448 m TVDSS`, biodegraded `21.4° API` / `38 cP` waxy crude, `target_bias=-0.16` with rig-wait drift, lift `40% PCP / 35% ESP / 15% JET_PUMP / 10% SRP`, heroes `BHG-019` and `BHG-088`).
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from app.analytics.generator.fields.bhagyam import BHAGYAM; assert BHAGYAM.n_wells==120 and BHAGYAM.target_bias==-0.16 and {'BHG-019','BHG-088'}<=set(BHAGYAM.fixtures); print('C1.3 OK')")
+  ```
+
+### Step C1.4 — Implement Aishwariya `FieldConfig` (`aishwariya.py` · `100` Wells, Seed `5303`) (`[A]` + `[O]` Review)
+* **Files:** `backend/app/analytics/generator/fields/aishwariya.py`
+* **Instructions:** Implement `AISHWARIYA` (`ASH-001..100`, pads `ASH-PAD-1`, `ASH-PAD-2`, `ASH-ABH-3` tight `Barmer_Hill` horizontal pad `1,850–2,750 m MD`, `ASH-CPF`, lift `45% ESP / 35% JET_PUMP / 15% SRP / 5% PCP`, fixtures `ASH-023` & `ASH-061`).
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from app.analytics.generator.fields.aishwariya import AISHWARIYA; assert AISHWARIYA.n_wells==100 and {'ASH-023','ASH-061'}<=set(AISHWARIYA.fixtures); print('C1.4 OK')")
+  ```
+
+### Step C1.5 — Implement Raageshwari `FieldConfig` (`raageshwari.py` · `60` Wells, Seed `5404`) & Wire `fields/__init__.py` (`[A]` + `[O]` Review)
+* **Files:** `backend/app/analytics/generator/fields/raageshwari.py`, `backend/app/analytics/generator/fields/__init__.py`, delete `backend/app/analytics/generator/fields/{geleki,lakwa,lakhmani}.py`
+* **Instructions:** Implement `RAAGESHWARI` (`RAG-001..060`, pads `RAG-RDG-N`, `RAG-RDG-S`, `RAG-OIL-1`, `RGT-TERMINAL`, deep `Raageshwari_Volcanics` `2,950–3,720 m MD`, `14,000–42,000 scf/bbl` GOR, lift `55% NATURAL / 30% GAS_LIFT / 15% ESP`, hero `RAG-014`); wire `FIELD_CONFIGS` (`460` wells) and delete Assam field modules.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from app.analytics.generator.fields import FIELD_CONFIGS; assert list(FIELD_CONFIGS)==['Mangala','Bhagyam','Aishwariya','Raageshwari'] and sum(c.n_wells for c in FIELD_CONFIGS.values())==460; print('C1.5 OK')")
+  ```
+
+### Step C1.6 — Refactor `wells_native.py` for Post-2008 Dates, Field-Zone Depths, Deviation & 6 Lift Types (`[A]`)
+* **Files:** `backend/app/analytics/generator/wells_native.py`
+* **Instructions:** Draw `completion_date` within `cfg.completion_window` (`2008–2021`, `spud_date` 25–95d prior), draw `perf_top_m` & `total_depth_md_m` / `total_depth_tvd_m` from `cfg.zone_depths_md` and `cfg.zone_md_tvd_ratio` (honouring `ASH-ABH-3` horizontal `Barmer_Hill` wells), populate `pump_setting_depth_m` for `ESP`, `JET_PUMP`, `PCP`, and `SRP`, and draw field-specific `casing_size_in` / `tubing_size_in`.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from app.analytics.generator.fields import FIELD_CONFIGS; from app.analytics.generator.wells_native import generate_native_well_master; dfs=[generate_native_well_master(c) for c in FIELD_CONFIGS.values()]; import pandas as pd; wm=pd.concat(dfs); assert len(wm)==460 and wm['completion_date'].min().year>=2008 and wm[wm['field']=='Bhagyam']['total_depth_tvd_m'].max()<700; print('C1.6 OK')")
+  ```
+
+### Step C1.7 — Refactor `formation_tops.py` for the 7-Unit Barmer Stratigraphic Column (`[A]`)
+* **Files:** `backend/app/analytics/generator/formation_tops.py`
+* **Instructions:** Replace Assam `LITHOLOGY_MAP` with the 7 Barmer units (`Thar_Alluvium_Kapurdi`, `Akli_Thumbli`, `Dharvi_Dungar`, `Barmer_Hill`, `Fatehgarh_Upper`, `Fatehgarh_Lower`, `Raageshwari_Volcanics`) so every well from `470 m` Bhagyam to `3,720 m` Raageshwari gets strictly contiguous, positive-thickness layers bracketing `(perf_top_m, perf_bottom_m)`.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from app.analytics.generator.fields import FIELD_CONFIGS; from app.analytics.generator.wells_native import generate_native_well_master; from app.analytics.generator.formation_tops import generate_formation_tops
+  for n,c in FIELD_CONFIGS.items():
+      wm=generate_native_well_master(c); ft=generate_formation_tops(wm,c.seed)
+      assert (ft['bottom_md_m']>ft['top_md_m']).all(), n
+  print('C1.7 OK')")
+  ```
+
+### Step C1.8 — Refactor `construction.py` for Shallow Bhagyam Shoes, Deep RDG Strings & Lift Equipment (`[A]`)
+* **Files:** `backend/app/analytics/generator/construction.py`
+* **Instructions:** Scale `SURFACE` casing shoe dynamically (`<= perf_top_m - 80 m`, `150–250 m` in Bhagyam), add `9.625"` `INTERMEDIATE` string on deep `Raageshwari` wells (`total_depth_md_m > 2500 m`), support `9.625"`, `7.0"`, and `5.5"` `P-110`/`L-80` production strings, and generate `ESP`, `JET_PUMP`, `PCP`, `SRP`, `GAS_LIFT` completion metadata in `tubing_string`.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from app.analytics.generator.fields import FIELD_CONFIGS; from app.analytics.generator.wells_native import generate_native_well_master; from app.analytics.generator.construction import generate_casing_tally, generate_tubing_string, generate_perforation_intervals
+  for n,c in FIELD_CONFIGS.items():
+      wm=generate_native_well_master(c); ct=generate_casing_tally(wm,c.seed); ts=generate_tubing_string(wm,c.seed); pi=generate_perforation_intervals(wm,c.seed)
+      surf=ct[ct['string_type']=='SURFACE'].set_index('well_id')['shoe_m']
+      assert (surf < wm.set_index('well_id')['perf_top_m'] - 50).all() and len(ts)==len(wm) and len(pi)>=len(wm), n
+  print('C1.8 OK')")
+  ```
+
+### Step C1.9 — Update `catalogue.py`, `pressure_surveys.py`, `telemetry.py` & `operations_events.py` for Barmer Physics (`[A]`)
+* **Files:** `backend/app/analytics/generator/{catalogue.py,pressure_surveys.py,telemetry.py,operations_events.py,hierarchy.py,targets.py}`
+* **Instructions:** Update `catalogue.py` job labels & lift applicability across `IC-01..IC-15`; scale `pressure_surveys.py` BHP/SBHP/FBHP to Barmer hydrostatic gradients (`~0.10 kg/cm²/m` oil, deep RDG gas gradient) and temperatures (`52–138°C`); update `telemetry.py` (`JET_PUMP` power-fluid pressure, `ESP` Hz/current, `PCP` torque/WHT); update `operations_events.py` Thar Desert / pad heater / power feeder events while maintaining downtime reconciliation (`V-N2`).
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from app.analytics.generator.catalogue import build_job_catalogue; df=build_job_catalogue(); assert 'ONGC' not in df.to_string() and set(df['intervention_class'])=={f'IC-{i:02d}' for i in range(1,16)}; print('C1.9 OK')")
+  ```
+
+### Step C1.10 — Implement Barmer Simulation & 6 Hero Well Scripts (`simulate.py`, `native.py`, `fixtures.py`) (`[O]`)
+* **Files:** `backend/app/analytics/generator/{simulate.py,native.py,fixtures.py}`
+* **Instructions:** Generalize `simulate.py` & `native.py` for `ESP`, `JET_PUMP`, `PCP`, `SRP`, `GAS_LIFT`, and `NATURAL` (ensuring `>= 45` historical episodes in every class `IC-01..IC-15` across the fleet), and implement deterministic fixture scripts in `fixtures.py` for `MNG-042`, `BHG-019`, `BHG-088`, `ASH-023`, `ASH-061`, and `RAG-014`.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from datetime import date; from app.analytics.generator.fields.mangala import MANGALA; from app.analytics.generator.native import run_native_field; out=run_native_field(MANGALA, date(2026,9,23)); assert 'MNG-042' in set(out['well_master']['well_id']); print('C1.10 Mangala sim OK:', len(out['daily_production']), 'rows')")
+  ```
+
+### Step C1.11 — Update `generate.py` (+ Barmer Planning Tables) & Materialize All 4 Fields + `asset/` (`[O]`)
+* **Files:** `backend/app/analytics/generator/{generate.py,v030/supporting.py}`, `backend/app/data/landing/{asset,mangala,bhagyam,aishwariya,raageshwari}/*.parquet` (delete `landing/{geleki,lakwa,lakhmani}/`)
+* **Instructions:** Route all 4 Barmer fields through unified 60-month generation (`2021-10-01` → `2026-09-30`), generate Barmer `well_run`, `draft_plan`, and `decision_log` (`asset_mgr_barmer` / `prod_eng_mpt`, anchored on `MNG-042` & `BHG-019`), remove legacy Assam landing folders, and materialize all parquets via `uv run python -m app.analytics.generator.generate --field all`.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m app.analytics.generator.generate --field all && uv run python -c "from pathlib import Path; import pandas as pd; r=Path('app/data/landing'); assert not (r/'geleki').exists(); wm=pd.concat([pd.read_parquet(r/f/'well_master.parquet') for f in ('mangala','bhagyam','aishwariya','raageshwari')]); wh=pd.concat([pd.read_parquet(r/f/'workover_history.parquet') for f in ('mangala','bhagyam','aishwariya','raageshwari')]); print('C1.11 OK: wells=',len(wm),'workovers=',len(wh))")
+  ```
+
+### Step C1.12 — Update & Pass Core Generator Validator (`validate.py`) & Target Pinning (`pin_targets.py`) (`[O]`)
+* **Files:** `backend/app/analytics/generator/{validate.py,pin_targets.py}`
+* **Instructions:** Update `validate.py` checks (`V-N1..V-N7`) for the 4 Barmer fields, Bhagyam `-16%` target gap, downtime conservation, and 6 hero fixtures; update `pin_targets.py` and confirm `validate.py` exits `0` with zero violations.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m app.analytics.generator.validate && uv run python -m app.analytics.generator.pin_targets | head -n 25)
+  ```
+
+---
+
+## Stage C2 · Stage-DG Wellbore, Deviation, Integrity & Hazard Tables + GeoJSONs (5 Steps · Day 1 PM)
+
+### Step C2.1 — Update `dg/common.py` & `dg/tubing_deviation.py` for Barmer Pad S-Wells & ABH Horizontals (`[A]`)
+* **Files:** `backend/app/analytics/generator/dg/{common.py,tubing_deviation.py}`
+* **Instructions:** Set `FIELDS = ("mangala", "bhagyam", "aishwariya", "raageshwari")`; generate `tubing_tally` (joint lengths summing to `tubing_string` depth) and `deviation_survey` (30m stations, S-well build/drop for MBA pads and `85°–90°` lateral build for `Barmer_Hill` `ASH-ABH-3` wells matching `total_depth_tvd_m` and `total_depth_md_m`, `is_synthetic=True`).
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m app.analytics.generator.dg --field mangala && uv run python -c "import pandas as pd; tt=pd.read_parquet('app/data/landing/mangala/tubing_tally.parquet'); dv=pd.read_parquet('app/data/landing/mangala/deviation_survey.parquet'); assert tt['is_synthetic'].all() and dv['is_synthetic'].all() and len(dv)>1000; print('C2.1 OK')")
+  ```
+
+### Step C2.2 — Update `dg/integrity.py` (`barrier_tests`, `wellhead_rating` & `RAG-014` Veto Fixture) (`[A]`)
+* **Files:** `backend/app/analytics/generator/dg/integrity.py`
+* **Instructions:** Generate `barrier_tests` and `wellhead_rating` (`3k/5k psi` MBA, `10k psi` RDG gas, `rating >= 1.5 * max_thp` on healthy wells), and deterministically script `RAG-014`'s failed annular barrier test + insufficient frac-pressure rating margin so `TC-027` safety veto triggers.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m app.analytics.generator.dg --field raageshwari && uv run python -c "import pandas as pd; bt=pd.read_parquet('app/data/landing/raageshwari/barrier_tests.parquet'); r14=bt[bt['well_id']=='RAG-014']; assert (r14['test_result']=='FAIL').any(); print('C2.2 RAG-014 barrier veto fixture OK')")
+  ```
+
+### Step C2.3 — Update `dg/hazards_fishing.py` (`fluid_hazards`, `fishing_records`) & Materialize All 4 Fields (`[A]`)
+* **Files:** `backend/app/analytics/generator/dg/hazards_fishing.py`
+* **Instructions:** Replace Assam fluid hazard profiles with Barmer waxy-paraffin (`pour_point ~42°C`, `WAT ~58°C`), polymer breakthrough (`ppm` on `MNG-042` & mature MBA patterns), SRB trace `H2S`, and RDG `CO2`; restrict `fishing_records` strictly to failed workover episodes; run `dg --field all`.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m app.analytics.generator.dg --field all && uv run python -c "from pathlib import Path; import pandas as pd
+  for f in ('mangala','bhagyam','aishwariya','raageshwari'):
+      for t in ('tubing_tally','deviation_survey','barrier_tests','wellhead_rating','fluid_hazards','fishing_records'):
+          df=pd.read_parquet(Path('app/data/landing')/f/f'{t}.parquet'); assert len(df)>0 and df['is_synthetic'].all()
+  print('C2.3 OK: 24/24 DG parquets materialized')")
+  ```
+
+### Step C2.4 — Generate Barmer Field & Well-Pad GeoJSON Boundaries (`[A]`)
+* **Files:** `backend/app/data/geodata/{mangala,bhagyam,aishwariya,raageshwari}_boundary.geojson`, `backend/app/analytics/tools/geodata.py`, delete `{geleki,lakwa,lakhmani}_boundary.geojson`
+* **Instructions:** Write Barmer boundary polygons from `geometry.boundary_polygon(cfg)` so 100% of `well_master` coordinates pass point-in-polygon checks, update `tools/geodata.py`, and remove Assam GeoJSONs.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from pathlib import Path; import json, pandas as pd; from app.analytics.tools.geodata import load_field_geojson
+  for f in ('Mangala','Bhagyam','Aishwariya','Raageshwari'):
+      gj=load_field_geojson(f); assert gj and 'features' in gj or gj.get('type')=='Feature'
+  assert not Path('app/data/geodata/geleki_boundary.geojson').exists()
+  print('C2.4 GeoJSONs OK')")
+  ```
+
+### Step C2.5 — Verify Stage-DG Consistency & Integrity Unit Checks (`[O]`)
+* **Files:** `backend/tests/unit/{test_dg_tubing_deviation.py,test_dg_integrity.py,test_dg_hazards_fishing.py}`
+* **Instructions:** Update field/well references in the 3 DG unit test files to the 4 Barmer fields (`460` wells) and run them via `pytest` immediately to confirm physical consistency (tubing length sum, TVD <= MD, rating >= 1.5×THP, fishing only on failed jobs, `100% is_synthetic`).
+* **Verify:**
+  ```bash
+  (cd backend && uv run pytest tests/unit/test_dg_tubing_deviation.py tests/unit/test_dg_integrity.py tests/unit/test_dg_hazards_fishing.py -q)
+  ```
+
+---
+
+## Stage C3 · Barmer PDF Document Corpus (`D01–D11`), SOPs & Fact-Slot Audit (5 Steps · Day 1 PM)
+
+### Step C3.1 — Rewrite 14 Operational SOP YAMLs (`IC-01..IC-14`) for Cairn Barmer Operations (`[F]` + `[O]` Review)
+* **Files:** `backend/app/analytics/docs_pdf/templates/sop/IC-01.yaml` .. `IC-14.yaml`
+* **Instructions:** Rewrite all 14 SOPs for Cairn Oil & Gas Barmer Basin procedures (ESP/PCP overhaul, wireline Jet-Pump nozzle/throat insert retrieval, HOCU hot-oil circulation & trace-heater check above `59°C` WAT, HPAM polymer-gel conformance squeeze, Barmer Hill / Raageshwari multi-stage prop-frac, safety barrier checks) with zero ONGC/Assam tokens.
+* **Verify:**
+  ```bash
+  ! grep -rn -iE "\b(ongc|geleki|lakwa|lakhmani|assam|sivasagar|tipam|barail|lakadong)\b" backend/app/analytics/docs_pdf/templates/sop/ && (cd backend && uv run python -c "from app.analytics.docs_pdf.sop import load_all_sops; s=load_all_sops(); assert len(s)==14; print('C3.1 14 SOPs OK')")
+  ```
+
+### Step C3.2 — Rewrite Hero Case-Study Narratives (`hero_text.yaml`) Using Strict Fact Slots (`[F]` + `[O]` Review)
+* **Files:** `backend/app/analytics/docs_pdf/templates/hero_text.yaml`
+* **Instructions:** Replace `GK-129`/`LKW-*`/`LKM-*` entries with `MNG-042`, `BHG-019`, `BHG-088`, `ASH-023`, `ASH-061`, and `RAG-014` case-study prose using named `{{slot}}` tokens only (**zero raw numeric digits**).
+* **Verify:**
+  ```bash
+  ! grep -rn -iE "\b(gk-|lkw-|lkm-|ongc|geleki|lakwa|lakhmani)\b" backend/app/analytics/docs_pdf/templates/hero_text.yaml && python3 -c "import yaml; d=yaml.safe_load(open('backend/app/analytics/docs_pdf/templates/hero_text.yaml')); assert 'MNG-042' in str(d) and 'RAG-014' in str(d); print('C3.2 hero_text OK')"
+  ```
+
+### Step C3.3 — Update `docs_pdf` Fact Builder, Slot Catalogues (`D01..D11`) & PDF Templates (`[F]` + `[O]` Review)
+* **Files:** `backend/app/analytics/docs_pdf/{facts.py,render.py,validate.py,show.py,ir.py,index.py}`, `templates/{d08_rca.py,d09_field_study.py,d10_monthly.py}`, `templates/slot_catalogue/D01.json..D11.json`
+* **Instructions:** Replace Assam field/zone/well-ID references with Cairn Barmer (`Mangala/Bhagyam/Aishwariya/Raageshwari`, `MNG-042` scanned CBL `DOC-CBL-MNG042-2014` & `DOC-SCAN-MNG-042-2019`, Cairn Oil & Gas / Vedanta synthetic headers).
+* **Verify:**
+  ```bash
+  ! grep -rn -iE "\b(ongc|geleki|lakwa|lakhmani|sivasagar|nazira|tipam|barail|lakadong|gk-129)\b" backend/app/analytics/docs_pdf/ && echo "C3.3 docs_pdf code zero-Assam OK"
+  ```
+
+### Step C3.4 — Build, Scanify & Index Full Barmer PDF Corpus (`docs_pdf.build`) (`[O]`)
+* **Files:** Generated `backend/app/data/docs_pdf/` & `backend/app/data/index/` (gitignored), `backend/app/data/landing/*/document_index.parquet`
+* **Instructions:** Execute `uv run python -m app.analytics.docs_pdf.build --field all` (`render` → `scanify` 10% of D1/D5 + `MNG-042` legacy CBL → `validate` → `index`).
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m app.analytics.docs_pdf.build --field all)
+  ```
+
+### Step C3.5 — Run Standalone 100% Fact-Slot Digit Leakage Audit (`HERO`, `SOP`, `--full`) (`[O]`)
+* **Files:** `backend/app/analytics/docs_pdf/validate.py` (verification run)
+* **Instructions:** Explicitly verify `validate.py --type HERO`, `validate.py --type SOP`, and `validate.py --full` exit `0` with **0 unauthorized digits** across the entire generated Barmer PDF corpus.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m app.analytics.docs_pdf.validate --type HERO && uv run python -m app.analytics.docs_pdf.validate --type SOP && uv run python -m app.analytics.docs_pdf.validate --full)
+  ```
+
+---
+
+## Stage C4 · GCS Lakehouse & BigQuery Medallion Pipeline (`asia-south1` · 6 Steps · Day 1 Eve)
+
+### Step C4.1 — `[USER GATE]` Provision GCS Bucket `gs://urvi-cairn-barmer-ai-agent-datalake` (`[O]`)
+* **Files:** GCP Storage (`urvi-cairn-barmer-ai-agent`, `asia-south1`)
+* **Instructions:** After user OK, create `gs://urvi-cairn-barmer-ai-agent-datalake` (`--location=asia-south1 --uniform-bucket-level-access --public-access-prevention`).
+* **Verify:**
+  ```bash
+  gcloud storage buckets describe gs://urvi-cairn-barmer-ai-agent-datalake --project=urvi-cairn-barmer-ai-agent --format="value(location,iamConfiguration.uniformBucketLevelAccess.enabled)"
+  ```
+
+### Step C4.2 — Update `lakehouse/` Config & SQLX Definitions for Barmer Fields & Regenerate DDL (`[A]` + `[O]`)
+* **Files:** `lakehouse/config.py`, `lakehouse/ddl/{generate_ddl.py,00_datasets.sql,10_bronze_external.sql,20_silver_tables.sql,30_silver_doc_chunks.sql,40_gold_loader_tables.sql}`, `lakehouse/load/{doc_chunks.py,dossier_facts.py}`, `lakehouse/dataform/definitions/gold/*.sqlx`, `lakehouse/decision_record.md`
+* **Instructions:** Update field lists in `lakehouse/config.py` (`mangala`, `bhagyam`, `aishwariya`, `raageshwari`), remove any Assam/ONGC strings in `lakehouse/`, and run `generate_ddl.py`.
+* **Verify:**
+  ```bash
+  uv run --project backend python -m lakehouse.ddl.generate_ddl && ! grep -rn -iE "\b(workover-operations-agentic-ai|geleki|lakwa|lakhmani)\b" lakehouse/ddl/ lakehouse/dataform/ lakehouse/config.py && echo "C4.2 DDL OK"
+  ```
+
+### Step C4.3 — Upload Barmer Bronze Parquets & PDF Corpus to GCS (`bronze_upload` & `documents_upload`) (`[O]`)
+* **Files:** `gs://urvi-cairn-barmer-ai-agent-datalake/{bronze,documents}/`
+* **Instructions:** Run `--dry-run` first, then upload all Barmer landing parquets and rendered PDFs to `gs://urvi-cairn-barmer-ai-agent-datalake`.
+* **Verify:**
+  ```bash
+  uv run --project backend python -m lakehouse.load.bronze_upload --dry-run && uv run --project backend python -m lakehouse.load.bronze_upload && uv run --project backend python -m lakehouse.load.documents_upload && gcloud storage ls gs://urvi-cairn-barmer-ai-agent-datalake/bronze/ | head -n 10
+  ```
+
+### Step C4.4 — Dry-Run & Apply BigQuery Datasets + Bronze/Silver/Gold DDL (`apply_ddl.py`) (`[O]`)
+* **Files:** BigQuery `urvi_cairn_{bronze,silver,gold}` (`asia-south1`)
+* **Instructions:** Apply `00_datasets.sql` first so datasets exist, run `--dry-run-only` across `10..40` SQL files, then apply full DDL in `asia-south1`.
+* **Verify:**
+  ```bash
+  uv run --project backend python -m lakehouse.load.apply_ddl --files 00_datasets.sql && uv run --project backend python -m lakehouse.load.apply_ddl --dry-run-only && uv run --project backend python -m lakehouse.load.apply_ddl && bq ls --project_id=urvi-cairn-barmer-ai-agent --format=prettyjson | grep -E "urvi_cairn_(bronze|silver|gold)"
+  ```
+
+### Step C4.5 — Run `bronze_to_silver` MERGE, `doc_chunks` & `dossier_facts` Loaders (`[O]`)
+* **Files:** BigQuery `urvi_cairn_silver.*`, `urvi_cairn_gold.dossier_facts`
+* **Instructions:** Execute `bronze_to_silver.py`, `doc_chunks.py`, and `dossier_facts.py`, then run `bronze_to_silver.py --check-only` to verify 100% row-count parity with Bronze parquets.
+* **Verify:**
+  ```bash
+  uv run --project backend python -m lakehouse.load.bronze_to_silver && uv run --project backend python -m lakehouse.load.bronze_to_silver --check-only && uv run --project backend python -m lakehouse.load.doc_chunks && uv run --project backend python -m lakehouse.load.dossier_facts
+  ```
+
+### Step C4.6 — Compile & Run Dataform Gold Pipeline (`field_kpi_monthly`, `sick_well_screen`, `intervention_features`, `nba_lookup`) (`[O]`)
+* **Files:** `lakehouse/dataform/` → BigQuery `urvi_cairn_gold.*`
+* **Instructions:** Compile and execute Dataform (`@dataform/cli@3.0.25`) against `urvi-cairn-barmer-ai-agent` (`asia-south1`) and verify `field_kpi_monthly_reconciles` assertion passes and all 460 Barmer wells appear in Silver/Gold.
+* **Verify:**
+  ```bash
+  (cd lakehouse/dataform && npx -y @dataform/cli@3.0.25 compile && npx -y @dataform/cli@3.0.25 run) && bq query --project_id=urvi-cairn-barmer-ai-agent --location=asia-south1 --use_legacy_sql=false "SELECT field, COUNT(*) AS wells FROM \`urvi-cairn-barmer-ai-agent.urvi_cairn_silver.well_master\` GROUP BY 1 ORDER BY 2 DESC"
+  ```
+
+---
+
+## Stage C5 · ML Feature Engineering, Model Retraining & Look-Alike Index (5 Steps · Day 2 AM)
+
+### Step C5.1 — Refactor `features.py` for Barmer Fields, Zones & 6 Artificial Lift Types (`[O]`)
+* **Files:** `backend/app/analytics/model/features.py`
+* **Instructions:** Set `FIELDS = ["Mangala", "Bhagyam", "Aishwariya", "Raageshwari"]`, `ZONES = ["Fatehgarh_Lower", "Fatehgarh_Upper", "Barmer_Hill", "Raageshwari_Volcanics"]`, and `LIFT_TYPES = ["ESP", "JET_PUMP", "PCP", "SRP", "GAS_LIFT", "NATURAL"]`; generalize pump efficiency/drawdown features across pumped lifts while keeping strict `< s` causal truncation and table whitelist rules intact.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from datetime import date; from app.analytics.model.features import build_features, feature_names; r=build_features('MNG-042', date(2026,9,23)); assert r.status=='OK' and 'field_Mangala' in r.values and 'lift_JET_PUMP' in r.values; print('C5.1 OK: features=', len(feature_names()))")
+  ```
+
+### Step C5.2 — Verify Zero-Leakage Feature Invariants on Barmer Data (`test_features_no_leakage.py`) (`[O]`)
+* **Files:** `backend/tests/unit/test_features_no_leakage.py`
+* **Instructions:** Update sample well IDs in `test_features_no_leakage.py` to Barmer wells (`MNG-042`, `BHG-019`, `ASH-023`, `RAG-014`) and run the leakage suite *before* model training to prove truncation invariance (`>= s`), future perturbation invariance, and table whitelist compliance.
+* **Verify:**
+  ```bash
+  (cd backend && uv run pytest tests/unit/test_features_no_leakage.py -q)
+  ```
+
+### Step C5.3 — Retrain Intervention Classifier (`train_classifier.py`) & Verify Honest Gate Q (`[O]`)
+* **Files:** `backend/app/analytics/model/train_classifier.py`, `backend/app/analytics/tools/intervention_classifier.py`, `backend/app/analytics/model/{intervention_classifier_v1.pkl,intervention_classifier_metrics.json}`
+* **Instructions:** Remove Geleki prepend exclusion, update cross-field diagnostic (`leave_aishwariya_out`) and fixture assertions (`ASH-023` top-1 `IC-06`; `ASH-061` calibrated top-2), run `train_classifier.py`, and verify **Gate Q passes honestly** (`0.70 <= macro_f1 <= 0.92`, `top3 >= 0.90`, `+0.05` over rule baseline, `ece <= 0.08`, `min_support >= 30`). **If any Gate Q threshold fails, stop immediately and report to user — never tune to pass.**
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m app.analytics.model.train_classifier && uv run python -c "import json; m=json.load(open('app/analytics/model/intervention_classifier_metrics.json')); assert m['gate_q']['passed'] is True, m['gate_q']; print('C5.3 Gate Q PASSED:', m['gate_q'])")
+  ```
+
+### Step C5.4 — Retrain Artificial-Lift Survival / Failure Model (`train.py`) & Verify Honest Gate E (`[O]`)
+* **Files:** `backend/app/analytics/model/train.py`, `backend/app/analytics/tools/candidate_ranking.py`, `backend/app/analytics/model/{coxph_srp_v1.pkl,survival_model_metrics.json}`
+* **Instructions:** Update `train.py` & `candidate_ranking.py::predict_failure` (`TC-006`) from Geleki `SRP`-only to Barmer pumped producers (`Mangala` / MBA `JET_PUMP`, `ESP`, `PCP`, `SRP`), retrain CoxPH model, and verify honest holdout C-index (`0.65 <= holdout_c_index <= 0.78` and `holdout_c_index > trigger_b_c_index`). **Stop and report if Gate E fails.**
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m app.analytics.model.train && uv run python -c "import json; m=json.load(open('app/analytics/model/survival_model_metrics.json')); c=m['holdout_c_index']; b=m['trigger_b_c_index']; assert 0.65 <= c <= 0.78 and c > b, m; print(f'C5.4 Gate E PASSED: c_index={c:.4f} > baseline={b:.4f}')")
+  ```
+
+### Step C5.5 — Rebuild Look-Alike Index (`analog_index.parquet`) & Verify Hero Plausibility (`[O]`)
+* **Files:** `backend/app/analytics/tools/success_engine.py`, `backend/app/analytics/model/analog_index.parquet`
+* **Instructions:** Run `success_engine.py --build-index` across all 460 Barmer wells and verify `MNG-042` (`IC-11` conformance top recommendation), `BHG-019` (`IC-04` thermal/wax restoration), `ASH-023` (`IC-06` sand cleanout), and `RAG-014` (`IC-14` barrier repair after `IC-09` frac safety veto).
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m app.analytics.tools.success_engine --build-index && for w in MNG-042 BHG-019 ASH-023 ASH-061 RAG-014; do uv run python -m app.analytics.tools.success_engine --well "$w" | head -n 5 || exit 1; done)
+  ```
+
+---
+
+## Stage C6 · Backend Tools, Cairn Branding, Prompts, Voice & RBAC (6 Steps · Day 2 PM)
+
+### Step C6.1 — Update `data_access/` Adapters & `parquet_repo.py` for Barmer Basin (`[O]`)
+* **Files:** `backend/app/data_access/{adapters.py,parquet_repo.py,bigquery_repo.py}`
+* **Instructions:** Update `BASIN = "Barmer Basin (RJ-ON-90/1)"` in `adapters.py`, clean docstrings/retired-prefix handling in `parquet_repo.py`, and verify both `ParquetRepository` (`460` wells) and `BigQueryRepository` initialize cleanly.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from app.data_access.adapters import BASIN; from app.data_access.repository import get_repo; assert 'Barmer' in BASIN and len(get_repo().list_wells())==460; print('C6.1 OK')")
+  ```
+
+### Step C6.2 — Replace India Asset Map Tool (`ongc_assets.py` → Cairn/Vedanta India Assets) (`[O]`)
+* **Files:** `backend/app/analytics/tools/ongc_assets.py` (or `cairn_assets.py` + route wiring in `backend/app/api/asset.py`)
+* **Instructions:** Serve Vedanta / Cairn Oil & Gas's 4 real Indian upstream assets (`Rajasthan Block RJ-ON-90/1 — Barmer` active zoom hub, `Ravva PKGM-1 — KG Offshore`, `Cambay CB/OS-2 — Gujarat`, `Jorhat OALP — Assam-Arakan`) on `/api/geo/cairn-assets` (and alias `/api/geo/ongc-assets` if hit by legacy client calls, with zero `ONGC` strings in payload).
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from fastapi.testclient import TestClient; from app.main import app; c=TestClient(app); r=c.get('/api/geo/cairn-assets'); assert r.status_code==200 and 'Barmer' in r.text and 'Ravva' in r.text and 'ONGC' not in r.text; print('C6.2 OK')")
+  ```
+
+### Step C6.3 — Clean All Remaining Analytics Tools (`backend/app/analytics/tools/*.py`) of Assam References (`[O]`)
+* **Files:** `backend/app/analytics/tools/{common.py,candidate_ranking.py,dossier.py,field_performance.py,hierarchy.py,arps_decline.py,chan_diagnostic.py,offset_decline.py,render_well_map.py}`
+* **Instructions:** Replace `Assam`, `Geleki`, `Lakwa`, `Lakhmani`, `Nazira`, and `GK-`/`LKW-`/`LKM-` references in code and docstrings with Barmer equivalents (`Barmer`, `Mangala`, `MPT-NAGANA`, `MNG-042`).
+* **Verify:**
+  ```bash
+  ! grep -rn -iE "\b(ongc|geleki|lakwa|lakhmani|sivasagar|nazira)\b" backend/app/analytics/tools/ --exclude="field_report.py" && echo "C6.3 tools clean OK"
+  ```
+
+### Step C6.4 — Create `cairn_vedanta_wordmark.svg` & Rebrand A4 Field Report (`field_report.py`) (`[F]` + `[O]`)
+* **Files:** `frontend/public/brand/cairn_vedanta_wordmark.svg`, `frontend/public/brand/README.txt`, delete `frontend/public/brand/ongc_logo.svg`, `backend/app/analytics/tools/field_report.py`
+* **Instructions:** Create clean SVG wordmark (`CAIRN OIL & GAS · VEDANTA LIMITED — Barmer Basin · Block RJ-ON-90/1`), remove `ongc_logo.svg`, rebrand `field_report.py` A4 HTML/print template, and verify sidecar fact validation passes 100% on `MNG-042` and `BHG-019`.
+* **Verify:**
+  ```bash
+  test ! -f frontend/public/brand/ongc_logo.svg && test -f frontend/public/brand/cairn_vedanta_wordmark.svg && (cd backend && uv run python -c "from app.analytics.tools.field_report import build_field_report; r=build_field_report('MNG-042'); assert 'ONGC' not in r['html'] and 'Cairn' in r['html']; print('C6.4 report OK')")
+  ```
+
+### Step C6.5 — Update RBAC Display Roles (`rbac.py`, `api/me.py`) to Vedanta / Cairn Titles (`[O]`)
+* **Files:** `backend/app/agent/rbac.py`, `backend/app/api/{me.py,analytics_wells.py,docs.py,dossier.py,fields.py,wells.py}`
+* **Instructions:** Map role display names & descriptions to Cairn / Vedanta titles (*COO / Chief Digital & Information Officer*, *Asset Manager — Barmer (MBA & RDG)*, *Production / Well Services Engineer*) and clean `GK-`/`Geleki` API docstrings/examples.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -c "from fastapi.testclient import TestClient; from app.main import app; r=TestClient(app).get('/api/me'); assert r.status_code==200 and 'ONGC' not in r.text; print('C6.5 RBAC/API OK:', r.json())")
+  ```
+
+### Step C6.6 — Rebrand Text Agent Prompts, Router, UI Screen Controls & Gemini Live Voice (`[O]`)
+* **Files:** `backend/app/agent/{prompt.py,router.py,runner.py,ui_control.py,adk_tools.py,adk_tools_ext.py,fake_llm.py,callbacks.py}`, `backend/app/live/{live_prompt.md,session.py,voice_tools.py,fallback.py}`
+* **Instructions:** Rebrand Urvi to **"Urvi AI Agent for Cairn Oil & Gas, Barmer"** (English default), update `_WELL_RE` to `MNG|BHG|ASH|RAG`, update screen-command field lists (`Mangala`, `Bhagyam`, `Aishwariya`, `Raageshwari`), and update `fake_llm.py` deterministic test responses for Barmer wells.
+* **Verify:**
+  ```bash
+  ! grep -rn -iE "\b(ongc|oil and natural gas|geleki|lakwa|lakhmani|sivasagar|nazira)\b" backend/app/agent/ backend/app/live/ backend/app/api/ && (cd backend && uv run python -c "from app.agent.prompt import build_system_prompt; p=build_system_prompt(); assert 'Cairn Oil & Gas' in p and 'Mangala' in p and 'ONGC' not in p; print('C6.6 agent & voice OK')")
+  ```
+
+---
+
+## Stage C7 · Frontend Map, Voice Controls, Persona UI, Architecture Tab & Docs (6 Steps · Day 2 PM)
+
+### Step C7.1 — Update `WellMap.tsx` & `api/asset.ts` for Vedanta India Assets & Barmer Pad Zoom (`[F]` + `[O]`)
+* **Files:** `frontend/src/components/map/WellMap.tsx`, `frontend/src/api/asset.ts`
+* **Instructions:** Point India overview map to `/api/geo/cairn-assets` with `BARMER_DRILL_BOUNDS` (`25.20..26.20°N, 71.30..71.85°E`), display Cairn / Vedanta asset markers (`Barmer RJ-ON-90/1`, `Ravva`, `Cambay`, `Jorhat OALP`), and render the 4 Barmer field boundaries, pad clusters, and MPT/RGT facility pins.
+* **Verify:**
+  ```bash
+  ! grep -rn -iE "\b(ongc|geleki|lakwa|lakhmani|assam_drill_bounds)\b" frontend/src/components/map/WellMap.tsx frontend/src/api/asset.ts && (cd frontend && npx tsc --noEmit)
+  ```
+
+### Step C7.2 — Update `App.tsx`, `uiCommands.ts`, `VoiceAgentPanel.tsx` & `api/chat.ts` for Barmer Fields & English Greeting (`[F]` + `[O]`)
+* **Files:** `frontend/src/{App.tsx,agent/uiCommands.ts,api/chat.ts}`, `frontend/src/components/{agent/VoiceAgentPanel.tsx,fields/FieldHistoryChart.tsx,well/FieldReportOverlay.tsx}`
+* **Instructions:** Update field selectors, browser voice/text UI screen commands (`Mangala`, `Bhagyam`, `Aishwariya`, `Raageshwari`, `MNG-|BHG-|ASH-|RAG-`), header subtitle (*Cairn Oil & Gas · Barmer Basin*), and default English greeting in `VoiceAgentPanel.tsx`.
+* **Verify:**
+  ```bash
+  ! grep -rn -iE "\b(ongc|geleki|lakwa|lakhmani|sivasagar)\b" frontend/src/App.tsx frontend/src/agent/uiCommands.ts frontend/src/components/agent/VoiceAgentPanel.tsx && (cd frontend && npx tsc --noEmit)
+  ```
+
+### Step C7.3 — Update Frontend Persona Picker & Localized Strings to Vedanta Roles (`[F]`)
+* **Files:** `frontend/src/components/persona/PersonaPicker.tsx`, `frontend/src/state/persona.tsx`, `frontend/src/i18n/strings.ts`, `frontend/src/api/decision.ts`
+* **Instructions:** Replace `CMD` / ONGC tooltips and role labels with Cairn / Vedanta titles (*COO / CIO*, *Asset Manager — Barmer*, *Production / Well Services Engineer*).
+* **Verify:**
+  ```bash
+  ! grep -rn -iE "\b(ongc|cmd)\b" frontend/src/components/persona/ frontend/src/i18n/ frontend/src/state/ && (cd frontend && npx tsc --noEmit)
+  ```
+
+### Step C7.4 — Update & Rebuild Architecture Tab Diagrams & Explain JSONs (`build_architecture.py`) (`[F]` + `[O]`)
+* **Files:** `frontend/scripts/{build_architecture.py,architecture_explain.py,architecture_icons/README.md}`, `frontend/public/architecture/{current.html,current-light.html,target.html,target-light.html,explain-current.json,explain-target.json}`
+* **Instructions:** Update **Current** (Barmer synthetic fields → `urvi-cairn-barmer-ai-agent-datalake` → `urvi_cairn_*` → `urvi-cairn-app`) and **Target** (Cairn/Vedanta India production sources: AVEVA PI / Pad SCADA, SAP S/4HANA PM/MM, Subsurface/WellView DMS `[verify]` → Vedanta Lakehouse in `asia-south1`), then regenerate all 6 files in `frontend/public/architecture/`.
+* **Verify:**
+  ```bash
+  uv run --project backend python frontend/scripts/build_architecture.py && ! grep -rn -iE "\b(ongc|geleki|lakwa|lakhmani|workover-operations-agentic-ai|wellpulse-app)\b" frontend/public/architecture/ && echo "C7.4 architecture OK"
+  ```
+
+### Step C7.5 — Build Production Frontend Bundle (`frontend/dist/`) (`[O]`)
+* **Files:** `frontend/dist/`
+* **Instructions:** Run `npm run build` inside `frontend/` and verify clean Vite bundle compilation and zero ONGC strings in compiled `frontend/dist/assets/*.js`.
+* **Verify:**
+  ```bash
+  (cd frontend && npm run build) && ! grep -rn -i "ongc" frontend/dist/ && echo "C7.5 frontend dist clean OK"
+  ```
+
+### Step C7.6 — Update Active Docs (`README.md`, `how_urvi_works.md`, `ml_recommendation_engine.md`, `data_access_plan.md`) (`[F]` + `[O]`)
+* **Files:** `README.md`, `docs/{how_urvi_works.md,ml_recommendation_engine.md,data_access_plan.md}`
+* **Instructions:** Update all 4 primary docs to Cairn Oil & Gas (Barmer Basin), inserting the exact retrained Barmer Gate Q & Gate E metrics into `docs/ml_recommendation_engine.md` and aligning `docs/how_urvi_works.md` with the Explain JSON, while preserving the top isolation banner in `README.md`.
+* **Verify:**
+  ```bash
+  ! grep -n -iE "\b(geleki|lakwa|lakhmani|sivasagar|gk-129)\b" README.md docs/how_urvi_works.md docs/ml_recommendation_engine.md docs/data_access_plan.md && echo "C7.6 docs OK"
+  ```
+
+---
+
+## Stage C8 · Full Test Suite, Golden Schemas, Eval Migration & Zero-ONGC Audit (6 Steps · Day 2 Eve)
+
+### Step C8.1 — Update Golden Route Targets & Recapture `backend/tests/golden/*.schema.json` (`[A]` + `[O]`)
+* **Files:** `backend/tests/golden/{routes.py,capture.py,*.schema.json}`
+* **Instructions:** Replace `Assam` / `GK-` / `LKW-` / `LKM-` targets in `routes.py` & `capture.py` with `Barmer` / `MNG-042` / `BHG-019` / `ASH-023`, recapture all 15 golden JSON schemas, and verify `test_api_shapes.py` (or golden schema tests) pass.
+* **Verify:**
+  ```bash
+  (cd backend && uv run python -m tests.golden.capture && ! grep -rn -iE "\b(gk-|lkw-|lkm-|assam)\b" tests/golden/)
+  ```
+
+### Step C8.2 — Migrate Analytics, ML, Document & Contract Unit Tests (`backend/tests/unit/`) (`[A]` + `[O]`)
+* **Files:** `backend/tests/unit/*.py` (rename `test_contracts_geleki.py` → `test_contracts_mangala.py`, `test_ed6_ongc_assets.py` → `test_ed6_cairn_assets.py`; remove obsolete `tests/baseline/landing_v030/` if gitignored)
+* **Instructions:** Port all 41 unit test files from Assam fixtures (`GK-129`, `LKW-*`, `LKM-*`, `Geleki/Lakwa/Lakhmani`) to their exact Barmer equivalents (`MNG-042`, `BHG-019`, `BHG-088`, `ASH-023`, `ASH-061`, `RAG-014`, `Mangala/Bhagyam/Aishwariya/Raageshwari`) without weakening assertions.
+* **Verify:**
+  ```bash
+  (cd backend && uv run pytest tests/unit/ --ignore=tests/unit/test_bl12_all_wells.py -q)
+  ```
+
+### Step C8.3 — Run All-460-Wells Recommendation & Plausibility Stress Test (`test_bl12_all_wells.py`) (`[O]`)
+* **Files:** `backend/tests/unit/test_bl12_all_wells.py`
+* **Instructions:** Verify `recommend_interventions` (`TC-030`) and `similar_wells` (`TC-031`) succeed deterministically across **all 460 Barmer wells** (`MNG-001..180`, `BHG-001..120`, `ASH-001..100`, `RAG-001..060`) with `0.05 <= p_success <= 0.95` and zero currency leaks.
+* **Verify:**
+  ```bash
+  (cd backend && uv run pytest tests/unit/test_bl12_all_wells.py -q)
+  ```
+
+### Step C8.4 — Migrate Integration (`test_backend_parity.py`, `test_demo_flow.py`) & BDD Suites (`tests/bdd/`) (`[A]` + `[O]`)
+* **Files:** `backend/tests/integration/{test_backend_parity.py,test_demo_flow.py}`, `backend/tests/bdd/{test_agent_bdd.py,features/*.feature}`
+* **Instructions:** Update Parquet-vs-BigQuery parity tests (`urvi_cairn_silver` in `asia-south1`), end-to-end demo flow integration tests, and Gherkin `.feature` scenarios to Barmer fields and hero wells.
+* **Verify:**
+  ```bash
+  (cd backend && uv run pytest tests/integration/ tests/bdd/ -q)
+  ```
+
+### Step C8.5 — Migrate Agent Evaluation Datasets (`backend/tests/eval/`) (`[F]` + `[O]`)
+* **Files:** `backend/tests/eval/{README.md,canvas_routing_v05.json,wellpulse-eval.json,datasets/v04-dataset.json}` (archive or clean old ONGC `results/*.json`)
+* **Instructions:** Port eval prompts and expected tool/canvas assertions to Barmer (`Mangala`, `Bhagyam`, `Aishwariya`, `Raageshwari`, `MNG-042`, `BHG-019`, `RAG-014`) and validate JSON schemas.
+* **Verify:**
+  ```bash
+  python3 -c 'import json, glob
+  for p in ["backend/tests/eval/canvas_routing_v05.json","backend/tests/eval/wellpulse-eval.json","backend/tests/eval/datasets/v04-dataset.json"]:
+      txt=open(p).read(); json.loads(txt); assert not any(k in txt.lower() for k in ["ongc","geleki","lakwa","lakhmani","gk-129"]), p
+  print("C8.5 eval JSONs OK")'
+  ```
+
+### Step C8.6 — Execute Full `pytest` Regression Gate & Repo-Wide Zero-ONGC Audit (`[O]`)
+* **Files:** Entire repository (`backend/`, `frontend/`, `lakehouse/`, `deploy/`)
+* **Instructions:** Run the full `pytest` suite (`0` failures) and execute the strict repo-wide grep audit ensuring zero ONGC/Assam strings remain in `backend/app/`, `frontend/src/`, `frontend/public/`, `frontend/dist/`, or `lakehouse/dataform/`.
+* **Verify:**
+  ```bash
+  (cd backend && uv run pytest -q) && ! grep -rn -iE "\b(ongc|oil and natural gas|geleki|lakwa|lakhmani|sivasagar|nazira|tipam|barail|lakadong|gk-129)\b" backend/app/ frontend/src/ frontend/public/ lakehouse/dataform/ && echo "C8.6 FULL SUITE + ZERO-ONGC GATE PASSED"
+  ```
+
+---
+
+## Stage C9 · Local Rehearsal, Cloud Run Deployment & CIO Demo Script (5 Steps · Day 3)
+
+### Step C9.1 — Update `deploy/selfcheck.py` & `run_local.sh` and Pass Local 7-Route Smoke Test (`[O]`)
+* **Files:** `deploy/selfcheck.py`, `run_local.sh`
+* **Instructions:** Update `deploy/selfcheck.py` to test Cairn Barmer endpoints (`/api/health`, `/api/wells` == 460, `/api/geo/cairn-assets`, `/api/fields/compare`, `/api/wells/MNG-042/recommendations`, `/api/wells/MNG-042/report` containing `"Cairn"`, `/ws/live` WebSocket handshake), start local server on `:8002`, run `selfcheck.py`, and stop cleanly.
+* **Verify:**
+  ```bash
+  (cd backend && uv run uvicorn app.main:app --host 127.0.0.1 --port 8002 >/tmp/urvi_cairn_smoke.log 2>&1 & PID=$!; trap "kill $PID 2>/dev/null || true" EXIT; sleep 4 && uv run python ../deploy/selfcheck.py http://127.0.0.1:8002)
+  ```
+
+### Step C9.2 — Author Pinned Cairn CIO Demo Script (`docs/demo_flow.md` & `docs/pinned_values.md`) (`[F]` + `[O]` Review)
+* **Files:** `docs/demo_flow.md`, `docs/pinned_values.md`
+* **Instructions:** Write the 7-act **Cairn Oil & Gas CIO Demo Script** (`India Map → Barmer RJ-ON-90/1` → `MBA + RDG Field Compare & Bhagyam -16% Gap` → `Sick Wells & Priority List` → `MNG-042 Polymer Breakthrough Deep Dive` → `IC-11 Conformance Recommendation` → `"Why not hot-oil wax flush?" Counterfactual Veto + RAG-014 Barrier Veto` → `Cairn A4 Field Report` → `Architecture Current vs Target`), pinning every single metric from live tool outputs.
+* **Verify:**
+  ```bash
+  test -f docs/demo_flow.md && test -f docs/pinned_values.md && ! grep -iE "\b(ongc|geleki|lakwa|lakhmani|gk-129)\b" docs/demo_flow.md docs/pinned_values.md && grep -q "MNG-042" docs/demo_flow.md && grep -q "BHG-019" docs/demo_flow.md && echo "C9.2 demo script OK"
+  ```
+
+### Step C9.3 — `[USER GATE]` Build & Deploy `urvi-cairn-app` to Cloud Run (`us-central1`) (`[O]`)
+* **Files:** `deploy/deploy.sh`, `deploy/env.cloudrun.yaml`
+* **Instructions:** **Pause for explicit user OK.** Run `bash deploy/deploy.sh build` and `bash deploy/deploy.sh deploy` to deploy `urvi-cairn-app` in `urvi-cairn-barmer-ai-agent` (`us-central1`, runtime SA `urvi-cairn-run`, zero touch to ONGC).
+* **Verify:**
+  ```bash
+  gcloud run services describe urvi-cairn-app --project=urvi-cairn-barmer-ai-agent --region=us-central1 --format="value(status.url,status.latestReadyRevisionName)"
+  ```
+
+### Step C9.4 — Run Live Cloud Run Smoke Test (`deploy.sh smoke`) & Record URL in `APP_LINK.md` (`[O]`)
+* **Files:** `APP_LINK.md`, `backlog_refinements.md`
+* **Instructions:** Run `bash deploy/deploy.sh smoke` against the live Cloud Run URL (7/7 checks incl. `/ws/live` Gemini Live WebSocket and `MNG-042` Cairn field report), record the live URL and revision in `APP_LINK.md`, and log deployment in `backlog_refinements.md`.
+* **Verify:**
+  ```bash
+  bash deploy/deploy.sh smoke && grep -q "https://urvi-cairn-app" APP_LINK.md
+  ```
+
+### Step C9.5 — `[USER GATE]` Final Checklist Audit, Git Commit & Push to `origin/main` (`[O]`)
+* **Files:** `docs/checklist.md`, `backlog_refinements.md`
+* **Instructions:** **Pause for explicit user OK.** Confirm all prior steps `C0.1`..`C9.4` are `[x]` (`Impl` + `Verify`) in `docs/checklist.md`, confirm `../wellpulse` was untouched, commit final release state, and push to `git@github.com:amandeepsinghs-cyber/urvi-cairn-barmer.git`.
+* **Verify:**
+  ```bash
+  ! grep -E "^- \[ \] \*\*\[C[0-8]\." docs/checklist.md && git remote -v | grep -q "amandeepsinghs-cyber/urvi-cairn-barmer.git" && test -z "$(git -C ../wellpulse status --porcelain 2>/dev/null || true)" && echo "C9.5 ALL GATES COMPLETE"
+  ```
+

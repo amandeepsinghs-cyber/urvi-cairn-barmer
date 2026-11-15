@@ -20,7 +20,7 @@ All per-connection state lives in a local ``state`` dict (no module-level mutabl
 Configuration (env; ``WELLPULSE_*`` wins, ``WORKOVER_*`` accepted as alias):
   WELLPULSE_LIVE_MODEL     verified via ``python -m app.live.verify_model`` (Stage U: gemini-3.8-live)
   WELLPULSE_LIVE_LOCATION  default us-central1 (gemini-3.8-live is not served from ``global``)
-  WELLPULSE_LIVE_PROJECT   default GOOGLE_CLOUD_PROJECT, then workover-operations-agentic-ai
+  WELLPULSE_LIVE_PROJECT   default GOOGLE_CLOUD_PROJECT, then urvi-cairn-barmer-ai-agent
   WELLPULSE_LIVE_VOICE     default Aoede (DI 2.0; D-42 kept the female voice)
   WELLPULSE_LIVE_OFFLINE   1 => skip Gemini, go straight to text fallback
   WELLPULSE_DEBUG_RECONNECT 1 => accept {"type":"debug_reconnect"} to force a resume (tests / demo)
@@ -45,7 +45,7 @@ logger = logging.getLogger("wellpulse.live.session")
 
 DEFAULT_LIVE_MODEL = "gemini-3.8-live"  # verified 2026-10-07 by models.list + live.connect (us-central1)
 DEFAULT_LIVE_LOCATION = "us-central1"
-DEFAULT_PROJECT = "workover-operations-agentic-ai"
+DEFAULT_PROJECT = "urvi-cairn-barmer-ai-agent"
 MAX_CONSECUTIVE_FAILURES = 3
 DROP_HANDLE_AFTER = 2
 RECAP_KEEP_FIRST = 4

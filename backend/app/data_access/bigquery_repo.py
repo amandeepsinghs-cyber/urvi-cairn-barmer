@@ -1,7 +1,7 @@
 """``BigQueryRepository``: the ``DATA_BACKEND=bigquery`` implementation of ``WellRepository`` (SDD §5.7, Stage X).
 
 Design: it *is* a ``ParquetRepository`` whose single raw-read primitive ``_read(folder, table,
-columns)`` is served from the Silver layer (``wellpulse_silver.*``, ``asia-south1``) instead of the
+columns)`` is served from the Silver layer (``urvi_cairn_silver.*``, ``asia-south1``) instead of the
 landing files. Every adapter, cache and route therefore runs the same code on both backends, which
 is what makes the parquet == BigQuery parity test meaningful (BDD F-15 "Backend parity").
 
@@ -30,9 +30,9 @@ from app.analytics.generator.fields import FIELD_CONFIGS
 
 from .parquet_repo import ParquetRepository
 
-PROJECT_ID = os.getenv("WELLPULSE_BQ_PROJECT", "workover-operations-agentic-ai")
+PROJECT_ID = os.getenv("WELLPULSE_BQ_PROJECT", "urvi-cairn-barmer-ai-agent")
 LOCATION = os.getenv("WELLPULSE_BQ_LOCATION", "asia-south1")
-SILVER_DATASET = os.getenv("WELLPULSE_BQ_SILVER_DATASET", "wellpulse_silver")
+SILVER_DATASET = os.getenv("WELLPULSE_BQ_SILVER_DATASET", "urvi_cairn_silver")
 MAX_BYTES_BILLED = int(os.getenv("WELLPULSE_BQ_MAX_BYTES", str(2 * 1024**3)))
 JOB_LABELS = {"app": "wellpulse", "component": "api", "stage": "x"}
 

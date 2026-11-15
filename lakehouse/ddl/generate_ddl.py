@@ -6,7 +6,7 @@ typed by hand: one source of truth, no drift. Run from the repo root or anywhere
     uv run --project backend python lakehouse/ddl/generate_ddl.py
 
 Writes (all idempotent: ``CREATE ... IF NOT EXISTS``; nothing is ever dropped):
-    00_datasets.sql          wellpulse_bronze / wellpulse_silver / wellpulse_gold (asia-south1)
+    00_datasets.sql          urvi_cairn_bronze / urvi_cairn_silver / urvi_cairn_gold (asia-south1)
     10_bronze_external.sql   one external table per landing table over gs://.../bronze/<table>/
     20_silver_tables.sql     typed Silver contract tables (partitioned + clustered)
     30_silver_doc_chunks.sql doc_chunks mirror of the TF-IDF index (D-17)

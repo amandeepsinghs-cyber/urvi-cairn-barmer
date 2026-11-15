@@ -12,13 +12,13 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-PROJECT_ID = os.getenv("WELLPULSE_BQ_PROJECT", "workover-operations-agentic-ai")
+PROJECT_ID = os.getenv("WELLPULSE_BQ_PROJECT", "urvi-cairn-barmer-ai-agent")
 LOCATION = os.getenv("WELLPULSE_BQ_LOCATION", "asia-south1")
-BUCKET = os.getenv("WELLPULSE_LAKEHOUSE_BUCKET", "workover-operations-agentic-ai-datalake")
+BUCKET = os.getenv("WELLPULSE_LAKEHOUSE_BUCKET", "urvi-cairn-barmer-ai-agent-datalake")
 
-BRONZE_DATASET = "wellpulse_bronze"
-SILVER_DATASET = "wellpulse_silver"
-GOLD_DATASET = "wellpulse_gold"
+BRONZE_DATASET = "urvi_cairn_bronze"
+SILVER_DATASET = "urvi_cairn_silver"
+GOLD_DATASET = "urvi_cairn_gold"
 
 BRONZE_PREFIX = "bronze"
 DOCUMENTS_PREFIX = "documents"

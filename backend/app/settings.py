@@ -27,7 +27,7 @@ MODEL_DIR = APP_DIR / "analytics" / "model"
 
 # ---- Stage V: text agent (SDD §12.1, D-13). Vertex AI + ADC only; no API key is read anywhere. ----
 # The shell may export a wrong GOOGLE_CLOUD_PROJECT, so the project is explicit (WELLPULSE_PROJECT_ID overrides).
-PROJECT_ID: str = os.getenv("WELLPULSE_PROJECT_ID", "workover-operations-agentic-ai")
+PROJECT_ID: str = os.getenv("WELLPULSE_PROJECT_ID", "urvi-cairn-barmer-ai-agent")
 TEXT_MODEL: str = "gemini-3.8-flash"  # never change (D-13)
 TEXT_LOCATION: str = os.getenv("WELLPULSE_TEXT_LOCATION", "global")  # gemini-3.8-flash 404s in us-central1
 # "vertex" (default) | "fake" (deterministic scripted LLM for CI / offline demo; tests set this)

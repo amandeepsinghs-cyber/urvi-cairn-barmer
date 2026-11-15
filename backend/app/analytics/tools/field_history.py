@@ -2,7 +2,7 @@
 
 Verbatim T2: *"the past let's say 5 year production data field-wise … aggregated of all the wells"*.
 
-Definitions are **identical to Gold ``wellpulse_gold.field_kpi_monthly``**
+Definitions are **identical to Gold ``urvi_cairn_gold.field_kpi_monthly``**
 (``lakehouse/dataform/definitions/gold/field_kpi_monthly.sqlx``) so the app, the lakehouse and the voice
 agent quote the same numbers (Gate X "Gold field_kpi_monthly = TC-028 output"):
 
@@ -35,7 +35,7 @@ from .hierarchy import FIELDS, resolve_field
 FREQS = {"M": "M", "Q": "Q", "Y": "Y"}
 
 DEFINITIONS = {
-    "source": "wellpulse_gold.field_kpi_monthly definitions (lakehouse/dataform/definitions/gold/field_kpi_monthly.sqlx)",
+    "source": "urvi_cairn_gold.field_kpi_monthly definitions (lakehouse/dataform/definitions/gold/field_kpi_monthly.sqlx)",
     "oil_bopd": "SUM(daily oil_rate_bopd, NULL=0) over wells and days / days_in_period",
     "water_cut_pct": "water_bbl / (oil_bbl + water_bbl) * 100 (volume-weighted)",
     "producing_wells": "producing well-days / days_in_period",

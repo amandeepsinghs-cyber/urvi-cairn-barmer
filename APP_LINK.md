@@ -1,11 +1,7 @@
-# Urvi AI Agent · WellPulse (V 1.1)
+# Urvi · Cairn / Vedanta Oil and Gas (Barmer Basin)
 
-**Live app (Cloud Run):** https://wellpulse-app-806277846965.us-central1.run.app
+**Not deployed yet.** Target: Cloud Run service `urvi-cairn-app` in the Cairn Google Cloud project (to be decided;
+placeholder `urvi-cairn-barmer-ai-agent` in `deploy/deploy.sh`, which refuses to deploy until it is set).
 
-- ONGC Assam Asset well operations demo (Geleki, Lakwa, Lakhmani). All data is synthetic and representative.
-- Open the link in Chrome, click **Urvi AI Agent** (bottom right, or Ctrl+K), then press **Live → Open mic** to talk.
-- Try: "Namaste Urvi" · "Sirf band wells dikhao" · "GGS three dikhao" · "Full screen karo".
-
-Project: `workover-operations-agentic-ai` · Region: `us-central1` · Service: `wellpulse-app`
-
-V 1.1 (2026-11-15): revision `wellpulse-app-00009-kt4`, image `v1-1-c242a4e`. New: Architecture button (Current / Target, Explain, light version), English by default, recommendation fix for 31 wells. Rollback target: `wellpulse-app-00008-g49`.
+The ONGC demo is a separate repo and deployment (`wellpulse-app`, project `workover-operations-agentic-ai`) and must not
+be changed from here.

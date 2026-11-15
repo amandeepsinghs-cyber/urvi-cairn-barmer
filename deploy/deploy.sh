@@ -5,31 +5,48 @@
 #   deploy/deploy.sh plan      print every command, change nothing (default)
 #   deploy/deploy.sh iam       ensure runtime SA + additive role bindings (never removes any)
 #   deploy/deploy.sh build     Cloud Build the multi-stage image -> Artifact Registry (no deploy)
-#   deploy/deploy.sh deploy    new revision of wellpulse-app from $IMAGE (or --source, see below)
+#   deploy/deploy.sh deploy    new revision of urvi-cairn-app from $IMAGE (or --source, see below)
 #   deploy/deploy.sh smoke     deploy/smoke_test.py against the service URL
 #   deploy/deploy.sh all       iam -> build -> deploy -> smoke
 #
 # Env overrides:
 #   IMAGE_TAG=v04-<sha>      image tag (default: v04-<git short sha>[-dirty])
-#   RUN_SA=<email>           runtime SA (default dedicated wellpulse-run@…; SDD §17.3)
+#   RUN_SA=<email>           runtime SA (default dedicated urvi-cairn-run@…; SDD §17.3)
 #   DEPLOY_MODE=image|source image (default): build with gcloud builds submit on e2-highcpu-8,
 #                            then `run deploy --image`. source: `gcloud run deploy --source .`
 #                            (Cloud Run's default build machine; corpus build is slower there).
 #   DRY_RUN=1                print commands instead of running them (implied by `plan`)
 #
 # Never deletes services, revisions, images or IAM bindings. Rollback:
-#   gcloud run services update-traffic wellpulse-app --region us-central1 \
-#     --project workover-operations-agentic-ai --to-revisions=<previous>=100
+#   gcloud run services update-traffic urvi-cairn-app --region us-central1 \
+#     --project urvi-cairn-barmer-ai-agent --to-revisions=<previous>=100
 # ==============================================================================
 set -euo pipefail
 
-PROJECT="workover-operations-agentic-ai"
+PROJECT="urvi-cairn-barmer-ai-agent"
 REGION="us-central1"
-SERVICE="wellpulse-app"
+SERVICE="urvi-cairn-app"
+
+# ---- SAFETY GUARD (Cairn / Vedanta replica) -------------------------------------------------------
+# This repo is a replica of the ONGC WellPulse demo. It must NEVER deploy to, build into or grant IAM on the ONGC
+# project or service. Refuse to run any real step (anything except `plan`) when the targets are ONGC's or are still
+# the placeholder. Set PROJECT above once the Cairn Google Cloud project exists.
+ONGC_PROJECT="workover-operations""-agentic-ai"
+ONGC_SERVICE="wellpulse""-app"
+guard_targets() {
+    if [ "${PROJECT}" = "${ONGC_PROJECT}" ] || [ "${SERVICE}" = "${ONGC_SERVICE}" ]; then
+        echo "[x] REFUSED: targets point at the ONGC demo (${PROJECT}/${SERVICE}). This is the Cairn replica." >&2
+        exit 2
+    fi
+    case "${PROJECT}" in *TBD*)
+        echo "[x] REFUSED: Cairn Google Cloud project not set yet (PROJECT=${PROJECT}). Edit deploy/deploy.sh." >&2
+        exit 2;;
+    esac
+}
 AR_REPO="cloud-run-source-deploy"
-BUCKET="workover-operations-agentic-ai-datalake"
-BQ_DATASETS=(wellpulse_bronze wellpulse_silver wellpulse_gold)
-SA_NAME="wellpulse-run"
+BUCKET="urvi-cairn-barmer-ai-agent-datalake"
+BQ_DATASETS=(urvi_cairn_bronze urvi_cairn_silver urvi_cairn_gold)
+SA_NAME="urvi-cairn-run"
 RUN_SA="${RUN_SA:-${SA_NAME}@${PROJECT}.iam.gserviceaccount.com}"
 DEPLOY_MODE="${DEPLOY_MODE:-image}"
 
@@ -80,7 +97,7 @@ step_iam() {
         if [ "${DRY_RUN:-0}" = "1" ] || ! gcloud iam service-accounts describe "${RUN_SA}" --project "${PROJECT}" >/dev/null 2>&1; then
             x gcloud iam service-accounts create "${SA_NAME}" --project "${PROJECT}" \
                 --display-name "WellPulse Cloud Run runtime (v0.4)" \
-                --description "Least-privilege runtime SA for wellpulse-app (SDD 17.3)"
+                --description "Least-privilege runtime SA for urvi-cairn-app (SDD 17.3)"
         else
             echo "   SA exists"
         fi
@@ -130,7 +147,7 @@ service_url() {
 step_smoke() {
     local url="${SMOKE_URL:-}"
     if [ -z "${url}" ]; then
-        if [ "${DRY_RUN:-0}" = "1" ]; then url="https://wellpulse-app-bowxi5445q-uc.a.run.app"; else url="$(service_url)"; fi
+        if [ "${DRY_RUN:-0}" = "1" ]; then url="https://<urvi-cairn-app URL>"; else url="$(service_url)"; fi
     fi
     echo "== smoke: ${url}"
     # websockets ships with uvicorn[standard] in the backend lock, so reuse that environment.
@@ -140,10 +157,10 @@ step_smoke() {
 cmd="${1:-plan}"
 case "${cmd}" in
     plan)   DRY_RUN=1; step_iam; step_build; step_deploy; step_smoke ;;
-    iam)    step_iam ;;
-    build)  step_build ;;
-    deploy) step_deploy ;;
-    smoke)  step_smoke ;;
-    all)    step_iam; [ "${DEPLOY_MODE}" = "image" ] && step_build; step_deploy; step_smoke ;;
+    iam)    guard_targets; step_iam ;;
+    build)  guard_targets; step_build ;;
+    deploy) guard_targets; step_deploy ;;
+    smoke)  guard_targets; step_smoke ;;
+    all)    guard_targets; step_iam; [ "${DEPLOY_MODE}" = "image" ] && step_build; step_deploy; step_smoke ;;
     *) echo "usage: $0 {plan|iam|build|deploy|smoke|all}" >&2; exit 2 ;;
 esac
