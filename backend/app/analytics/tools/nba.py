@@ -192,9 +192,10 @@ def _pressure(well_id: WellId, as_of: date) -> dict | None:
     out = {"latest": latest, "previous": prev, "n_surveys": int(len(ps)), "sbhp_change_pct": None,
            "pi_change_pct": None, "doc_id": None}
     if prev:
-        if prev["sbhp_kgcm2"]:
+        # BL-12: a survey may lack SBHP or PI (e.g. a fluid-level-only survey); a change needs both values.
+        if prev["sbhp_kgcm2"] and latest["sbhp_kgcm2"] is not None:
             out["sbhp_change_pct"] = round((latest["sbhp_kgcm2"] / prev["sbhp_kgcm2"] - 1.0) * 100.0, 1)
-        if prev["pi_bpd_per_kgcm2"]:
+        if prev["pi_bpd_per_kgcm2"] and latest["pi_bpd_per_kgcm2"] is not None:
             out["pi_change_pct"] = round((latest["pi_bpd_per_kgcm2"] / prev["pi_bpd_per_kgcm2"] - 1.0) * 100.0, 1)
     out["doc_id"] = _doc_for_survey(well_id, latest["survey_date"])
     return out
