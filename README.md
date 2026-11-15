@@ -11,6 +11,10 @@ WellPulse is an industrial operations intelligence platform designed for mature 
 
 | Doc | Purpose |
 |---|---|
+| [`backlog_refinements.md`](./backlog_refinements.md) | **Start here for the latest state:** latest changes, open user refinements (R-n), backlog (BL-n) |
+| [`docs/how_urvi_works.md`](./docs/how_urvi_works.md) | Plain-English walkthrough of the architecture (same text as the Explain button in the Architecture tab) |
+| [`docs/ml_recommendation_engine.md`](./docs/ml_recommendation_engine.md) | ML and recommendation engine: every model and rule, training, inference, decisions; present system and production design |
+| [`docs/data_access_plan.md`](./docs/data_access_plan.md) | Where real ONGC data comes from, how Urvi fetches it (via the EDP) and how it stays in India (residency routes, controls) |
 | [`docs/v05_change_brief.md`](./docs/v05_change_brief.md) | **Canonical source of truth for v0.5**: user feedback U-1..U-7, stages AC..W2, decisions D-25..D-32 |
 | [`verbatim.md`](./verbatim.md) | Source of truth: the user's verbatim requirements (v0.4 baseline) |
 | [`docs/BRD.md`](./docs/BRD.md) | Business requirements, personas, success metrics (v0.5 updated) |

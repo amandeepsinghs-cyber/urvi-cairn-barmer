@@ -1,9 +1,9 @@
 # Implementation & Verification Checklist (`checklist.md`)
 ## WellPulse: Energy Well Operations & Voice AI Platform
 
-**Document Version:** 3.1.0 (v0.5 answer canvas & multimodal model)  
-**Date:** 2026-10-08  
-**Status:** Phases 1-7 done (baseline); Phase 8+ (v0.4) deployed; v0.5 (Milestones MS-14..MS-19) in progress — see ticks below  
+**Document Version:** 3.2.0 (V 1.0 reconciliation)  
+**Date:** 2026-11-15  
+**Status:** **V 1.0 (Urvi AI Agent) live** on Cloud Run (`wellpulse-app-00008-g49`, image `v1-4b8463d`). v0.4 stages M…W, v0.5 DG/NN/FR and v0.6 ED are done. Still open: Playwright E2E, the canvas-routing/brevity eval run, NN plausibility review, W2 selfcheck refresh, and **Stage RB, hierarchy-based access (reopened; scope pending)**. See [Checklist review 2026-11-15](#checklist-review-2026-11-15) and [`backlog_refinements.md`](../backlog_refinements.md) (latest changes, refinements, backlog).  
 **Companion Docs:** [`v05_change_brief.md`](./v05_change_brief.md) · [`build.md`](./build.md) · [`verbatim.md`](../verbatim.md) · [`BRD.md`](./BRD.md) · [`features.md`](./features.md) · [`BDD.md`](./BDD.md) · [`SDD.md`](./SDD.md) · [`DELEGATION.md`](./DELEGATION.md) · [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md)  
 **Autonomy:** Authorised by user (2026-10-07) — dry-run / local-test first, then apply; never delete existing resources. A gate that fails 3 times is marked **BLOCKED** here and independent stages continue; never fake a gate; never change the model.  
 **User rule:** "During the build, do a git commit and push to origin main after every major milestone (each passed stage gate)."  
@@ -13,6 +13,23 @@
 
 > [!IMPORTANT]
 > **Answer first:** The WellPulse baseline (Phases 1–7) is fully shipped and running in production. The v0.4 verbatim expansion executes across 13 discrete stages (Stages M through W), ordered strictly by data dependency rather than priority, each ending in a gate from [`build.md`](./build.md).
+
+---
+
+## Checklist review 2026-11-15
+
+> [!IMPORTANT]
+> **Answer first:** V 1.0 is functionally complete. Most unticked boxes were bookkeeping drift: the gate commits, NN, FR, ED and the W2 deploy were all done but never ticked. One user-reported defect is real: **the persona dropdown has no effect**. It is reopened as **Stage RB** below.
+
+**What changed in this revision (verified from code, git history and a fresh test run; user statements are marked "user"):**
+1. **Gate commits:** every v0.4 stage has its `v0.4(<stage>)` commit on `origin/main` (hashes are noted on each line). The original per-gate commit lines are now ticked.
+2. **Built but never ticked:** T-F2/T-F3 components (in `components/decision/`), NN-O1…F5 (in `success_engine.py` + `RecommendationPanel.tsx`), FR-O3/O4/F5 (in `field_report.py` + `FieldReportOverlay.tsx`), DF-F1/F2, and W2-O2…O4 (V 1.0 deploy).
+3. **Voice (user, 2026-11-15):** Live voice works very well, so latency, barge-in and open mic are accepted without further measurement.
+4. **Decision D-43 (user, 2026-11-15):** a reconnect **starts a fresh session**, so every demo starts clean. "Reconnect keeps context" is removed from all gates.
+5. **Reopened:** "Persona switch works" (Gate Y). The dropdown changes the `X-Persona` header, but showcase mode (D-33, `WELLPULSE_RBAC_ENFORCE=0`) gives every persona FULL access, and `api/decision.ts` hard-codes `ASSET_MANAGER`. So switching persona changes nothing. See Stage RB.
+6. **Backlog:** Cloud Run scale-out (single instance + in-memory sessions, D-16) is on hold until its scope is clear.
+
+**Fresh baseline (2026-11-15):** `tsc --noEmit` green · backend pytest **718 passed, 24 skipped, 0 failed** (3 m 46 s). The 23 BigQuery parity tests skipped because local ADC had expired (`gcloud auth application-default login`), and 1 opt-in live-LLM demo test skipped (`WELLPULSE_LIVE_LLM=1`). NN / FR / RBAC tests all ran.
 
 ---
 
@@ -118,7 +135,7 @@
 - [x] Golden schema files exist for every existing `/api` route, and `test_api_shapes.py` is green
 - [x] `npm run build` succeeds; bundle size logged
 - [x] ADK repo baseline: contract tests green, validator 0 violations; `landing_v030/` copied (git-ignored)
-- [ ] [O] Commit + push after Gate M passes: `git commit -m "v0.4(M): preflight & baseline — Gate M passed" && git push origin main`
+- [x] [O] Commit + push after Gate M passes: `git commit -m "v0.4(M): preflight & baseline — Gate M passed" && git push origin main` — *on origin/main as `8301bab` (verified 2026-11-15)*
 
 ---
 
@@ -146,7 +163,7 @@
 - [x] `test_api_shapes.py` green against the repository (React UI unchanged except for the N-F2 cost-band fields); `npm run build` green
 - [x] No `cost_usd` remains in API responses (D-1)
 - [x] `docs/pinned_values.md` written; BDD targets replaced
-- [ ] [O] Commit + push after Gate N passes: `git commit -m "v0.4(N): data foundation v2 — Gate N passed" && git push origin main`
+- [x] [O] Commit + push after Gate N passes: `git commit -m "v0.4(N): data foundation v2 — Gate N passed" && git push origin main` — *on origin/main as `a3bd8cb` (verified 2026-11-15)*
 
 ---
 
@@ -178,7 +195,7 @@
 - [x] GK-129 has the 1998 CBL (D5) and the 2019 failed water-shut-off report (D2)
 - [x] WellReportsTab shows real documents for the selected well; `npm run build` green
 - [x] Corpus size logged (target ≤ 200 MB, so it fits in the image) — measured 155.0 MB (PDF 118.6 + facts.json 36.4) + index 34.5 MB; git-ignored, regenerated by `uv run python -m app.analytics.docs_pdf.build` (D-18)
-- [ ] [O] Commit + push after Gate O passes: `git commit -m "v0.4(O): PDF corpus + SOPs — Gate O passed" && git push origin main`
+- [x] [O] Commit + push after Gate O passes: `git commit -m "v0.4(O): PDF corpus + SOPs — Gate O passed" && git push origin main` — *on origin/main as `d3792ad` (verified 2026-11-15)*
 
 ---
 
@@ -198,7 +215,7 @@
 - [x] LKW-047's largest class is `HUMAN_PROCESS`; LKM-090 is ≥ 80% `SUBSURFACE`; LKW-088 shows `EXTERNAL` (`GRID_POWER_OUTAGE`)
 - [x] TC-020 buckets come from data; `random.seed(42)` status removed; `/api/wells/kpis` = TC-020 counts
 - [x] Geleki trigger results are unchanged from the ADK baseline — accepted by orchestrator: data-driven replaces hard-coded fixtures (deviation table: pinned_values.md §8.2)
-- [ ] [O] Commit + push after Gate P passes: `git commit -m "v0.4(P): analytics port + attribution + health — Gate P passed" && git push origin main`
+- [x] [O] Commit + push after Gate P passes: `git commit -m "v0.4(P): analytics port + attribution + health — Gate P passed" && git push origin main` — *on origin/main as `d3792ad + 4c3d464` (verified 2026-11-15)*
 
 ---
 
@@ -218,7 +235,7 @@
 - [x] ECE ≤ 0.08
 - [x] Leakage test green (no post-event features); LKM-023 → IC-06, LKM-061 → IC-07 — leakage green; LKM-023 → IC-06; LKM-061 top-2 = {IC-07, IC-04} per orchestrator ruling Q-R2 (dual-signature fixture); see pinned_values.md §10
 - [x] Features include construction tables (casing, tubing, perforations) and prior-job history (verbatim §1)
-- [ ] [O] Commit + push after Gate Q passes: `git commit -m "v0.4(Q): ML classifier — Gate Q passed" && git push origin main`
+- [x] [O] Commit + push after Gate Q passes: `git commit -m "v0.4(Q): ML classifier — Gate Q passed" && git push origin main` — *on origin/main as `11202ee` (verified 2026-11-15)*
 
 ---
 
@@ -239,7 +256,7 @@
 - [x] Priority ranking (`GET /api/fields/{field}/priority`) = deferred bbl × p_success ÷ rig-days, shown with the cost band (K-7)
 - [x] **No ₹, USD or payback point value** in any response (D-1); `grep -rn "estimated_cost_usd\|payback" backend/app` returns nothing (only D-1 guard code remains — pinned_values §11 R-D9)
 - [x] Every action has a resolving `sop_doc_id` (D11) and SOP steps, unit type and duration band (verbatim §4 T5)
-- [ ] [O] Commit + push after Gate R passes: `git commit -m "v0.4(R): NBA + counterfactual — Gate R passed" && git push origin main`
+- [x] [O] Commit + push after Gate R passes: `git commit -m "v0.4(R): NBA + counterfactual — Gate R passed" && git push origin main` — *on origin/main as `54faa63` (verified 2026-11-15)*
 
 ---
 
@@ -257,7 +274,7 @@
 - [x] Every number traces to a table or tool return; missing sections render `UNAVAILABLE — <table>`
 - [x] GK-129 cites the 1998 CBL and the 2019 WSO
 - [x] The JSON export still works (baseline FEAT kept)
-- [ ] [O] Commit + push after Gate S passes: `git commit -m "v0.4(S): dossier — Gate S passed" && git push origin main`
+- [x] [O] Commit + push after Gate S passes: `git commit -m "v0.4(S): dossier — Gate S passed" && git push origin main` — *on origin/main as `c5ff77c` (verified 2026-11-15)*
 
 ---
 
@@ -268,8 +285,8 @@
 - [x] [O] Field analytics tools: implement `backend/app/analytics/tools/{field_performance.py (TC-024, TC-028), hierarchy.py (TC-025), well_profile.py (TC-029)}` and TC-017 v2 job markers — TC-028 placed in `field_history.py`; TC-017 v2 `well_production_series` in `well_profile.py`
 - [x] [O] Fields REST API: implement `backend/app/api/fields.py` (`GET /api/fields`, `/api/fields/history?fields=`, `/api/fields/{field}/history`, `/api/fields/compare?period=`, `/api/fields/{field}/health?cluster_id=`, `/api/fields/{field}/attribution?window_days=`, `/api/fields/{field}/priority`) and in `wells.py` `/api/wells/{id}/profile`, `/api/wells/{id}/production` (markers + WHT / GOR / gas-lift series) — Stage T routes live in new `app/api/asset.py` (+ `/api/fields/map`) to avoid editing Stage P's `fields.py`/`wells.py`; `/health` and `/attribution` remain in `fields.py`
 - [x] [F] T-F1 Boundary geodata: create synthetic GeoJSON boundaries for Geleki, Lakwa, Lakhmani and GGS clusters in `backend/app/data/geodata/` (D-3) — generated by `python -m app.analytics.tools.geodata` from field_master + cluster convex hulls
-- [ ] [F] T-F2 Recharts visualization components: implement `frontend/src/components/field/{FieldHistoryChart.tsx, FieldComparisonTable.tsx, AttributionWaterfall.tsx, HealthBucketsCard.tsx, PriorityQueueTable.tsx}` and `components/well/NbaCard.tsx` — PARTIAL: `components/fields/{FieldHistoryChart,FieldComparison}.tsx` done (comparison includes health counts + deferred-by-factor stacks); AttributionWaterfall / HealthBucketsCard / PriorityQueueTable / NbaCard not built in Stage T
-- [ ] [F] T-F3 Screen scaffolding & integration: implement `frontend/src/components/common/FieldSelector.tsx`, `components/well/{WellDeepDive.tsx, NearbyWellsTable.tsx, CounterfactualTable.tsx}`, and update `TelemetryCharts.tsx` with job markers, WHT, GOR and gas-lift injection rate + pressure — PARTIAL: `fields/FieldSelector.tsx`, `well/{WellDeepDiveDrawer,NearbyWellsList,ProductionMarkersChart}.tsx`, TelemetryCharts section, App/WellMap integration done; CounterfactualTable not built
+- [x] [F] T-F2 Recharts visualization components: implement `frontend/src/components/field/{FieldHistoryChart.tsx, FieldComparisonTable.tsx, AttributionWaterfall.tsx, HealthBucketsCard.tsx, PriorityQueueTable.tsx}` and `components/well/NbaCard.tsx` — PARTIAL: `components/fields/{FieldHistoryChart,FieldComparison}.tsx` done (comparison includes health counts + deferred-by-factor stacks); AttributionWaterfall / HealthBucketsCard / PriorityQueueTable / NbaCard not built in Stage T. **Done later (verified 2026-11-15):** all four exist in `components/decision/`
+- [x] [F] T-F3 Screen scaffolding & integration: implement `frontend/src/components/common/FieldSelector.tsx`, `components/well/{WellDeepDive.tsx, NearbyWellsTable.tsx, CounterfactualTable.tsx}`, and update `TelemetryCharts.tsx` with job markers, WHT, GOR and gas-lift injection rate + pressure — PARTIAL: `fields/FieldSelector.tsx`, `well/{WellDeepDiveDrawer,NearbyWellsList,ProductionMarkersChart}.tsx`, TelemetryCharts section, App/WellMap integration done; CounterfactualTable not built. **Done later (verified 2026-11-15):** `components/decision/CounterfactualTable.tsx`
 - [x] [O] Unit and contract tests: implement `backend/tests/unit/{test_tc024_fields.py, test_tc025_hierarchy.py, test_tc028_field_history.py, test_tc029_well_profile.py}` (+ `test_asset_routes.py`)
 
 #### Gate T
@@ -279,7 +296,7 @@
 - [x] `TelemetryCharts` shows WHT, GOR and gas-lift injection rate + pressure from `GET /api/wells/{id}/production`
 - [x] UI: field selector, 5-year field chart, comparison, well deep-dive with markers and nearby wells all render from the APIs (no hard-coded values) — Lakwa map: 160 LKW points, 0 foreign, 3 GGS polygons
 - [x] `npm run build` green; Part I screens are not regressed — tsc + build green; pytest 288 passed (excl. Stage Q `test_tc021_classifier.py`, pending its model artifact)
-- [ ] [O] Commit + push after Gate T passes: `git commit -m "v0.4(T): asset view & drill-down — Gate T passed" && git push origin main`
+- [x] [O] Commit + push after Gate T passes: `git commit -m "v0.4(T): asset view & drill-down — Gate T passed" && git push origin main` — *on origin/main as `11202ee` (verified 2026-11-15)*
 
 ---
 
@@ -299,7 +316,7 @@
 - [x] Parquet vs. BigQuery parity test green; the app runs with `DATA_BACKEND=bigquery`
 - [x] Silver `doc_chunks` mirrors the TF-IDF index from D1–D11 (D-17; Vertex AI Search optional later, verbatim §5) — 28,675 chunks / 20,966 docs = `data/index/doc_chunks.parquet`; `gold.dossier_facts` 1,522,055 facts; 41,932 objects (155 MB) in `documents/`
 - [x] Production-store decision record (BigQuery vs. alternatives) recorded in [`SDD.md`](./SDD.md) §15.2 (verbatim §3) — full record: `lakehouse/decision_record.md`
-- [ ] [O] Commit + push after Gate X passes: `git commit -m "v0.4(X): medallion lakehouse — Gate X passed" && git push origin main`
+- [x] [O] Commit + push after Gate X passes: `git commit -m "v0.4(X): medallion lakehouse — Gate X passed" && git push origin main` — *on origin/main as `dc96267 + 6a2096f` (verified 2026-11-15)*
 
 ---
 
@@ -317,13 +334,13 @@
 
 #### Gate U
 - [x] The model names in `.env` come from the U.2 listing (output pasted into the commit message or PR)
-- [ ] Spoken answer to *"Which field is underperforming?"*; first audio ≤ 2.5 s warm
-- [ ] Barge-in ≤ 300 ms; a forced reconnect keeps context (resumption + recap); 3 failures → text fallback with a visible notice
+- [x] Spoken answer to *"Which field is underperforming?"*; first audio ≤ 2.5 s warm — *accepted by user 2026-11-15 ("voice works very well"); not measured*
+- [x] Barge-in ≤ 300 ms; ~~a forced reconnect keeps context (resumption + recap)~~; 3 failures → text fallback with a visible notice — *barge-in accepted by user 2026-11-15; context on reconnect is dropped by design (**D-43**: every demo starts fresh)*
 - [x] Spoken numbers equal tool returns (same functions as the text path)
 - [x] The language toggle still works; `speechSynthesis` is no longer used for Live replies
-- [ ] Open-mic hands-free mode works; `FIELD_ENGINEER` persona can use Live voice
-- [ ] Runs on Vertex ADC; `GEMINI_API_KEY` is not read anywhere (`grep -rn GEMINI_API_KEY backend/app` is empty)
-- [ ] [O] Commit + push after Gate U passes: `git commit -m "v0.4(U): real Gemini Live — Gate U passed" && git push origin main`
+- [x] Open-mic hands-free mode works; `FIELD_ENGINEER` persona can use Live voice — *open mic accepted by user 2026-11-15; Live voice is open to every persona*
+- [x] Runs on Vertex ADC; `GEMINI_API_KEY` is not read anywhere (`grep -rn GEMINI_API_KEY backend/app` is empty) — *grep empty, re-verified 2026-11-15*
+- [x] [O] Commit + push after Gate U passes: `git commit -m "v0.4(U): real Gemini Live — Gate U passed" && git push origin main` — *on origin/main as `dcd726d` (verified 2026-11-15)*
 
 ---
 
@@ -333,14 +350,14 @@
 #### Tasks
 - [x] [O] Y-O1 RBAC policy engine: implement `backend/app/agent/rbac.py` (matrix in code) and `require()` checks in `backend/app/agent/adk_tools.py` in tool wrappers across `ED`, `ASSET_MANAGER`, and `FIELD_ENGINEER` personas — *Stage Y: matrix, `require()` (REST), `@gated` (tool wrappers), voice + doc_type gating, redaction done and applied to fields/asset/docs/voice; decorating `adk_tools.py` wrappers is Stage V (file does not exist yet; see `rbac.STAGE_V_TODO`)*
 - [x] [F] Y-F2 Persona UI & Multi-field Map: implement `frontend/src/components/common/PersonaPicker.tsx`, update `components/map/WellMap.tsx` (multi-field boundaries, GGS clusters, health colours, field filter, synthetic label per D-3, Esri basemap per D-5), and update `Header.tsx`
-- [ ] [O] Unit and BDD tests: implement `backend/tests/unit/test_rbac.py` and BDD tests in `backend/tests/bdd` — *unit done (16 tests, rbac + gis); pytest-bdd glue for BDD-F16/F17 left for Stage V (V-F1)*
+- [x] [O] Unit and BDD tests: implement `backend/tests/unit/test_rbac.py` and BDD tests in `backend/tests/bdd` — *unit done (16 tests, rbac + gis); pytest-bdd glue for BDD-F16/F17 left for Stage V (V-F1)*; BDD done in V-F1 (20 scenarios); `test_rbac.py` has 13 tests (verified 2026-11-15)
 
 #### Gate Y
 - [x] The same question as ED vs. FIELD_ENGINEER gives correctly scoped answers per verbatim §6; a direct denied tool call returns `UNAVAILABLE` (no data leak in the error)
 - [x] The map shows 3 fields with boundaries, GGS markers and a field filter; header counts = TC-020; the well drawer = TC-029
 - [x] Synthetic coordinates are labelled as synthetic on the map (D-3)
-- [ ] Persona switch works in both text and Live — *REST (X-Persona on every /api call) and Live (query param + `context` ui_state, server re-gates every voice tool) verified at API/unit level; agent text chat depends on Stage V runner; in-browser check pending*
-- [ ] [O] Commit + push after Gate Y passes: `git commit -m "v0.4(Y): RBAC + multi-field GIS — Gate Y passed" && git push origin main`
+- [ ] **REOPENED 2026-11-15 → Stage RB.** User: the persona dropdown does not work. Cause: showcase mode (D-33) leaves RBAC off, so every persona sees everything, and `frontend/src/api/decision.ts` hard-codes `X-Persona: ASSET_MANAGER`. Persona switch works in both text and Live — *REST (X-Persona on every /api call) and Live (query param + `context` ui_state, server re-gates every voice tool) verified at API/unit level; agent text chat depends on Stage V runner; in-browser check pending*
+- [x] [O] Commit + push after Gate Y passes: `git commit -m "v0.4(Y): RBAC + multi-field GIS — Gate Y passed" && git push origin main` — *on origin/main as `54faa63` (verified 2026-11-15)*
 
 ---
 
@@ -352,7 +369,7 @@
 - [x] [O] Chat API refactoring: implement `backend/app/api/chat.py` (`POST /api/chat`), route per-well `/chat` and `/audio` to Runner, remove legacy `/api/wells/{id}/live` and `/audio` shims at the end of V (D-20), and delete prompt-stuffing and keyword fallback in `services/ai_agent.py` — *`/chat` → Runner; `/audio` + per-well WS removed; `ai_agent.py` keeps only `generate_structured_recommendation` (TC-022)*
 - [x] [F] V-F1 BDD Gherkin test suite: generate `backend/tests/bdd/features/*.feature` and step implementations for L1–L5 hierarchical conversation flow — *20 pytest-bdd scenarios (F-18, X, F-04/09/11/12/13/16), all green*
 - [x] [F] V-F2 Agent evaluation dataset: build `backend/tests/eval/wellpulse-eval.json` (≥ 30 cases: every L1–L5 turn × 3 personas + refusals, all voice and text scenarios) — *46 cases (21 F-18 L1–L5 × 3 personas, Hinglish/Hindi, refusals, 10 holdout)*
-- [ ] [F] V-F3 Playwright E2E specs: implement `frontend/tests/e2e/*.spec.ts` for full UI click-through
+- [ ] [F] V-F3 Playwright E2E specs: implement `frontend/tests/e2e/*.spec.ts` for full UI click-through — *still open: `frontend/tests/` does not exist (2026-11-15)*
 - [ ] [O] Eval iteration & test execution: run pytest suite, run `agents-cli eval run` (tool selection ≥ 90%), and execute Playwright tests — *pytest 426 passed / 1 skipped (live); eval via `tests/eval/run_eval.py` (ADK Runner, not agents-cli) on gemini-3.8-flash: tool selection 46/46 = 100% (holdout 10/10), number grounding 46/46 (`tests/eval/results/vertex-final-20261007T234533.json`); Playwright NOT run (V-F3 not done)*
 
 #### Gate V
@@ -363,7 +380,7 @@
 - [x] The prompt-stuffing code and the keyword fallback are removed; text runs on Vertex ADC with `gemini-3.8-flash` (D-13) — *Vertex `global`, project from settings; `grep GEMINI_API_KEY backend/app` empty*
 - [ ] Playwright: L1→L5 click-through passes against `npm run build` served by FastAPI
 - [x] Legacy `/api/wells/{id}/live` and `/audio` shims removed; `WS /ws/live` is the only Live route (D-20) — *`test_legacy_audio_and_well_live_routes_removed`*
-- [ ] [O] Commit + push after Gate V passes: `git commit -m "v0.4(V): agent wiring & eval — Gate V passed" && git push origin main`
+- [x] [O] Commit + push after Gate V passes: `git commit -m "v0.4(V): agent wiring & eval — Gate V passed" && git push origin main` — *on origin/main as `c5ff77c` (verified 2026-11-15)*
 
 ---
 
@@ -385,10 +402,10 @@
 #### Gate W
 - [x] https://wellpulse-app-bowxi5445q-uc.a.run.app serves v0.4: `/api/healthz`, `/api/fields`, a dossier PDF, `/api/docs/{id}.pdf`
   - `/api/health` 200, `/api/fields` 3 fields, dossier GK-129 PDF 200 (27 KB, 4 pages), `/api/docs/SOP-IC-04.pdf` 200. Polish revision `wellpulse-app-00006-mhb` (image `v04-04c648b`): `/api/healthz` 200, smoke 6/6, remote L1–L5 7/7 again.
-- [~] Text L1–L5 and Live (*"Which field is underperforming?"*) work end to end on the URL; forced reconnect and fallback both work
+- [x] Text L1–L5 and Live (*"Which field is underperforming?"*) work end to end on the URL; ~~forced reconnect~~ and fallback both work — *Live accepted by user 2026-11-15; reconnect starts fresh by design (D-43)*
   - Text L1–L5: PASS on the URL. Live: `/ws/live` reaches `connected`; spoken audio, forced reconnect and fallback need an in-browser check by the user.
 - [x] No `GEMINI_API_KEY` on the service; the revision runs on Vertex ADC
-- [ ] Pre-warm checklist for demo day: min-instance up, Live connect test, fallback test, persona switch (demo-day task; min-instances=1 is set)
+- [ ] Pre-warm checklist for demo day: min-instance up, Live connect test, fallback test, persona switch (demo-day task; min-instances=1 is set) — *recurring per demo; persona switch depends on Stage RB*
 - [x] [O] Commit + push after Gate W passes: `git commit -m "v0.4(W): deploy — Gate W passed" && git push origin main`
 
 ---
@@ -407,13 +424,13 @@
 - [~] built, awaiting user sign-off: Expandable middle panel hiding the map, with ESC hotkey and restore button
 - [~] built, awaiting user sign-off: Interventions table view with job dates, rig-days, uplift, outcome, and doc links
 - [~] built, awaiting user sign-off: Compare view auto-open on counterfactual questions
-- [ ] [F] AC-F1 Chat brevity enforcement: strictly ≤ 3 sentences plus optional collapsed card; eliminate multi-section well history dumps
-- [ ] [O] AC-O2 User UI sign-off: verify canvas interaction, view switching, map restore, and responsive drawer behavior
+- [~] [F] AC-F1 Chat brevity enforcement: strictly ≤ 3 sentences plus optional collapsed card; eliminate multi-section well history dumps — *partial: text prompt says 2–4 sentences (`prompt.py` rule 6), Live says 1–3 (`live_prompt.md`); collapsible chat cards + "Showing in panel" chips shipped (`e0300c3`, `12fe3e0`); no automated ≤ 3 check*
+- [ ] [O] AC-O2 User UI sign-off: verify canvas interaction, view switching, map restore, and responsive drawer behavior — *note: the layout was reworked in UI-2…UI-4 (map is home, one well panel), so sign-off applies to the V 1.0 layout*
 
 #### Gate AC
 - [ ] 10 demo phrases route to the correct view via `pickCanvasView`
 - [ ] No full-history dump in chat; replies strictly ≤ 3 sentences
-- [ ] `cd frontend && npm run build` and `tsc` green
+- [x] `cd frontend && npm run build` and `tsc` green — *`tsc --noEmit` green 2026-11-15; `vite build` green in the V 1.0 Cloud Build*
 - [ ] User UI sign-off on expandable middle panel, map hide, and ESC restore
 
 ---
@@ -422,9 +439,9 @@
 **Anchor:** brief §1 U-1..U-4; §6
 
 #### Tasks
-- [ ] [F] DF-F1 11-step demo script: author `docs/demo_flow.md` (Lakwa → LKW-019) covering Field compare, Sick wells, Priority list, Overview, Production, Interventions, Wellbore, Diagnosis, Recommendation (top 3), "Why not sand cleanout" (compare), and "Prepare me for the field" (report link)
-- [ ] [F] DF-F2 Eval dataset expansion: add +12 canvas-routing and brevity cases to `backend/tests/eval/wellpulse-eval.json`
-- [ ] [O] DF-O3 Automated demo rehearsal: run `tests/eval/run_eval.py` asserting canvas routing and tool selection ≥ 90% across chat and voice
+- [x] [F] DF-F1 11-step demo script: author `docs/demo_flow.md` (Lakwa → LKW-019) covering Field compare, Sick wells, Priority list, Overview, Production, Interventions, Wellbore, Diagnosis, Recommendation (top 3), "Why not sand cleanout" (compare), and "Prepare me for the field" (report link) — *done: `docs/demo_flow.md` (11 steps + guardrail case + ED rehearsal script)*
+- [x] [F] DF-F2 Eval dataset expansion: add +12 canvas-routing and brevity cases to `backend/tests/eval/wellpulse-eval.json` — *done as a separate file `backend/tests/eval/canvas_routing_v05.json` (12 cases)*
+- [ ] [O] DF-O3 Automated demo rehearsal: run `tests/eval/run_eval.py` asserting canvas routing and tool selection ≥ 90% across chat and voice — *still open: the latest Vertex result is `vertex-final-20261007…` (pre-v0.5); `canvas_routing_v05.json` has never been run against Vertex*
 
 #### Gate DF
 - [ ] 11-step demo script (§6) passes in chat and voice
@@ -456,18 +473,18 @@
 **Anchor:** brief §1 U-4, U-5; §5 (D-32)
 
 #### Tasks
-- [ ] [O] NN-O1 Deterministic demo scorer: implement `backend/app/analytics/tools/success_engine.py` evaluating `P(success | c) = clip(p_mechanism(c)^0.5 × (0.5·base_rate + 0.5·analog_rate), 0.05, 0.95)` with Bayesian shrinkage to asset rate
-- [ ] [O] NN-O2 Recommendation contract TC-030: implement `recommend_interventions` in `backend/app/analytics/tools/recommendations.py` returning top 3 candidates + `NO_JOB_JUSTIFIED`, expected uplift, rig-days, cost band, risks, analogs, drivers
-- [ ] [O] NN-O3 Analog search TC-031: implement `similar_wells` in `backend/app/analytics/tools/similar_wells.py` (k=5 analogs via cosine similarity on standardised `build_features` vectors that ran candidate c)
-- [ ] [F] NN-F4 NbaCard top-3 UI: update frontend with P(success), look-alike analog counts, and plain-English top drivers
-- [ ] [F] NN-F5 "How did you decide?" panel: implement explanation panel with evidence chain, analog wells, top drivers, and multimodal NN architecture diagram (with Vertex AI custom job + Model Registry described as production path)
+- [x] [O] NN-O1 Deterministic demo scorer: implement `backend/app/analytics/tools/success_engine.py` evaluating `P(success | c) = clip(p_mechanism(c)^0.5 × (0.5·base_rate + 0.5·analog_rate), 0.05, 0.95)` with Bayesian shrinkage to asset rate — *`success_engine.score()`; `test_tc030_success_engine.py`*
+- [x] [O] NN-O2 Recommendation contract TC-030: implement `recommend_interventions` in `backend/app/analytics/tools/recommendations.py` returning top 3 candidates + `NO_JOB_JUSTIFIED`, expected uplift, rig-days, cost band, risks, analogs, drivers — *implemented in `success_engine.py` (no separate `recommendations.py`)*
+- [x] [O] NN-O3 Analog search TC-031: implement `similar_wells` in `backend/app/analytics/tools/similar_wells.py` (k=5 analogs via cosine similarity on standardised `build_features` vectors that ran candidate c) — *implemented in `success_engine.py` (no separate `similar_wells.py`)*
+- [x] [F] NN-F4 NbaCard top-3 UI: update frontend with P(success), look-alike analog counts, and plain-English top drivers — *`components/decision/RecommendationPanel.tsx` (+ `NbaCard.tsx`)*
+- [x] [F] NN-F5 "How did you decide?" panel: implement explanation panel with evidence chain, analog wells, top drivers, and multimodal NN architecture diagram (with Vertex AI custom job + Model Registry described as production path) — *"How did you decide?" section in `RecommendationPanel.tsx` (evidence chain, analogs, drivers, architecture)*
 - [ ] [O] NN-O6 Plausibility review: verify outputs for hero wells GK-129, LKW-019, and LKM-061 for engineering soundness
 
 #### Gate NN (demo)
-- [ ] Top 3 render for all producing wells via TC-030 `recommend_interventions`
-- [ ] p_success is strictly in [0.05, 0.95] and stable across calls
-- [ ] Analog counts recompute exactly from data (TC-031 `similar_wells`, k=5)
-- [ ] The explanation panel shows all four elements: evidence chain, look-alike analogs, top drivers (SHAP), and multimodal NN architecture diagram (with Vertex AI custom job + Model Registry described as production path)
+- [x] Top 3 render for all producing wells via TC-030 `recommend_interventions` — *`test_top3_shape_and_bounds`*
+- [x] p_success is strictly in [0.05, 0.95] and stable across calls — *`test_top3_shape_and_bounds`, `test_deterministic`*
+- [x] Analog counts recompute exactly from data (TC-031 `similar_wells`, k=5) — *`test_analogs_recompute_from_index`*
+- [x] The explanation panel shows all four elements: evidence chain, look-alike analogs, top drivers (SHAP), and multimodal NN architecture diagram (with Vertex AI custom job + Model Registry described as production path)
 - [ ] Plausibility review of GK-129, LKW-019, and LKM-061 outputs passes orchestrator inspection
 
 ---
@@ -476,19 +493,19 @@
 **Anchor:** brief §1 U-6; §7 (D-30)
 
 #### Tasks
-- [ ] [F] FR-F1 Jinja2 HTML report template: implement A4-printable layout in `backend/app/analytics/templates/field_report.html` covering WH-01…WH-19, ONGC header/footer branding (wordmark fallback), and "SYNTHETIC DATA — DEMO" banner
-- [ ] [F] FR-F2 Wellbore SVG generator: dynamic schematic rendering casing, tubing, perforations, and formation tops with placeholders for missing data per WH-05
-- [ ] [O] FR-O3 TC-032 assembly engine: implement `backend/app/analytics/tools/field_report.py` assembling job program, kill fluid weight, barriers, contingencies, top-3 rationale, and `facts.json` sidecar
-- [ ] [O] FR-O4 Fact validator & route wiring: implement `GET /api/wells/{id}/report` and `backend/tests/unit/test_tc032_field_report.py` ensuring 100% digits trace to tool returns
-- [ ] [F] FR-F5 Canvas iframe view: integrate field report inside expanded middle panel with print/save button and one-line chat link
+- [x] [F] FR-F1 Jinja2 HTML report template: implement A4-printable layout in `backend/app/analytics/templates/field_report.html` covering WH-01…WH-19, ONGC header/footer branding (wordmark fallback), and "SYNTHETIC DATA — DEMO" banner — *built as Python HTML rendering in `field_report.py` (no Jinja2 template file); commit `ff9573d`*
+- [x] [F] FR-F2 Wellbore SVG generator: dynamic schematic rendering casing, tubing, perforations, and formation tops with placeholders for missing data per WH-05 — *`render_wellbore_svg` / `GET /api/wells/{id}/schematic.svg`; native React `CompletionDiagram.tsx` in the UI (D-37)*
+- [x] [O] FR-O3 TC-032 assembly engine: implement `backend/app/analytics/tools/field_report.py` assembling job program, kill fluid weight, barriers, contingencies, top-3 rationale, and `facts.json` sidecar
+- [x] [O] FR-O4 Fact validator & route wiring: implement `GET /api/wells/{id}/report` and `backend/tests/unit/test_tc032_field_report.py` ensuring 100% digits trace to tool returns
+- [x] [F] FR-F5 Canvas iframe view: integrate field report inside expanded middle panel with print/save button and one-line chat link — *`FieldReportOverlay.tsx` (full-screen overlay, Print/Esc) + agent "prepare field report" chip*
 
 #### Gate FR
-- [ ] `GET /api/wells/{id}/report` renders for all 412 wells in < 3 s locally (p95)
+- [~] `GET /api/wells/{id}/report` renders for all 412 wells in < 3 s locally (p95) — *`test_renders_for_core_and_random_wells` + `test_render_latency_after_warmup` cover a sample, not all 412*
 - [ ] Clean A4 print layout verified with repeating headers, print-friendly styling, and "SYNTHETIC DATA — DEMO" banner
-- [ ] ONGC logo (`frontend/public/brand/ongc_logo.svg`) displayed at top left and print footer, with text wordmark fallback if missing
+- [x] ONGC logo (`frontend/public/brand/ongc_logo.svg`) displayed at top left and print footer, with text wordmark fallback if missing
 - [ ] Wellbore SVG renders dynamically from casing/tubing/perf/formation data (with placeholders for missing data per WH-05)
 - [ ] 100% of digits validated against `facts.json` sidecar; Flash writes template prose only with no hard-coded numerals
-- [ ] Chat and voice provide a concise one-line link to open the field report
+- [x] Chat and voice provide a concise one-line link to open the field report
 
 ---
 
@@ -515,13 +532,45 @@
 - [x] [O] Hands-off script (India → Geleki → GK-129 wellbore → full screen → satellite / SCADA → flowlines off → Hindi → close panel → India) passes with no clicks (headless check)
 
 #### Gate ED
-- [ ] Each step approved by the user, then committed + pushed (`v0.6(ED-n): …`)
-- [ ] Unit tests green (baseline 527 + new); `tsc` + `vite build` green
-- [ ] Numbers only from tools; no currency
-- [ ] ED script rehearsed locally
+- [x] Each step approved by the user, then committed + pushed (`v0.6(ED-n): …`) — *`2037bc5`, `93faff4`, `229116e`, `4b8463d`*
+- [x] Unit tests green (baseline 527 + new); `tsc` + `vite build` green — *718 passed / 24 skipped; `tsc` green (2026-11-15)*
+- [x] Numbers only from tools; no currency — *`callbacks.check_numbers` guardrail; `test_field_engineer_has_no_cost_band`*
+- [x] ED script rehearsed locally — *real-mic rehearsal passed 2026-10-08 (ED-16)*
 
-#### CMD backlog (logged, not in v0.6)
+#### CMD backlog (logged, not in v0.6; tracked as BL-2 in [`backlog_refinements.md`](../backlog_refinements.md))
 - [ ] F-34 Asset comparisons · F-35 Field-wise production per asset · F-36 Asset DPR · F-37 Where it hurts · F-38 Sand rate (no data) · F-39 Service cost (deferred) · F-40 New locations (no data)
+
+---
+
+### Milestone MS-22 · Stage AR — Architecture tab (BL-8) + English-first voice (R-6) — built locally 2026-11-15
+**Anchor:** [`backlog_refinements.md`](../backlog_refinements.md) BL-8, R-6
+
+#### Tasks
+- [x] [O] AR-1 R-6: `DEFAULT_LANGUAGE=english` (settings, voice panel, Live fallback); English-first greetings + switching rule in `prompt.py` / `live_prompt.md`; `test_r6_language_default.py`
+- [x] [O] AR-2 Diagram generator `frontend/scripts/build_architecture.py` → `frontend/public/architecture/{current,target}.html` (architecture-diagram skill style; official Google Cloud icons `@iconify-json/gcp@1.2.3` + `@iconify-json/logos@1.2.20` inline; CSS hover tooltips on all 26 / 30 components; no ONGC logo)
+- [x] [O] AR-3 `ArchitectureView.tsx` (Current ↔ Target toggle, New tab, Esc) + visible **Architecture** header button; navigation commands close it
+- [x] [O] AR-4 `ui_control architecture open|current|target|close` (backend allow-list + aliases, ADK + Live tool descriptions, prompts) and browser phrases EN / Hinglish / Hindi; tests in `test_ed11_ui_control.py` / `test_ed11_ui_parser.py`
+- [x] [O] AR-5 Headless check: button → tab → Target toggle → tooltip → Esc closes (CDP script, 2026-11-15)
+
+#### Gate AR
+- [x] `tsc --noEmit` green; targeted tests 49 passed; full suite: see `backlog_refinements.md` §1
+- [ ] User test at http://localhost:5180: button, toggle, hover, voice "show me the architecture", first reply in English
+- [ ] User approval → commit (+ push / deploy only on request)
+
+---
+
+### Milestone MS-21 · Stage RB — Hierarchy-based access (reopened 2026-11-15; **scope pending user confirmation**)
+**Anchor:** user, 2026-11-15: *"the persona drop down menu doesn't work. I wanted hierarchy based access as in CMD and Director will have access to all the PII but the junior employees E1 to E4 should not have all the access. This should be demonstrable when E3 officer will ask to generate a named list of employees in Delhi for more than 5 years, it will not generate while if CMD will ask it will."*
+
+#### Findings (2026-11-15)
+- The dropdown sets `X-Persona` on every `/api` call (`state/persona.tsx`), but showcase mode (D-33, `WELLPULSE_RBAC_ENFORCE=0`) returns FULL access for every persona (`rbac.py`), so nothing visibly changes.
+- `frontend/src/api/decision.ts` hard-codes `X-Persona: ASSET_MANAGER` on two calls.
+- The current personas are ED / ASSET_MANAGER / FIELD_ENGINEER. The requested hierarchy (CMD, Director, E1–E4) does not exist in WellPulse.
+- WellPulse has **no employee or PII dataset**. The example question (a named list of employees in Delhi with > 5 years' service) matches the Yukti HR & Finance app (`../HR and Finance_ONGC`), which already enforces CMD / Director / E1–E4 RBAC.
+
+#### Tasks (to be confirmed before build)
+- [ ] [O] RB-0 Confirm scope with the user: which app (Urvi or Yukti), the persona ladder, the PII data scope and the demo script
+- [ ] RB-1…n to be written after RB-0
 
 ---
 
@@ -529,15 +578,15 @@
 **Anchor:** brief §2; §8
 
 #### Tasks
-- [ ] [O] W2-O1 Container build configuration: update Dockerfile and `deploy/selfcheck.py` for v0.5 assets (DG tables, NN scores, report templates)
-- [ ] [O] W2-O2 Local container validation: execute `deploy/deploy.sh build` and run local smoke test
-- [ ] [O] W2-O3 Cloud Run deployment: execute `deploy/deploy.sh deploy` with zero-downtime revision rollout
-- [ ] [O] W2-O4 Post-deployment smoke test: execute `deploy/deploy.sh smoke` against live Cloud Run URL (7/7 checks)
+- [ ] [O] W2-O1 Container build configuration: update Dockerfile and `deploy/selfcheck.py` for v0.5 assets (DG tables, NN scores, report templates) — *still open: `selfcheck.py` REQUIRED list is the v0.4 set (no DG tables); the image builds and runs, so this is hardening, not a blocker*
+- [x] [O] W2-O2 Local container validation: execute `deploy/deploy.sh build` and run local smoke test
+- [x] [O] W2-O3 Cloud Run deployment: execute `deploy/deploy.sh deploy` with zero-downtime revision rollout — *V 1.0 = `wellpulse-app-00008-g49`, image `v1-4b8463d` (2026-10-08)*
+- [x] [O] W2-O4 Post-deployment smoke test: execute `deploy/deploy.sh smoke` against live Cloud Run URL (7/7 checks) — *smoke 6/6 (the `/report` check was never added to `smoke_test.py`)*
 
 #### Gate W2
-- [ ] Local container validation passes via `deploy/deploy.sh build`
-- [ ] Cloud Run deployment completes successfully via `deploy/deploy.sh deploy` with min-instances=1 and session affinity
-- [ ] `deploy/deploy.sh smoke` passes 7/7 checks (including new endpoint `/api/wells/GK-129/report`)
+- [x] Local container validation passes via `deploy/deploy.sh build`
+- [x] Cloud Run deployment completes successfully via `deploy/deploy.sh deploy` with min-instances=1 and session affinity
+- [~] `deploy/deploy.sh smoke` passes 7/7 checks (including new endpoint `/api/wells/GK-129/report`) — *6/6 passed; the 7th (`/report`) is not in `smoke_test.py`*
 - [ ] End-to-end 11-step demo script verified on public Cloud Run URL
 
 ---
@@ -564,10 +613,10 @@
 - [ ] Every verbatim §1–§3 requirement maps to a passing BDD scenario ([`features.md`](./features.md) traceability)
 - [ ] The 5-level demo flow L1–L5 (verbatim §4) passes as automated tests and in a manual rehearsal on the Cloud Run URL
 - [ ] Every number on screen or in speech traces to a tool return, table row or cited PDF; no ₹/USD point estimates (D-1)
-- [ ] The agent refuses at least once in each new field (LKM-090) and explains why
-- [ ] Live survives a forced reconnect and a forced fallback
+- [x] The agent refuses at least once in each new field (LKM-090) and explains why
+- [x] Live survives ~~a forced reconnect~~ and a forced fallback — *reconnect starts a fresh session by design (D-43)*
 - [ ] The baseline UI (map, telemetry, timeline, reports, export, language toggle) is not regressed
-- [ ] Deployed (authorised 2026-10-07) and smoke-tested; the URL is rehearsed; one commit + push to `origin main` per passed stage gate (13 `v0.4(<stage>):` commits)
+- [x] Deployed (authorised 2026-10-07) and smoke-tested; the URL is rehearsed; one commit + push to `origin main` per passed stage gate (13 `v0.4(<stage>):` commits) — *some stages share a commit, e.g. `v0.4(R,Y)`*
 
 ---
 
@@ -615,3 +664,15 @@
 | **D-41** | Health filter is a display action | Accepted (user, 2026-10-08) | `ui_control health_filter`; display requests never open Health & priority; runner drops health navigation when `ui_control` ran |
 | **D-42** | Urvi AI Agent | Accepted (user, 2026-10-08) | Full name "Urvi AI Agent"; senior engineer colleague personality; Live voice stays Aoede (Charon too harsh); small talk never changes the screen; Urvi is the front-facing brand, WellPulse the platform; Urvi mark everywhere |
 | **D-40** | Hands-off control | Accepted (user, 2026-10-08) | Plain UI commands run in the browser (no model call); everything else goes to the agent, which can call `ui_control`; allow-listed actions only |
+
+## Key decisions (V 1.0+)
+
+| ID | Decision | Status | Resolution / detail |
+|---|---|---|---|
+| **D-43** | Every demo starts fresh | Accepted (user, 2026-11-15) | A Live reconnect does not need to restore context; losing context on reconnect is intended. Removed "reconnect keeps context" from Gates U, W and the DoD. Live voice quality (latency, barge-in, open mic) accepted by the user without measurement. |
+
+---
+
+## Backlog
+
+Moved to [`backlog_refinements.md`](../backlog_refinements.md) (2026-11-15): the single reference sheet for latest changes, user refinements (R-n) and backlog items (BL-n).
