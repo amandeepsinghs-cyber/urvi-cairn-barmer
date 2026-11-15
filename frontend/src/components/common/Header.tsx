@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, AlertTriangle, CheckCircle, Layers, Radio, XCircle } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle, Layers, Network, Radio, XCircle } from 'lucide-react';
 import { FleetKPIs, WellStatus } from '../../types/well';
 import { PersonaPicker } from '../persona/PersonaPicker';
 import { UrviMark } from './UrviMark';
@@ -12,6 +12,9 @@ interface HeaderProps {
   onSearchChange: (query: string) => void;
   /** ED-15: agent docked on the right → less room; hide the search below 2xl and shorten the status pill. */
   compact?: boolean;
+  /** BL-8: Architecture tab button (visible so viewers know the architecture can be shown). */
+  architectureOpen?: boolean;
+  onToggleArchitecture?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,6 +24,8 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   onSearchChange,
   compact = false,
+  architectureOpen = false,
+  onToggleArchitecture,
 }) => {
   return (
     <header className="h-16 bg-surface border-b border-border px-4 gap-3 flex items-center justify-between shrink-0 min-w-0">
@@ -95,6 +100,23 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Global Search & Live Indicator */}
       <div className="flex items-center gap-2 min-w-0">
+        {onToggleArchitecture && (
+          <button
+            type="button"
+            onClick={onToggleArchitecture}
+            data-testid="architecture-button"
+            aria-pressed={architectureOpen}
+            title="Show how Urvi is built: current and target architecture (or ask Urvi: “show me the architecture”)"
+            className={`h-7 inline-flex items-center gap-1.5 px-2.5 shrink-0 whitespace-nowrap rounded-lg border text-xs font-sans transition-colors ${
+              architectureOpen
+                ? 'bg-accent/80 border-accent text-white font-semibold'
+                : 'bg-[#0d1117] border-border text-white/85 hover:text-white hover:border-accent/60'
+            }`}
+          >
+            <Network className="w-3.5 h-3.5" />
+            Architecture
+          </button>
+        )}
         {/* Stage Y (F-16): demo persona switch; X-Persona is added to every /api call */}
         <PersonaPicker compact />
         <div className={compact ? 'relative hidden 2xl:block' : 'relative'}>

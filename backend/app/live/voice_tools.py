@@ -632,7 +632,9 @@ def _v_dossier(well_id: str) -> dict[str, Any]:
         "pressures|diagnosis|recommendation|offsets|history|nearby), open_screen field_history|field_compare|"
         "field_health, panel expand|restore|close, language english|hinglish|hindi, report open|print|close, agent "
         "dock|undock, health_filter all|healthy|attention|not_producing (map shows only that health tag; "
-        "'only show non producing / band wells' -> not_producing, 'show all wells' -> all). Act first, then "
+        "'only show non producing / band wells' -> not_producing, 'show all wells' -> all), architecture "
+        "open|current|target|close (system architecture diagram; 'show the architecture' -> open, 'target / "
+        "production architecture' -> target). Act first, then "
         "confirm in a few words, e.g. 'Full screen on'."
     ),
     action_kind="ui_control",

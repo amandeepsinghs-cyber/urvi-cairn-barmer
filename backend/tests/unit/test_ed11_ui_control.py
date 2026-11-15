@@ -140,3 +140,18 @@ def test_front_and_back_allow_lists_match():
     for m in re.finditer(r"^\s{2}(\w+):\s*(null|\[([^\]]*)\])", block, re.M):
         front[m.group(1)] = None if m.group(2) == "null" else tuple(re.findall(r"'([^']+)'", m.group(3)))
     assert front == ui.UI_ACTIONS
+
+
+# BL-8: Architecture tab via ui_control (text agent + Live share the allow-list)
+@pytest.mark.parametrize("raw, expect", [("open", "open"), ("show", "open"), ("current", "current"),
+                                         ("as built", "current"), ("target", "target"), ("production", "target"),
+                                         ("close", "close"), ("hide", "close")])
+def test_bl8_architecture_action(raw, expect):
+    cmd, err = ui.validate("architecture", raw)
+    assert err == "" and cmd == {"action": "architecture", "value": expect, "label": cmd["label"]}
+    assert cmd["label"].startswith("Architecture")
+
+
+def test_bl8_architecture_rejects_unknown_value():
+    cmd, err = ui.validate("architecture", "blueprint")
+    assert cmd is None and "architecture" in err

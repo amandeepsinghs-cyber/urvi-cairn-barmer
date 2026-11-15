@@ -1,0 +1,149 @@
+{
+ "title": "How Urvi would work in production for ONGC",
+ "intro": "Same agent, same tools, real data. ONGC's systems feed the ONGC Enterprise Data Platform (EDP); Urvi reads a governed \"Well Health\" data product from the EDP; Urvi and Gemini run in Google Cloud India regions; nothing leaves India. AI runs in the cloud, as the EDP RFP places it.",
+ "sections": [
+  {
+   "heading": "A question, step by step",
+   "steps": [
+    [
+     "1",
+     "Sign in",
+     "Users reach Urvi through Identity-Aware Proxy with their ONGC login (single sign-on). Typed and voice traffic both enter here."
+    ],
+    [
+     "2",
+     "Urvi API + web app",
+     "The same service as the demo, on Cloud Run in Mumbai, scaling with load."
+    ],
+    [
+     "3",
+     "ADK agent",
+     "The same single agent and tools as the demo; role-based access is enforced."
+    ],
+    [
+     "4",
+     "Gemini (India)",
+     "Gemini on Vertex AI India regional endpoints. ONGC data is not used to train models."
+    ],
+    [
+     "5",
+     "Tools",
+     "The same engineering tools, plus nightly scores from the trained recommendation models."
+    ],
+    [
+     "6",
+     "EDP data adapter",
+     "A new adapter in Urvi's data access layer. It replaces the demo's parquet files."
+    ],
+    [
+     "7",
+     "EDP consumption API",
+     "The adapter reads the Well Health data product through the EDP's API (the RFP allows no direct database queries)."
+    ]
+   ]
+  },
+  {
+   "heading": "Voice",
+   "steps": [
+    [
+     "B",
+     "Gemini Live (India)",
+     "The Live proxy connects to Gemini Live on an India endpoint at go-live."
+    ],
+    [
+     "C",
+     "Same tools",
+     "Voice tools call the same analytics code as chat."
+    ]
+   ]
+  },
+  {
+   "heading": "Where the data comes from",
+   "steps": [
+    [
+     "D1",
+     "ONGC systems → EDP on-prem",
+     "Production / DPR, SCADA + OSI PI, WIS / EDS, SAP, LIMS and DISHA are ingested by the EDP's ingestion layer (UDEL) in ONGC's data centres. Raw Category A data (e.g. raw SCADA) stays there."
+    ],
+    [
+     "D2",
+     "Interconnect",
+     "Data that ONGC places in the cloud zone travels over a private link (Cloud Interconnect), encrypted."
+    ],
+    [
+     "D3",
+     "Bronze → Silver → Gold",
+     "The EDP cloud zone cleans and curates it into the Well Health data product."
+    ],
+    [
+     "D4",
+     "Consumption API",
+     "The product is published through the EDP API, which Urvi reads (step 7)."
+    ]
+   ]
+  },
+  {
+   "heading": "Two other routes (dashed)",
+   "body": [
+    "Route B: the data stays on-prem and Urvi, still in the cloud, reads only the rows it needs from the on-prem EDP API over the private link.",
+    "Route P (pilot): before the EDP is live, ONGC exports 10–20 mature Assam wells (names masked) to a landing bucket in Mumbai, so Urvi can be proven on real data in weeks."
+   ]
+  },
+  {
+   "heading": "How it stays in India and secure",
+   "body": [
+    "Mumbai (asia-south1) is the primary region and Delhi (asia-south2) the disaster-recovery region; both are MeitY-empanelled and accepted as India-resident by the RFP (§3.2.6).",
+    "ONGC holds the encryption keys (Cloud KMS, CMEK / EKM); a VPC Service Controls perimeter prevents data copies leaving the project; Access Approval means Google support access needs ONGC's approval; logs stay in India for at least 180 days."
+   ]
+  },
+  {
+   "heading": "What changes from the demo",
+   "table": {
+    "cols": [
+     "Area",
+     "Demo",
+     "Production"
+    ],
+    "rows": [
+     [
+      "Region",
+      "us-central1 (Gemini Live)",
+      "asia-south1 / asia-south2"
+     ],
+     [
+      "Data",
+      "Synthetic, packed into the app",
+      "ONGC EDP Well Health product via API"
+     ],
+     [
+      "Access",
+      "Public demo URL",
+      "IAP + ONGC single sign-on, role-based access"
+     ],
+     [
+      "Scale",
+      "One instance, in-memory sessions",
+      "Autoscaling, Memorystore session store"
+     ],
+     [
+      "Recommendations",
+      "Classifier + rates + look-alikes",
+      "Models trained on ONGC history (Vertex AI)"
+     ],
+     [
+      "Documents",
+      "Keyword search",
+      "Vertex AI Search"
+     ]
+    ]
+   }
+  },
+  {
+   "heading": "Read more",
+   "body": [
+    "Data routes and residency: docs/data_access_plan.md.",
+    "Training, inference and decisions: docs/ml_recommendation_engine.md."
+   ]
+  }
+ ]
+}

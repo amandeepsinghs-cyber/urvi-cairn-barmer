@@ -55,6 +55,16 @@ CASES: list[tuple[str, str | None, list[str] | None]] = [
     ("GK-129 water cut kitna hai", None, None),
     ("compare decline with nearby wells", "GK-129", None),
     ("show me the worst well in Lakwa", None, None),
+    # BL-8: Architecture tab
+    ("show me the architecture", None, ["Architecture"]),
+    ("architecture dikhao", None, ["Architecture"]),
+    ("आर्किटेक्चर दिखाओ", None, ["Architecture"]),
+    ("show the target architecture", None, ["Architecture · Target"]),
+    ("production architecture", None, ["Architecture · Target"]),
+    ("current architecture", None, ["Architecture · Current"]),
+    ("close the architecture", None, ["Architecture closed"]),
+    ("explain the architecture", None, None),
+    ("how does the architecture work", None, None),
 ]
 
 HARNESS = """

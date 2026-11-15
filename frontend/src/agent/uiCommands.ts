@@ -26,6 +26,7 @@ export const UI_ACTIONS = {
   report: ['open', 'print', 'close'],
   agent: ['dock', 'undock'],
   health_filter: ['all', 'healthy', 'attention', 'not_producing'], // ED-14 (D-41)
+  architecture: ['open', 'current', 'target', 'close'], // BL-8: Architecture tab
 } as const;
 
 export type UiAction = keyof typeof UI_ACTIONS;
@@ -90,6 +91,10 @@ const LABELS: Record<string, string> = {
   'health_filter:healthy': 'Showing: Healthy',
   'health_filter:attention': 'Showing: Needs attention',
   'health_filter:not_producing': 'Showing: Not producing',
+  'architecture:open': 'Architecture',
+  'architecture:current': 'Architecture · Current',
+  'architecture:target': 'Architecture · Target',
+  'architecture:close': 'Architecture closed',
 };
 
 export function labelOf(c: UiCommand): string {
@@ -140,7 +145,22 @@ const VIEW_WORDS: [RegExp, string][] = [
 ];
 
 // Order matters: specific before generic.
+const ARCH = String.raw`(?:architecture|architect|system design|aarkitekchar|arkitekchar|आर्किटेक्चर)`;
 const RULES: Rule[] = [
+  // BL-8: Architecture tab (before the generic close / panel rules)
+  {
+    re: new RegExp(String.raw`\b(?:close|hide|exit|band karo|hatao)\s*(?:the\s*)?${ARCH}\b|\b${ARCH}\s*(?:band|close|hatao)\b|आर्किटेक्चर बंद`),
+    build: () => ({ action: 'architecture', value: 'close' }),
+  },
+  {
+    re: new RegExp(String.raw`\b(?:target|production|future|to-be)\s*${ARCH}|\b${ARCH}\s*(?:target|production)\b`),
+    build: () => ({ action: 'architecture', value: 'target' }),
+  },
+  {
+    re: new RegExp(String.raw`\b(?:current|existing|today'?s|as-built|v1)\s*${ARCH}|\b${ARCH}\s*current\b`),
+    build: () => ({ action: 'architecture', value: 'current' }),
+  },
+  { re: new RegExp(String.raw`\b${ARCH}\b|आर्किटेक्चर`), build: () => ({ action: 'architecture', value: 'open' }) },
   {
     re: /\b(full\s*-?\s*screen|fullscreen|maximi[sz]e (the )?map|poori screen|puri screen)\b|पूरी स्क्रीन|फुल स्क्रीन/,
     build: (_m, s) => ({ action: 'fullscreen', value: off(s) ? 'off' : 'on' }),

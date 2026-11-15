@@ -29,6 +29,7 @@ UI_ACTIONS: dict[str, tuple[str, ...] | None] = {
     "report": ("open", "print", "close"),
     "agent": ("dock", "undock"),
     "health_filter": ("all", "healthy", "attention", "not_producing"),  # ED-14 (D-41), D-38 groups
+    "architecture": ("open", "current", "target", "close"),  # BL-8: Architecture tab (Current V 1.0 / Target)
 }
 WELL_VIEWS: tuple[str, ...] = (
     "summary", "overview", "production", "interventions", "wellbore", "pressures", "diagnosis",
@@ -51,6 +52,9 @@ _ALIASES = {
                       "non_producing": "not_producing", "not-producing": "not_producing", "shut": "not_producing",
                       "closed": "not_producing", "band": "not_producing", "dead": "not_producing"},
     "panel": {"maximize": "expand", "maximise": "expand", "shrink": "restore", "hide": "close"},
+    "architecture": {"show": "open", "on": "open", "now": "current", "existing": "current", "as_built": "current",
+                     "v1": "current", "production": "target", "future": "target", "to_be": "target", "hide": "close",
+                     "off": "close", "exit": "close"},
 }
 _WELL_RE = re.compile(r"^\s*([A-Za-z]{2,3})[\s-]?(\d{1,3})\s*$")
 
@@ -122,6 +126,8 @@ _LABELS = {
     ("health_filter", "all"): "Showing all wells", ("health_filter", "healthy"): "Showing: Healthy",
     ("health_filter", "attention"): "Showing: Needs attention",
     ("health_filter", "not_producing"): "Showing: Not producing",
+    ("architecture", "open"): "Architecture", ("architecture", "current"): "Architecture · Current",
+    ("architecture", "target"): "Architecture · Target", ("architecture", "close"): "Architecture closed",
 }
 
 

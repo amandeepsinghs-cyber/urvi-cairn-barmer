@@ -10,6 +10,7 @@ import { FieldHistoryChart } from './components/fields/FieldHistoryChart';
 import { FieldComparison } from './components/fields/FieldComparison';
 import { WellDeepDiveDrawer, CanvasView } from './components/well/WellDeepDiveDrawer';
 import { FieldReportOverlay } from './components/well/FieldReportOverlay';
+import { ArchitectureView, ArchitectureMode } from './components/architecture/ArchitectureView';
 import { usePersona } from './state/persona'; // Stage Y: tabs hidden per persona (UI hint; server enforces)
 // Stage R (additive): field health buckets (TC-020) + priority queue (TC-010)
 import { HealthBucketsCard } from './components/decision/HealthBucketsCard';
@@ -57,6 +58,8 @@ export function App() {
   // Step 5: well whose printable field report is open in the full-screen overlay.
   const [reportWellId, setReportWellId] = useState<string | null>(null);
   const [reportPrint, setReportPrint] = useState<boolean>(false);
+  // BL-8: Architecture tab (null = closed)
+  const [archMode, setArchMode] = useState<ArchitectureMode | null>(null);
   useEffect(() => {
     if (!middleExpanded) return;
     const onKey = (e: KeyboardEvent) => {
@@ -77,6 +80,7 @@ export function App() {
       return;
     }
     if (a.kind === 'navigate') {
+      setArchMode(null); // BL-8: an answer that navigates brings the map / panel back into view
       if (a.field) {
         setFieldFilter(a.field as FieldFilter);
         if (a.screen === 'field_health' || a.screen === 'priority') {
@@ -222,6 +226,15 @@ export function App() {
 
   // Stage ED-10 / ED-11 (F-41): hands-off commands that change app state (the map handles its own).
   useUiCommands((cmd) => {
+    // BL-8: navigation commands bring the map / panel back into view.
+    if (
+      archMode &&
+      ['open_well', 'focus_well', 'open_screen', 'focus_field', 'focus_cluster', 'map_view', 'fullscreen', 'report'].includes(
+        cmd.action,
+      )
+    ) {
+      setArchMode(null);
+    }
     // Panel-bound commands: leave map full screen first so the panel is visible.
     if (
       mapFullscreen &&
@@ -259,6 +272,12 @@ export function App() {
         if (cmd.value === 'close') closePanel();
         else if (cmd.value === 'expand') setMiddleExpanded(true);
         else setMiddleExpanded(false);
+        return;
+      case 'architecture':
+        if (cmd.value === 'close') setArchMode(null);
+        else if (cmd.value === 'target') setArchMode('target');
+        else if (cmd.value === 'current') setArchMode('current');
+        else setArchMode((m) => m ?? 'current');
         return;
       case 'health_filter':
         setSelectedStatus(
@@ -322,6 +341,8 @@ export function App() {
         }
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        architectureOpen={!!archMode}
+        onToggleArchitecture={() => dispatchUi({ action: 'architecture', value: archMode ? 'close' : 'open' })}
       />
 
       {isLoading ? (
@@ -455,6 +476,16 @@ export function App() {
         onOpenFieldReport={setReportWellId}
         suspended={!!reportWellId}
       />
+
+      {/* BL-8: Architecture tab (header button or "show me the architecture"); the agent stays usable. */}
+      {archMode && (
+        <ArchitectureView
+          mode={archMode}
+          onModeChange={(m) => dispatchUi({ action: 'architecture', value: m })}
+          onClose={() => setArchMode(null)}
+          rightInset={agentDocked ? AGENT_DOCK_WIDTH : 0}
+        />
+      )}
 
       {/* Step 5: printable field report — full-screen overlay (Print / Close / Esc). */}
       {reportWellId && (

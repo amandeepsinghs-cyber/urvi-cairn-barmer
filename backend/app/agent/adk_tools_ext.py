@@ -716,7 +716,9 @@ def ui_control(
     summary|overview|production|interventions|wellbore|pressures|diagnosis|recommendation|offsets|history|nearby)
     · open_screen field_history|field_compare|field_health · panel expand|restore|close ·
     language english|hinglish|hindi · report open|print|close (well_id) · agent dock|undock ·
-    health_filter all|healthy|attention|not_producing (show only wells with that health tag on the map).
+    health_filter all|healthy|attention|not_producing (show only wells with that health tag on the map) ·
+    architecture open|current|target|close (the system architecture diagram: 'show me the architecture' -> open,
+    'target / production architecture' -> target, 'current architecture' -> current).
     'Only show / display / filter non producing (healthy, needs attention) wells' -> health_filter, NOT a health
     analysis tool; 'show all wells' -> health_filter all. Returns the executed command; say it in a few words (e.g. 'Full screen on')."""
     from app.agent import ui_control as ui
