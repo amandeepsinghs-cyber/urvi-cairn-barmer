@@ -138,7 +138,7 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
   useEffect(() => {
     if (!inputPrompt && composerRef.current) composerRef.current.style.height = '';
   }, [inputPrompt]);
-  const [language, setLanguage] = useState<AgentLanguage>('hinglish');
+  const [language, setLanguage] = useState<AgentLanguage>('english'); // R-6: English default
   const [currentRecommendation, setCurrentRecommendation] = useState<SafeRecommendation | null>(null);
 
   // Live client states

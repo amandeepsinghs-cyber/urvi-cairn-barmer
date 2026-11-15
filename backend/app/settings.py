@@ -32,7 +32,7 @@ TEXT_MODEL: str = "gemini-3.8-flash"  # never change (D-13)
 TEXT_LOCATION: str = os.getenv("WELLPULSE_TEXT_LOCATION", "global")  # gemini-3.8-flash 404s in us-central1
 # "vertex" (default) | "fake" (deterministic scripted LLM for CI / offline demo; tests set this)
 AGENT_LLM: str = os.getenv("WELLPULSE_AGENT_LLM", "vertex").lower()
-DEFAULT_LANGUAGE: str = os.getenv("WELLPULSE_DEFAULT_LANGUAGE", "hinglish")  # R-1 resolved: Hinglish default
+DEFAULT_LANGUAGE: str = os.getenv("WELLPULSE_DEFAULT_LANGUAGE", "english")  # R-6 (2026-11-15): English default; Hindi/Hinglish only on request
 
 # SDD §13.1: ?as_of= is honoured only when this is on (tests); otherwise settings.AS_OF.
 ALLOW_AS_OF_OVERRIDE: bool = os.getenv("ALLOW_AS_OF_OVERRIDE", "").strip().lower() in ("1", "true", "yes")

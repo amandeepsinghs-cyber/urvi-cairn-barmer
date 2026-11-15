@@ -19,7 +19,7 @@ def _turn_args(text: str, ui: dict[str, Any]) -> dict[str, Any]:
         "persona": ui.get("persona") or "ASSET_MANAGER",
         "field": ui.get("field"),
         "well_id": ui.get("well_id"),
-        "language": ui.get("language") or "hinglish",
+        "language": ui.get("language") or "english",
         "text": text,
         "screen": ui.get("screen"),
     }

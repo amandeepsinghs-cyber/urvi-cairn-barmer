@@ -28,7 +28,7 @@ SUMMARY_KEYS = (
 
 class ChatRequest(BaseModel):
     message: str
-    language: str | None = None  # None → settings.DEFAULT_LANGUAGE (Hinglish, R-1)
+    language: str | None = None  # None → settings.DEFAULT_LANGUAGE (English, R-6)
     session_id: str | None = None
 
 
