@@ -7,9 +7,9 @@
   "doc_id": {
    "source": "corpus",
    "examples": [
-    "DWR-GK-058-003-D06",
-    "DWR-LKM-005-006-D04",
-    "DWR-GK-090-003-D08"
+    "DWR-MNG-058-003-D06",
+    "DWR-ASH-005-006-D04",
+    "DWR-MNG-090-003-D08"
    ],
    "missing_share": 0.0
   },
@@ -33,9 +33,9 @@
   "doc_title": {
    "source": "corpus",
    "examples": [
-    "GK-058 Daily Workover Report \u2014 RE_PERFORATION day 6 of 36",
-    "LKM-005 Daily Workover Report \u2014 TUBING_REPLACE day 4 of 4",
-    "GK-090 Daily Workover Report \u2014 TUBING_REPLACE day 8 of 9"
+    "MNG-058 Daily Workover Report — RE_PERFORATION day 6 of 36",
+    "ASH-005 Daily Workover Report — TUBING_REPLACE day 4 of 4",
+    "MNG-090 Daily Workover Report — TUBING_REPLACE day 8 of 9"
    ],
    "missing_share": 0.0
   },
@@ -51,25 +51,26 @@
   "field": {
    "source": "field_master.field",
    "examples": [
-    "Geleki",
-    "Lakhmani",
-    "Lakwa"
+    "Mangala",
+    "Aishwariya",
+    "Bhagyam"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Geleki",
-    "Lakhmani",
-    "Lakwa"
+    "Aishwariya",
+    "Bhagyam",
+    "Mangala",
+    "Raageshwari"
    ]
   },
   "asset": {
    "source": "field_master.asset",
    "examples": [
-    "Assam"
+    "Barmer Basin"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Assam"
+    "Barmer Basin"
    ]
   },
   "as_of": {
@@ -82,37 +83,42 @@
   "well_id": {
    "source": "well_master.well_id",
    "examples": [
-    "GK-058",
-    "LKM-005",
-    "GK-090"
+    "MNG-058",
+    "ASH-005",
+    "MNG-090"
    ],
    "missing_share": 0.0
   },
   "cluster_id": {
    "source": "well_master.cluster_id",
    "examples": [
-    "GK-NE",
-    "LKM-GGS-I",
-    "GK-CENTRAL"
+    "MNG-PAD-B",
+    "ASH-PAD-1",
+    "MNG-PAD-A"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "GK-CENTRAL",
-    "GK-NE",
-    "GK-SW",
-    "LKM-GGS-I",
-    "LKM-GGS-II",
-    "LKW-GGS-I",
-    "LKW-GGS-II",
-    "LKW-GGS-III"
+    "ASH-ABH-3",
+    "ASH-PAD-1",
+    "ASH-PAD-2",
+    "BHG-PAD-1",
+    "BHG-PAD-2",
+    "BHG-PAD-3",
+    "MNG-PAD-A",
+    "MNG-PAD-B",
+    "MNG-PAD-C",
+    "MNG-PAD-D",
+    "RAG-OIL-1",
+    "RAG-RDG-N",
+    "RAG-RDG-S"
    ]
   },
   "workover_id": {
    "source": "workover_history.workover_id",
    "examples": [
-    "WO-GK-058-003",
-    "WO-LKM-005-006",
-    "WO-GK-090-003"
+    "WO-MNG-058-003",
+    "WO-ASH-005-006",
+    "WO-MNG-090-003"
    ],
    "missing_share": 0.0
   },
@@ -195,9 +201,9 @@
   "rig_id": {
    "source": "workover_history.rig_id",
    "examples": [
-    "RIG-ASSAM-02",
-    "RIG-ASSAM-14",
-    "RIG-ASSAM-12"
+    "RIG-BARMER-02",
+    "RIG-BARMER-14",
+    "RIG-BARMER-12"
    ],
    "missing_share": 0.0
   },
@@ -389,8 +395,11 @@
    ],
    "missing_share": 0.0,
    "categorical_values": [
+    "ESP",
     "GAS_LIFT",
+    "JET_PUMP",
     "NATURAL",
+    "PCP",
     "SRP"
    ]
   },
@@ -450,10 +459,10 @@
   "workover_id"
  ],
  "sample_doc_ids": [
-  "DWR-GK-058-003-D06",
-  "DWR-LKM-005-006-D04",
-  "DWR-GK-090-003-D08",
-  "DWR-GK-126-025-D04",
-  "DWR-LKW-132-001-D03"
+  "DWR-MNG-058-003-D06",
+  "DWR-ASH-005-006-D04",
+  "DWR-MNG-090-003-D08",
+  "DWR-MNG-126-025-D04",
+  "DWR-BHG-032-001-D03"
  ]
 }

@@ -39,8 +39,9 @@ JOB_LABELS = {"app": "wellpulse", "component": "api", "stage": "x"}
 # Columns the lakehouse adds (lakehouse/config.py LAKEHOUSE_COLUMNS); never returned to callers.
 LAKEHOUSE_COLUMNS = ("_source_row", "_landing_folder", "_bronze_dt", "_silver_loaded_at")
 # Columns that are Arrow ``null`` in the landing contract (cast to FLOAT64 in Bronze).
-NULL_TYPED_COLUMNS = {"well_master": ("max_dls_deg_30m",)}
+NULL_TYPED_COLUMNS: dict[str, tuple[str, ...]] = {}
 FIELD_FOLDERS = {f.lower(): f for f in FIELD_CONFIGS}
+LOWERCASE_FIELD_TABLES = ("tubing_tally", "deviation_survey")
 
 
 class BigQueryRepository(ParquetRepository):
@@ -91,13 +92,16 @@ class BigQueryRepository(ParquetRepository):
         params: dict[str, tuple[str, object]] = {"folder": ("STRING", folder)}
         if folder in FIELD_FOLDERS and "field" in contract:
             where.append("field = @field")
-            params["field"] = ("STRING", FIELD_FOLDERS[folder])
+            field_val = folder if table in LOWERCASE_FIELD_TABLES else FIELD_FOLDERS[folder]
+            params["field"] = ("STRING", field_val)
         if table == "daily_production":
             where.append("production_date <= @as_of")
             params["as_of"] = ("DATE", settings.AS_OF)
         sql = (f"SELECT {select} FROM `{self.project}.{self.dataset}.{table}` "
                f"WHERE {' AND '.join(where)} ORDER BY _source_row")
         df = self._query(sql, params).to_pandas()
+        if "_ingested_at" in df.columns and isinstance(df["_ingested_at"].dtype, pd.DatetimeTZDtype):
+            df["_ingested_at"] = df["_ingested_at"].astype("datetime64[ms, UTC]")
         for c in NULL_TYPED_COLUMNS.get(table, ()):
             if c in df.columns and df[c].isna().all():
                 df[c] = pd.Series([None] * len(df), dtype=object)

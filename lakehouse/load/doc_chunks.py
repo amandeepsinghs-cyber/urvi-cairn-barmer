@@ -24,15 +24,18 @@ from lakehouse import config as C
 
 
 def infer_field(well_id: Any) -> str | None:
-    """Infer field name from standard well ID prefix."""
+    """Infer field name from standard Barmer well ID prefix."""
     if not isinstance(well_id, str):
         return None
-    if well_id.startswith("GK-"):
-        return "Geleki"
-    if well_id.startswith("LKW-"):
-        return "Lakwa"
-    if well_id.startswith("LKM-"):
-        return "Lakhmani"
+    wid = well_id.upper()
+    if wid.startswith("MNG-"):
+        return "Mangala"
+    if wid.startswith("BHG-"):
+        return "Bhagyam"
+    if wid.startswith("ASH-"):
+        return "Aishwariya"
+    if wid.startswith("RAG-"):
+        return "Raageshwari"
     return None
 
 
@@ -62,7 +65,7 @@ def load_landing_document_index() -> pd.DataFrame:
         d["gcs_uri"] = "gs://" + C.BUCKET + "/" + C.DOCUMENTS_PREFIX + "/" + d["path"].astype(str)
         return d[["doc_id", "well_id", "doc_type", "doc_date", "gcs_uri"]].drop_duplicates(subset=["doc_id"])
     dfs: list[pd.DataFrame] = []
-    for folder in ["geleki", "lakwa", "lakhmani", "asset"]:
+    for folder in C.LANDING_FOLDERS:
         p = C.LANDING_DIR / folder / "document_index.parquet"
         if p.exists():
             dfs.append(pq.read_table(p).to_pandas())
@@ -153,7 +156,7 @@ def build_chunk_frame(
         + ":c"
         + res["chunk_seq"].fillna(0).astype(int).astype(str)
     )
-    # keep the TF-IDF index's own chunk_id (e.g. "CBL-GK-001-2025#p1") so TC-026 hits join 1:1
+    # keep the TF-IDF index's own chunk_id (e.g. "CBL-MNG-001-2025#p1") so TC-026 hits join 1:1
     res["chunk_id"] = res["chunk_id"].fillna(derived_id) if "chunk_id" in res.columns else derived_id
 
     # Dates and timestamps

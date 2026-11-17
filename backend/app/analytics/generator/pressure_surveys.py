@@ -1,7 +1,11 @@
-"""Pressure surveys generator.
+"""Pressure surveys generator for Cairn Oil & Gas — Barmer Basin.
 
-Stage N / WellPulse v0.4 synthetic data generation.
+Scales SBHP/FBHP to Barmer hydrostatic gradients (~0.098–0.102 kg/cm2/m TVD)
+across shallow ~410–620m TVD Bhagyam wells (ensuring sbhp >= 18.0 kg/cm2)
+through deep 3,000m+ Raageshwari tight gas-condensate wells.
 """
+
+from __future__ import annotations
 
 from datetime import date, timedelta
 
@@ -69,17 +73,19 @@ def generate_pressure_surveys(
         td_tvd_m = float(row["total_depth_tvd_m"])
 
         datum_tvd_m = round(perf_top_m * td_tvd_m / td_md_m, 1)
+        grad = 0.102 if str(fld) == "Raageshwari" else 0.098
+        depletion = 0.015 if str(fld) == "Raageshwari" else 0.010
 
         curr_date = start + timedelta(days=int(rng.integers(0, 366)))
         while curr_date <= end:
             # Draw order per survey: normal, uniform
-            norm = float(rng.normal(0.0, 3.0))
-            u = float(rng.uniform(0.35, 0.65))
+            norm = float(rng.normal(0.0, 2.2))
+            u = float(rng.uniform(0.38, 0.66))
 
             survey_id = f"PS-{wid}-{curr_date:%Y%m%d}"
             years = (curr_date - start).days / 365.25
-            sbhp = round(0.085 * datum_tvd_m * (1.0 - 0.02 * years) + norm, 1)
-            fbhp = round(sbhp * u, 1)
+            sbhp = round(max(18.0, grad * datum_tvd_m * (1.0 - depletion * years) + norm), 1)
+            fbhp = round(min(sbhp - 1.5, max(6.0, sbhp * u)), 1)
 
             # Liquid & pi
             d_start = curr_date - timedelta(days=30)
@@ -91,12 +97,14 @@ def generate_pressure_surveys(
                 if np.any(mask):
                     liquid = float(np.mean(w_rates[mask]))
                     diff = sbhp - fbhp
-                    if diff != 0:
+                    if diff > 0:
                         pi = round(liquid / diff, 3)
 
             # fluid_level_m
             fl = np.clip(
-                datum_tvd_m - fbhp * 10.0 / 0.9, 50.0, datum_tvd_m - 10.0
+                datum_tvd_m - fbhp * 10.0 / 0.88,
+                40.0,
+                max(50.0, datum_tvd_m - 10.0),
             )
             fluid_level_m = round(float(fl), 1)
 

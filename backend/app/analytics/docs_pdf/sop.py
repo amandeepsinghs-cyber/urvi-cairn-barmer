@@ -44,6 +44,16 @@ def load_sop(ic: str) -> dict | None:
     return yaml.safe_load(p.read_text())
 
 
+def load_all_sops() -> dict[str, dict]:
+    """Load all IC-*.yaml SOP definitions keyed by intervention class ID."""
+    sops: dict[str, dict] = {}
+    for p in sorted(SOP_DIR.glob("IC-*.yaml")):
+        data = yaml.safe_load(p.read_text())
+        if data is not None:
+            sops[p.stem] = data
+    return sops
+
+
 def schema_problems(ic: str, data: dict | None, job_codes: list[str] | None = None) -> list[str]:
     if data is None:
         return [f"{ic}: templates/sop/{ic}.yaml missing"]

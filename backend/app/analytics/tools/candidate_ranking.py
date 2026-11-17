@@ -3,7 +3,7 @@
 What changed in the port (SDD §3.2, §6.1):
 
 * **No per-well constants.** v0.3.0 returned hard-coded values for the seven demo wells
-  (GK-129/141/055/087/103/112/147) and a constant for every other well (e.g. ETTF 142 d, uplift
+  (legacy fixtures) and a constant for every other well (e.g. ETTF 142 d, uplift
   9 BOPD, residual −2.5 %). Every number now comes from the landing tables, TC-001/TC-002 or the
   pinned CoxPH model. Where the data cannot support a value the tool says ``UNAVAILABLE``.
 * **Field-aware** (K-6): ``field`` is required for field-level tools; per-well tools resolve the
@@ -286,7 +286,7 @@ def _mech_cached(well_id: WellId, as_of: date, window_days: int) -> ToolResult:
     elif ge(m["liquid_cv_ratio"], c["sand"]["min_cv_ratio"]) and le(liq, c["sand"]["max_liquid_change_frac"]):
         sig = MechSignature.SAND
         ev = f"liquid-rate scatter x{m['liquid_cv_ratio']:.1f} with liquid {liq:+.0%} (solids loading)"
-    elif lift == "SRP" and not vented and ge(m["chp_change_kgcm2"], c["pump_wear"]["min_chp_rise_kgcm2"]) and le(
+    elif lift in PUMPED_LIFTS and not vented and ge(m["chp_change_kgcm2"], c["pump_wear"]["min_chp_rise_kgcm2"]) and le(
             liq, c["pump_wear"]["max_liquid_change_frac"]):
         sig = MechSignature.PUMP_WEAR
         ev = f"CHP {m['chp_change_kgcm2']:+.1f} kg/cm2 with liquid {liq:+.0%} (fluid pound / worn pump)"
@@ -318,7 +318,7 @@ def _mech_cached(well_id: WellId, as_of: date, window_days: int) -> ToolResult:
 
 
 # ---------------------------------------------------------------------------
-# TC-006 · predict_failure()  (CoxPH, SRP only — model trained on Geleki v0.3.0, Gate E/N)
+# TC-006 · predict_failure()  (CoxPH — model trained on Barmer pumped wells, Gate E/N)
 # ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class FailurePrediction:
@@ -336,7 +336,8 @@ class FailurePrediction:
     horizon_capped: bool = False
 
 
-MODEL_VERSION = "coxph-v1.0-geleki"
+MODEL_VERSION = "coxph-v1.0-barmer"
+PUMPED_LIFTS = ("SRP", "ESP", "JET_PUMP", "PCP")
 _FEATURES = ["liquid_rate_obs", "wc_sq_obs", "fillage_gap_obs", "chp_obs", "well_age_days"]
 
 
@@ -357,19 +358,25 @@ def _current_run_start(well_id: WellId, as_of: date) -> date | None:
 
 def _srp_features(well_id: WellId, as_of: date) -> tuple[dict | None, list[str]]:
     w = well_master_row(well_id)
-    p = _producing(well_rows("daily_production", well_id), as_of - timedelta(days=29), as_of)
+    all_d = well_rows("daily_production", well_id)
+    p = _producing(all_d, as_of - timedelta(days=29), as_of)
     if p.empty:
         return None, ["daily_production:producing_days_30d"]
-    missing = [f for f in ("plunger_diameter_in", "stroke_length_in", "completion_date") if pd.isna(w.get(f))]
+    missing = [f for f in ("completion_date",) if pd.isna(w.get(f))]
     if missing:
         return None, missing
     liq = float(p["liquid_rate_blpd"].mean())
     wc = float(p["water_cut_pct"].mean())
     chp = float(p["chp_kgcm2"].mean())
-    spm = float(p["spm"].mean())
     rt = float(p["runtime_fraction"].mean())
-    ap = (math.pi / 4.0) * float(w["plunger_diameter_in"]) ** 2
-    theo = 0.1166 * ap * float(w["stroke_length_in"]) * spm * rt
+    if str(w.get("lift_type")) == "SRP" and pd.notna(w.get("plunger_diameter_in")) and pd.notna(w.get("stroke_length_in")):
+        spm = float(p["spm"].mean()) if p["spm"].notna().any() else 8.0
+        ap = (math.pi / 4.0) * float(w["plunger_diameter_in"]) ** 2
+        theo = 0.1166 * ap * float(w["stroke_length_in"]) * spm * rt
+    else:
+        hist_p = _producing(all_d, as_of - timedelta(days=365), as_of)
+        peak_liq = float(hist_p["liquid_rate_blpd"].quantile(0.90)) if len(hist_p) else liq * 1.15
+        theo = max(liq, peak_liq * rt)
     comp = w["completion_date"]
     comp = comp.date() if hasattr(comp, "date") and not isinstance(comp, date) else comp
     return {
@@ -394,9 +401,9 @@ def _predict_cached(well_id: WellId, as_of: date, model_version: str) -> ToolRes
         return unavailable("TC-006", params, t0, ["well_id"], f"Well {well_id} not found.")
     if model_version != MODEL_VERSION:
         return unavailable("TC-006", params, t0, ["model_version"], f"Model {model_version} is not deployed.")
-    if str(w["lift_type"]) != "SRP":
-        return unavailable("TC-006", params, t0, ["lift_type:SRP"],
-                           f"{MODEL_VERSION} covers rod-pumped wells only; {well_id} is {w['lift_type']}.")
+    if str(w["lift_type"]) not in PUMPED_LIFTS:
+        return unavailable("TC-006", params, t0, ["lift_type:PUMPED"],
+                           f"{MODEL_VERSION} covers pumped wells only; {well_id} is {w['lift_type']}.")
     feats, missing = _srp_features(well_id, as_of)
     if feats is None:
         return unavailable("TC-006", params, t0, missing, f"Cannot build CoxPH features for {well_id}.")
@@ -429,7 +436,7 @@ def _predict_cached(well_id: WellId, as_of: date, model_version: str) -> ToolRes
     top = sorted(contrib.items(), key=lambda kv: -abs(kv[1]))[:3]
     tb = _trigger_b(well_id, as_of)
     base = round(max(0.0, tb["p50_days"] - tb["days_since"]), 1) if tb["available"] else None
-    conf = Confidence.MEDIUM if field_of(well_id) == "Geleki" else Confidence.LOW
+    conf = Confidence.MEDIUM if field_of(well_id) in ("Mangala", "Bhagyam", "Aishwariya") else Confidence.LOW
     pred = FailurePrediction(
         well_id=well_id, ettf_days=ettf, ci_low_days=lo, ci_high_days=hi,
         predicted_date=(as_of + timedelta(days=int(round(ettf)))) if ettf is not None else None,
@@ -438,7 +445,7 @@ def _predict_cached(well_id: WellId, as_of: date, model_version: str) -> ToolRes
         horizon_capped=capped,
     )
     status = ToolStatus.OK if conf != Confidence.LOW else ToolStatus.LOW_CONFIDENCE
-    note = "" if conf != Confidence.LOW else " (model trained on Geleki SRP wells; out-of-field)"
+    note = "" if conf != Confidence.LOW else " (model trained on Barmer MBA pumped wells; out-of-field)"
     ettf_txt = f"{ettf:.0f}d" if ettf is not None else f"beyond model horizon ({times[-1]:.0f}d)"
     return ToolResult(status, pred, [], f"Predicted ETTF for {well_id}: {ettf_txt}, partial hazard {hazard:.3f}{note}.",
                       build_provenance("TC-006", params, t0))
@@ -967,24 +974,26 @@ def rank_candidates(field: str, as_of: date | None = None) -> ToolResult:
 # TC-011 · check_mro()
 # ---------------------------------------------------------------------------
 JOB_ITEMS: dict[JobCode, list[str]] = {
-    "CEMENT_SQUEEZE": ["CEMENT_RETAINER_55"],
-    "PUMP_OVERHAUL": ["SRP_PLUNGER_150", "SRP_VALVE_ROD"],
-    "ROD_REPLACE": ["ROD_GRADE_D_78", "POLISHED_ROD_125"],
-    "TUBING_REPLACE": ["TUBING_J55_278"],
+    "CEMENT_SQUEEZE": ["CEMENT_RETAINER_70"],
+    "PUMP_OVERHAUL": ["SRP_PLUNGER_150"],
+    "ROD_REPLACE": ["ROD_GRADE_D_78"],
+    "TUBING_REPLACE": ["TUBING_L80_278"],
     "WAX_HOTOIL": ["PARAFFIN_SOLVENT_BBL"],
     "WAX_SOLVENT": ["PARAFFIN_SOLVENT_BBL"],
     "SCALE_ACID_BULLHEAD": ["SCALE_INHIBITOR_DRUM"],
     "SCALE_INHIBITOR": ["SCALE_INHIBITOR_DRUM"],
     "GLV_REPLACE": ["GAS_LIFT_VALVE_1IN"],
-    "STRADDLE_PACKER": ["BRIDGE_PLUG_55"],
+    "STRADDLE_PACKER": ["BRIDGE_PLUG_70"],
 }
 
 
-def check_mro(job_code: JobCode, required_date: date | None = None, primary_base: str = "NAZIRA") -> ToolResult:
+def check_mro(job_code: JobCode, required_date: date | None = None, primary_base: str = "MPT_NAGANA") -> ToolResult:
     t0 = time.perf_counter()
     required_date = required_date or (settings.AS_OF + timedelta(days=2))
-    params = {"job_code": job_code, "required_date": str(required_date), "primary_base": primary_base}
     mro = load_table("mro_inventory")
+    if len(mro) and "base" in mro.columns and primary_base not in set(mro["base"]):
+        primary_base = str(mro["base"].iloc[0])
+    params = {"job_code": job_code, "required_date": str(required_date), "primary_base": primary_base}
     items = JOB_ITEMS.get(job_code, [])
     blocker, alt_base, transit = None, None, 0
     checked = []

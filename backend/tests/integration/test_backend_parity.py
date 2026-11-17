@@ -30,8 +30,8 @@ from app.data_access.parquet_repo import ParquetRepository
 
 PROJECT = os.getenv("WELLPULSE_BQ_PROJECT", "urvi-cairn-barmer-ai-agent")
 LOCATION = os.getenv("WELLPULSE_BQ_LOCATION", "asia-south1")
-FIXTURE_WELLS = ["GK-129", "GK-101", "LKW-047", "LKW-112", "LKW-088", "LKM-023", "LKM-061", "LKM-090"]
-FIELDS = ["Geleki", "Lakwa", "Lakhmani"]
+FIXTURE_WELLS = ["MNG-042", "MNG-012", "BHG-019", "BHG-088", "ASH-023", "ASH-061", "RAG-014"]
+FIELDS = ["Mangala", "Bhagyam", "Aishwariya", "Raageshwari"]
 
 
 def _bq_client_or_skip():
@@ -121,8 +121,8 @@ def test_rest_routes_identical_with_bigquery_backend(pq_repo, bq_repo):
 
     from app.main import app
 
-    routes = ["/api/wells", "/api/wells/kpis", "/api/wells?field=Lakwa"]
-    for wid in ["GK-129", "LKW-047", "LKM-061"]:
+    routes = ["/api/wells", "/api/wells/kpis", "/api/wells?field=Bhagyam"]
+    for wid in ["MNG-042", "BHG-019", "ASH-061"]:
         routes += [f"/api/wells/{wid}", f"/api/wells/{wid}/history?range=1y", f"/api/wells/{wid}/workovers"]
     old = r._repo
     try:
@@ -141,7 +141,7 @@ def test_rest_routes_identical_with_bigquery_backend(pq_repo, bq_repo):
 def test_queries_carry_pruning_predicates(bq_repo):
     assert len(bq_repo.daily) > 0  # ensure loaded
     daily = [q for q in bq_repo.queries if "daily_production" in q and "INFORMATION_SCHEMA" not in q]
-    assert len(daily) == 3
+    assert len(daily) == 4
     for q in daily:
         assert "production_date <= @as_of" in q and "field = @field" in q, q
     for q in bq_repo.queries:
@@ -182,7 +182,7 @@ def test_gold_field_kpi_monthly_reconciles_to_repository(pq_repo, bq_client):
         f"FROM `{PROJECT}.urvi_cairn_gold.field_kpi_monthly`", location=LOCATION).result().to_arrow().to_pandas()
     m = repo.merge(gold, on=["field", "month"], how="outer", suffixes=("_repo", "_gold"), indicator=True)
     assert (m["_merge"] == "both").all(), m[m["_merge"] != "both"][["field", "month", "_merge"]]
-    assert len(m) == 3 * 60  # 3 fields x 60 months (2021-10 .. 2026-09, Sept partial to AS_OF)
+    assert len(m) == 4 * 60  # 4 fields x 60 months (2021-10 .. 2026-09, Sept partial to AS_OF)
     for col in ["oil_bbl", "water_bbl", "gas_mscf", "oil_bopd"]:
         rel = (m[f"{col}_gold"] - m[f"{col}_repo"]).abs() / m[f"{col}_repo"].abs().clip(lower=1e-9)
         assert rel.max() <= 1e-3, (col, m.loc[rel.idxmax(), ["field", "month"]].to_dict(), rel.max())

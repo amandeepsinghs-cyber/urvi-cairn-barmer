@@ -41,7 +41,7 @@ FINISHED = ("SUCCESS", "PARTIAL", "FAILED")
 MODALITY = {"production": "Production time series", "construction": "Geology & completion",
             "history": "Intervention history", "events": "Operations & tests"}
 ARCHITECTURE = {
-    "name": "WellPulse multimodal success network",
+    "name": "Urvi Cairn Barmer multimodal success network",
     "inputs": [
         {"modality": "Production time series", "encoder": "1D-CNN / GRU over 24 months (oil, gas, water cut, GOR, THP, uptime)"},
         {"modality": "Geology & completion", "encoder": "MLP over formation tops, zone, casing / tubing, lift, deviation, fluid hazards"},

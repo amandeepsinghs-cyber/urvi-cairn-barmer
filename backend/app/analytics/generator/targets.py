@@ -1,4 +1,4 @@
-"""field_targets (SDD §5.3; F-09, decision N-D5).
+"""field_targets for Cairn Oil & Gas — Barmer Basin (SDD §5.3; F-09, decision N-D5).
 
 target_oil_bopd(month) = potential(month) × U_plan
   * potential = Σ over wells of the healthy-state oil rate (Arps decline × persistent productivity at
@@ -9,7 +9,7 @@ target_oil_bopd(month) = potential(month) × U_plan
 target_uptime_pct = producing well-days / non-idle well-days over the same baseline period.
 
 No target is set from the designed gap; the gap vs. target *emerges* from what happens after the
-baseline (Lakwa's deteriorating logistics, GGS-II outages, …) and is measured by ``gap_vs_target``.
+baseline (Bhagyam's deteriorating rig-wait logistics, pad feeder outages, …) and is measured by ``gap_vs_target``.
 """
 
 from __future__ import annotations

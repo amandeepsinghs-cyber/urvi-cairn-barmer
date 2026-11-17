@@ -42,10 +42,13 @@ MAX_BYTES_BILLED = int(os.getenv("WELLPULSE_BQ_MAX_BYTES", str(2 * 1024**3)))
 
 # Lineage columns added by the lakehouse (not present in the landing contract).
 #   _source_row     0-based row ordinal inside the landing file (added in Bronze; preserves file order)
-#   _landing_folder hive partition key: asset | geleki | lakwa | lakhmani
+#   _landing_folder hive partition key: asset | mangala | bhagyam | aishwariya | raageshwari
 #   _bronze_dt      hive partition key: batch date
 #   _silver_loaded_at load timestamp (Silver only)
 LAKEHOUSE_COLUMNS = ["_source_row", "_landing_folder", "_bronze_dt", "_silver_loaded_at"]
+
+LANDING_FOLDERS = ["mangala", "bhagyam", "aishwariya", "raageshwari", "asset"]
+OPTIONAL_TABLES = {"well_run", "draft_plan", "decision_log"}
 
 # Natural keys (verified unique on the Stage N landing data) used for Silver de-duplication/MERGE.
 TABLE_KEYS: dict[str, list[str]] = {
@@ -126,9 +129,8 @@ def gcs(*parts: str) -> str:
 
 def landing_tables() -> dict[str, list[Path]]:
     """{table: [landing parquet paths]} in the folder order the parquet repository uses."""
-    order = ["geleki", "lakwa", "lakhmani", "asset"]
     out: dict[str, list[Path]] = {}
-    for folder in order:
+    for folder in LANDING_FOLDERS:
         for p in sorted((LANDING_DIR / folder).glob("*.parquet")):
             out.setdefault(p.stem, []).append(p)
     return out

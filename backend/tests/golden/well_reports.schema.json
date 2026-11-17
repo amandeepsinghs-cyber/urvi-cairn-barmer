@@ -88,6 +88,11 @@
               "string"
             ]
           },
+          "survey_id": {
+            "type": [
+              "string"
+            ]
+          },
           "title": {
             "type": [
               "string"
@@ -106,6 +111,7 @@
           "sonolog_fluid_level_m",
           "static_bottomhole_pressure_sbhp_psi",
           "survey_date",
+          "survey_id",
           "title"
         ],
         "type": [
@@ -197,6 +203,11 @@
                   "number"
                 ]
               },
+              "first_test_in_record": {
+                "type": [
+                  "string"
+                ]
+              },
               "flowing_tubing_pressure_psi": {
                 "type": [
                   "number"
@@ -220,6 +231,7 @@
             },
             "required": [
               "choke_mm",
+              "first_test_in_record",
               "flowing_tubing_pressure_psi",
               "gas_rate_mcfd",
               "oil_rate_bopd",
@@ -295,6 +307,11 @@
               "string"
             ]
           },
+          "cost_band": {
+            "type": [
+              "string"
+            ]
+          },
           "date": {
             "type": [
               "string"
@@ -341,9 +358,19 @@
               "string"
             ]
           },
+          "report_doc_id": {
+            "type": [
+              "string"
+            ]
+          },
           "report_id": {
             "type": [
               "string"
+            ]
+          },
+          "rig_days": {
+            "type": [
+              "number"
             ]
           },
           "shift_hours": {
@@ -361,6 +388,11 @@
               "string"
             ]
           },
+          "workover_id": {
+            "type": [
+              "string"
+            ]
+          },
           "workover_rig": {
             "type": [
               "string"
@@ -369,15 +401,19 @@
         },
         "required": [
           "contractor",
+          "cost_band",
           "date",
           "hourly_logs",
           "issuing_authority",
           "operation_type",
           "outcome_summary",
+          "report_doc_id",
           "report_id",
+          "rig_days",
           "shift_hours",
           "supervising_engineer",
           "title",
+          "workover_id",
           "workover_rig"
         ],
         "type": [
@@ -546,8 +582,8 @@
   },
   "status": 200,
   "wells": [
-    "GK-129",
-    "LKW-047",
-    "LKM-061"
+    "MNG-042",
+    "BHG-019",
+    "ASH-023"
   ]
 }

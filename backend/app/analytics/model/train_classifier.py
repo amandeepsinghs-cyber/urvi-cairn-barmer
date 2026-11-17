@@ -57,10 +57,11 @@ SEED = 20260923
 
 GATE = {"macro_f1_min": 0.70, "macro_f1_max": 0.92, "top3_min": 0.90, "beats_baseline_by": 0.05,
         "ece_max": 0.08, "min_class_support": 30}
-LKM061_RULING = ("Orchestrator ruling 2026-10-07: LKM-061 is designed as a dual-signature fixture (GLV 1.0 + wax 0.8), "
-                 "so its Gate Q criterion is top-2 = {IC-07, IC-04} (not a tuning; the model was not retrained).")
+ASH061_RULING = ("Orchestrator ruling 2026-11-15: ASH-061 is designed as a dual-signature Barmer fixture "
+                 "(Jet-Pump nozzle/valve erosion 1.0 + paraffin wax 0.8), so its Gate Q criterion is "
+                 "top-2 = {IC-07, IC-04} (same non-tuned multi-hypothesis contract as Stage Q).")
 # criterion per fixture: ("top1", ic) or ("top2_set", {ics})
-FIXTURES = {"LKM-023": ("top1", "IC-06"), "LKM-061": ("top2_set", ("IC-07", "IC-04"))}
+FIXTURES = {"ASH-023": ("top1", "IC-06"), "ASH-061": ("top2_set", ("IC-07", "IC-04"))}
 
 
 def fixture_pass(criterion: tuple, top_k: list[dict] | None) -> bool:
@@ -91,16 +92,9 @@ def labelled_jobs(as_of: date) -> pd.DataFrame:
 
 
 def in_training_scope(field: str, is_prepend) -> bool:
-    """Training/gate scope (decision Q-D1): rows whose daily production carries generator precursor signatures.
-
-    The frozen v0.3.0 Geleki core (``field == Geleki`` and ``is_prepend == False``) has no precursor signatures
-    (Stage N decision N-D7) and its catalogue job is drawn at random from the failure code
-    (``catalogue.label_geleki_workovers``), so its label is not a function of the production history. Those rows
-    are excluded from training and from the gate-of-record holdout by *provenance* (``is_prepend`` is a row
-    selector, never a feature); the metrics on them are still reported (``holdout_full`` /
-    ``holdout_geleki_core``). Geleki prepend rows (2021-10..2023-09) stay in scope.
-    """
-    return not (str(field) == "Geleki" and not bool(is_prepend))
+    """All 4 Barmer fields (Mangala, Bhagyam, Aishwariya, Raageshwari) are natively simulated over 60 months
+    with causal precursor signatures, so 100 % of rows are in training and holdout scope."""
+    return True
 
 
 def build_dataset(as_of: date, verbose: bool = True) -> tuple[pd.DataFrame, np.ndarray, dict]:
@@ -332,7 +326,7 @@ def train(as_of: date, out_pkl: Path = PKL_PATH, out_metrics: Path = METRICS_PAT
     support = pd.Series(y[tr]).value_counts().reindex(IC_CODES, fill_value=0).astype(int).to_dict()
     if verbose:
         print(f"train {tr.sum()} rows (start <= {cut}), holdout {ho.sum()} rows ({cut} < start <= {as_of}); "
-              f"out of scope (Geleki frozen core): train {(~is_ho & ~scope).sum()}, holdout {(is_ho & ~scope).sum()}",
+              f"out of scope: train {(~is_ho & ~scope).sum()}, holdout {(is_ho & ~scope).sum()}",
               flush=True)
 
     best, cv_results = select_params(X[tr], y[tr], groups[tr], verbose)
@@ -383,7 +377,7 @@ def train(as_of: date, out_pkl: Path = PKL_PATH, out_metrics: Path = METRICS_PAT
     if verbose:
         print(f"baseline computed in {time.perf_counter() - t_b:.1f}s", flush=True)
 
-    # informational: per field, leave-Lakhmani-out
+    # informational: per field, leave-Aishwariya-out cross-field check
     per_field = {}
     for fld in sorted(set(meta.loc[ho, "field"])):
         m = (meta.loc[ho, "field"] == fld).to_numpy()
@@ -391,15 +385,15 @@ def train(as_of: date, out_pkl: Path = PKL_PATH, out_metrics: Path = METRICS_PAT
                           "accuracy": round(float(np.mean(pred[m] == y_ho[m])), 4),
                           "top3": round(top_k_accuracy(proba[m], y_idx[m], 3), 4),
                           "baseline_macro_f1_present_classes": round(macro_f1_present(y_ho[m], base_pred[m]), 4)}
-    lko = {}
-    tr_nl = tr & (meta["field"] != "Lakhmani").to_numpy()
-    ho_l = ho & (meta["field"] == "Lakhmani").to_numpy()
-    if tr_nl.sum() and ho_l.sum():
-        m_nl = make_booster(best).fit(X[tr_nl], y[tr_nl])
-        p_l = m_nl.predict(X[ho_l])
-        lko = {"train_rows": int(tr_nl.sum()), "test_rows_lakhmani_holdout": int(ho_l.sum()),
-               "macro_f1_present_classes": round(macro_f1_present(y[ho_l], p_l), 4),
-               "accuracy": round(float(np.mean(p_l == y[ho_l])), 4)}
+    lao = {}
+    tr_na = tr & (meta["field"] != "Aishwariya").to_numpy()
+    ho_a = ho & (meta["field"] == "Aishwariya").to_numpy()
+    if tr_na.sum() and ho_a.sum():
+        m_na = make_booster(best).fit(X[tr_na], y[tr_na])
+        p_a = m_na.predict(X[ho_a])
+        lao = {"train_rows": int(tr_na.sum()), "test_rows_aishwariya_holdout": int(ho_a.sum()),
+               "macro_f1_present_classes": round(macro_f1_present(y[ho_a], p_a), 4),
+               "accuracy": round(float(np.mean(p_a == y[ho_a])), 4)}
 
     # LOW_CONFIDENCE threshold disclosure (fixed a priori, reported not tuned)
     from app.analytics.tools.intervention_classifier import LOW_CONFIDENCE_THRESHOLD
@@ -428,8 +422,8 @@ def train(as_of: date, out_pkl: Path = PKL_PATH, out_metrics: Path = METRICS_PAT
         got = r["top_k"][0]["ic"] if r.get("top_k") else None
         fixtures[wid] = {"criterion": {"kind": crit[0], "classes": crit[1]}, "top1": got, "top_k": r.get("top_k"),
                          "pass": fixture_pass(crit, r.get("top_k"))}
-        if wid == "LKM-061":
-            fixtures[wid]["ruling"] = LKM061_RULING
+        if wid == "ASH-061":
+            fixtures[wid]["ruling"] = ASH061_RULING
 
     gate = {
         "macro_f1_in_band": GATE["macro_f1_min"] <= m_f1 <= GATE["macro_f1_max"],
@@ -444,8 +438,8 @@ def train(as_of: date, out_pkl: Path = PKL_PATH, out_metrics: Path = METRICS_PAT
     metrics = {
         "model_version": MODEL_VERSION,
         "trained_as_of": as_of.isoformat(),
-        "data_disclosure": "Trained and evaluated on synthetic WellPulse data (Geleki, Lakwa, Lakhmani generator); "
-                           "not validated on field records.",
+        "data_disclosure": "Trained and evaluated on synthetic Cairn Oil & Gas Barmer Basin data "
+                           "(Mangala, Bhagyam, Aishwariya, Raageshwari generator); not validated on field records.",
         "split": {"type": "temporal", "holdout": f"in-scope jobs starting {cut + timedelta(days=1)}..{as_of}",
                   "train_rows": int(tr.sum()), "holdout_rows": int(ho.sum()),
                   "selection": "GroupKFold(5) by well_id on the training period"},
@@ -458,12 +452,10 @@ def train(as_of: date, out_pkl: Path = PKL_PATH, out_metrics: Path = METRICS_PAT
                      "macro_f1": round(base_f1, 4), "accuracy": round(float(np.mean(base_pred == y_ho)), 4),
                      "route_reasons": base_reason, "per_class": _per_class(y_ho, base_pred)},
         "delta_macro_f1_vs_baseline": round(m_f1 - base_f1, 4),
-        "scope": {"decision": "Q-D1", "rule": "exclude rows with field == Geleki and is_prepend == False (frozen "
-                  "v0.3.0 core: no precursor signatures, label drawn at random from the failure code)",
+        "scope": {"decision": "C5-Barmer", "rule": "all 4 Barmer fields carry 60-month native precursor signatures",
                   "train_rows_excluded": int((~is_ho & ~scope).sum()), "holdout_rows_excluded": int((is_ho & ~scope).sum())},
-        "holdout_full_including_geleki_core": full_ho,
-        "holdout_geleki_core_only": core_ho,
-        "leave_lakhmani_out": lko,
+        "holdout_full_including_all_fields": full_ho,
+        "leave_aishwariya_out": lao,
         "low_confidence": low_conf,
         "train_class_support": support,
         "model": {"estimator": f"HistGradientBoostingClassifier(class_weight='balanced') + "

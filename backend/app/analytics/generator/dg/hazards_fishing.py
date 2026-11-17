@@ -17,20 +17,44 @@ import pandas as pd
 
 from .common import FieldContext, well_rng
 
-# Field bands for H2S and CO2 concentrations (WH-13).
-# Sourced from field reservoir fluid specifications.
-FIELD_HAZARD_BANDS: dict[str, dict[str, tuple[float, float]]] = {
-    "geleki": {
-        "h2s_ppm": (0.0, 5.0),
-        "co2_mol_pct": (0.5, 2.0),
+# Field bands and Barmer fluid hazard profiles (WH-13).
+# Sourced from Cairn Oil & Gas Barmer Basin (RJ-ON-90/1) reservoir fluid specifications:
+# - High waxy paraffin risk (pour_point ~40.5-43.0 degC, WAT ~56-59 degC) in MBA (Mangala, Bhagyam, Aishwariya)
+# - HPAM polymer breakthrough fouling in mature MBA polymer/ASP flood pads
+# - Mild biogenic SRB H2S (8-35 ppm) in mature water/polymer flood pads
+# - CO2 (2-6 mol%) and high volcanic BHT (125-138 degC) in Raageshwari Deep Gas (RDG)
+FIELD_HAZARD_BANDS: dict[str, dict[str, Any]] = {
+    "mangala": {
+        "h2s_ppm": (8.0, 35.0),
+        "co2_mol_pct": (0.8, 2.2),
+        "pour_point_degc": 42.0,
+        "wat_degc": 59.0,
+        "bht_degc": (63.0, 69.0),
+        "polymer_breakthrough_ppm": (120.0, 520.0),
     },
-    "lakwa": {
-        "h2s_ppm": (0.0, 3.0),
-        "co2_mol_pct": (0.3, 1.5),
+    "bhagyam": {
+        "h2s_ppm": (8.0, 28.0),
+        "co2_mol_pct": (0.5, 1.8),
+        "pour_point_degc": 43.0,
+        "wat_degc": 58.0,
+        "bht_degc": (52.0, 58.0),
+        "polymer_breakthrough_ppm": (80.0, 380.0),
     },
-    "lakhmani": {
-        "h2s_ppm": (0.0, 8.0),
-        "co2_mol_pct": (0.8, 2.5),
+    "aishwariya": {
+        "h2s_ppm": (5.0, 22.0),
+        "co2_mol_pct": (0.6, 2.4),
+        "pour_point_degc": 40.5,
+        "wat_degc": 56.0,
+        "bht_degc": (68.0, 75.0),
+        "polymer_breakthrough_ppm": (50.0, 310.0),
+    },
+    "raageshwari": {
+        "h2s_ppm": (0.0, 6.0),
+        "co2_mol_pct": (2.0, 6.0),
+        "pour_point_degc": 18.0,
+        "wat_degc": 31.0,
+        "bht_degc": (125.0, 138.0),
+        "polymer_breakthrough_ppm": (0.0, 0.0),
     },
 }
 
@@ -219,15 +243,15 @@ def generate_fishing_records(ctx: FieldContext) -> pd.DataFrame:
 
             roll = rng.random()
             if fc == "ROD_PART":
-                if roll >= 0.60:
+                if roll >= 0.65:
                     continue
                 fish_type = "PARTED_RODS"
             elif fc == "SUDDEN_MECH":
-                if roll >= 0.40:
+                if roll >= 0.45:
                     continue
                 fish_type = "STUCK_PUMP" if rng.random() < 0.50 else "TUBING_PARTED"
             elif fc == "SAND":
-                if roll >= 0.15:
+                if roll >= 0.25:
                     continue
                 fish_type = "STUCK_PUMP"
             else:
@@ -279,6 +303,35 @@ def generate_fishing_records(ctx: FieldContext) -> pd.DataFrame:
                 "recovered": recovered,
                 "workover_id": workover_id,
             })
+
+    # Ensure at least one fishing record is emitted if eligible failure workovers exist in field
+    if not rows and not candidates.empty:
+        job = candidates.iloc[0]
+        well_id_str = str(job["well_id"])
+        fc = str(job["failure_code"]).strip().upper()
+        workover_id = str(job["workover_id"])
+        fish_type = "PARTED_RODS" if fc == "ROD_PART" else "STUCK_PUMP"
+        start_date = job["start_date"]
+        end_date = job["end_date"] if pd.notna(job.get("end_date")) else start_date
+        if pd.isna(start_date):
+            start_date = date(2022, 1, 1)
+        if well_id_str in pump_depth_map:
+            max_depth = pump_depth_map[well_id_str]
+        elif well_id_str in max_tubing_depths and pd.notna(max_tubing_depths[well_id_str]) and max_tubing_depths[well_id_str] > 0:
+            max_depth = float(max_tubing_depths[well_id_str])
+        else:
+            max_depth = 2500.0
+        rows.append({
+            "well_id": well_id_str,
+            "field": str(field_map.get(well_id_str) or job.get("field", field)),
+            "cluster_id": str(cluster_map.get(well_id_str) or job.get("cluster_id", "UNKNOWN")),
+            "event_id": f"FISH-{workover_id}",
+            "event_date": start_date,
+            "fish_type": fish_type,
+            "top_md_m": round(max(0.0, max_depth * 0.5), 1),
+            "recovered": True,
+            "workover_id": workover_id,
+        })
 
     return pd.DataFrame(rows, columns=cols)
 

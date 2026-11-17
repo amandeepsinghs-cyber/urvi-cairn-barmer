@@ -17,6 +17,8 @@ body{padding:1.25rem 1.5rem 1.5rem}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 h1{font-size:1.2rem;font-weight:700;letter-spacing:-.01em}
 .badge-pill{border:1px solid #1e293b;border-radius:999px;color:#94a3b8;font-size:.65rem;padding:.1rem .55rem}
+.thesis-banner{background:rgba(8,51,68,.4);border:1px solid #22d3ee;border-left:4px solid #22d3ee;border-radius:.5rem;color:#ffffff;font-size:.74rem;line-height:1.45;margin:.45rem 0 .45rem 1.4rem;padding:.45rem .75rem}
+.thesis-banner b{color:#60a5fa}
 .subtitle{color:#94a3b8;font-size:.78rem;margin-left:1.4rem}
 .steps{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin:.6rem 0 .8rem 1.4rem;font-size:.7rem;color:#94a3b8}
 .steps b{color:#ffffff;font-weight:700}
@@ -50,7 +52,8 @@ svg.diagram{display:block;width:100%;height:auto}
   <div class="header">
     <div class="header-row"><div class="pulse-dot"></div><h1>Urvi AI Agent · Architecture · Current (V 1.0 demo)</h1>
       <span class="badge-pill">synthetic demo data</span></div>
-    <p class="subtitle">As built and running today. The demo runs in us-central1 because Gemini Live is not yet offered in India regions; it uses only synthetic data.</p>
+    <div class="thesis-banner"><b>Single-Agent, Multi-Tool Hybrid Architecture:</b> Natural spoken &amp; typed language in (Gemini ADK / Live) → deterministic engineering physics, ML models &amp; numeric-grounding guards underneath — best of both worlds with minimal hallucination.</div>
+    <p class="subtitle">As built and running today on Barmer Basin synthetic data (460 wells). Demo uses us-central1 for Gemini Live; data lakehouse sits in asia-south1.</p>
     <div class="steps"><span><b>①</b> user asks</span> <span><b>②</b> web app calls the Urvi API</span> <span><b>③</b> API hands the question to the agent</span> <span><b>④</b> agent ↔ Gemini Flash</span> <span><b>⑤</b> agent calls the analytics tools</span> <span><b>⑥</b> tools read well data</span> <span><b>⑦</b> answer + screen actions back to the browser</span> <span><b>Ⓐ–Ⓒ</b> voice: audio → Live proxy ↔ Gemini Live → same tools</span></div>
   </div>
   <div class="diagram-container"><div class="stage">
@@ -174,8 +177,8 @@ svg.diagram{display:block;width:100%;height:auto}
 <rect x="28" y="258" width="30" height="30" rx="6" fill="#f8fafc"/>
 <svg x="32" y="262.0" width="22" height="22" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet"><circle cx="12" cy="8" r="3.6" fill="none" stroke="#5f6368" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 20c.8-3.8 3.9-6 7.5-6s6.7 2.2 7.5 6" fill="none" stroke="#5f6368" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
 <text x="66" y="277" fill="#ffffff" font-size="12" font-weight="600">Users</text>
-<text x="32" y="300" fill="#94a3b8" font-size="9">ED · Asset Manager</text>
-<text x="32" y="312" fill="#94a3b8" font-size="9">Field Engineer</text>
+<text x="32" y="300" fill="#94a3b8" font-size="9">Asset Manager</text>
+<text x="32" y="312" fill="#94a3b8" font-size="9">Production Engineer</text>
 <text x="32" y="324" fill="#94a3b8" font-size="9">Chrome + microphone</text>
 </g>
 <g class="node">
@@ -210,7 +213,7 @@ svg.diagram{display:block;width:100%;height:auto}
 <rect x="215" y="446.0" width="68.0" height="38" rx="6" fill="#f8fafc"/>
 <svg x="219" y="453.0" width="60.0" height="24.0" viewBox="0 0 512 136" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="i7-SVGUYvxcnue" x1="-6.234%" x2="103.068%" y1="45.374%" y2="58.975%"><stop offset="0%" stop-color="#8ac443"/><stop offset="100%" stop-color="#75b843"/></linearGradient><linearGradient id="i7-SVGAjQeQc5o" x1="-10.801%" x2="110.996%" y1="43.538%" y2="56.986%"><stop offset="0%" stop-color="#75b843"/><stop offset="100%" stop-color="#4b9744"/></linearGradient><linearGradient id="i7-SVGv05LQezO" x1="108.51%" x2="-3.274%" y1="41.458%" y2="65.747%"><stop offset="0%" stop-color="#c1db74"/><stop offset="100%" stop-color="#acd259"/></linearGradient><linearGradient id="i7-SVGviccrdMv" x1="129.073%" x2="-25.413%" y1="38.386%" y2="61.919%"><stop offset="0%" stop-color="#acd259"/><stop offset="100%" stop-color="#8ac443"/></linearGradient></defs><path fill="#70706f" d="M347.7 88.3c-2 1.3-4.1 2-6.1 2c-1.5 0-2.7-.6-3.7-1.8c-.9-1.2-1.4-2.7-1.4-4.6c0-2.8.7-6.5 2.1-11.2l4-13.6l9.4-.7l2-9.3l-8.5.5l6.3-21l-16.2 3.3l-5.7 18.9l-5.8.2l-1.9 9.5l4.6-.2l-2.6 9.2c-1.2 4.1-2.1 7.7-2.6 10.9c-4.8 4.9-8.4 8-10.8 9.4s-5 2.1-7.6 2.1c-6.8 0-11-3.9-12.6-11.8c17.7-5.2 26.6-12 26.6-20.3c0-3.1-1.1-5.7-3.4-7.6s-5.3-2.9-9-2.9c-7.2 0-13.8 3.5-19.7 10.4c-5.4 6.3-8.3 13.2-8.8 20.9c-4.9 4.8-8.6 8-11 9.5c-2.5 1.6-4.8 2.4-7 2.4c-2.1 0-3.9-1-5.1-3.1c-1.3-2.1-1.9-4.8-1.9-8.3c0-1.6.2-4.5.5-8.6c8.1-8.7 14-17 17.8-24.7s5.7-15.7 5.7-23.9c0-2.9-.4-5.2-1.1-6.9s-1.7-2.6-2.9-2.6c-.2 0-.6.1-1.1.2L254.8 20c-5.2 10-9.7 20.9-13.4 32.8c-3.3 10.7-5.1 20.1-5.4 28c-6.4 7.7-12.3 11.5-17.7 11.5c-3.9 0-6.9-2.1-8.9-6.3l5.1-25.3c8.3-7.7 13.9-14.1 16.9-19.3s4.5-10.7 4.5-16.3c0-3.3-.5-5.9-1.5-7.9s-2.2-3-3.7-3c-.2 0-1.7.4-4.5 1.1s-5.5 1.5-8 2.2c-2.5.8-4 1.6-4.7 2.5c-.6.9-2.2 4.2-4.7 10.1s-4.4 11.2-5.7 16.1c-1.4 4.8-3.2 12.7-5.3 23.5l-10.1 10.5v-.1c-3.4 3.4-6.1 6-8 7.6c-1.9 1.7-3.6 2.5-5.2 2.5c-2.5 0-3.7-1.7-3.7-5.2c0-3.3 1.4-9.4 4.1-18.3l5.3-17.7h-3.4l-12.4 6.8c-2-4.6-5.5-7-10.6-7q-6 0-13.8 5.1c-5.2 3.4-9.5 7.8-12.8 13.3c-2.6 4.3-4.2 8.7-4.7 13.3c-4.6 4.6-8.1 7.7-10.5 9.1s-5 2.1-7.6 2.1c-6.8 0-11-3.9-12.6-11.8c17.7-5.2 26.6-12 26.6-20.3c0-3.1-1.1-5.7-3.4-7.6s-5.3-2.9-9-2.9c-7.2 0-13.8 3.5-19.7 10.4c-5.4 6.3-8.3 13.3-8.8 21c-5.9 6.5-12.1 9.8-18.6 9.8c-3.4 0-7.4-.9-12.1-2.7s-8.3-3-10.8-3.7c-2.5-.6-5.5-.8-8.9-.6c5.3-5.5 8.8-11.1 10.8-16.8c1.9-5.7 3.3-12.2 4.1-19.6s1.6-12.7 2.3-16s2-6.1 3.8-8.5s4.4-3.6 7.7-3.6c2.7 0 4.9 1 6.5 3s2.4 4.7 2.4 8.2c0 4.5-1 8.4-3.1 11.7s-4.5 4.9-7.2 4.9c-1.7 0-3-.6-4.1-1.9c-.5 1.7-.7 3.1-.7 4.4c0 2.4.7 4.3 2.2 5.7s3.4 2.1 6 2.1c4.9 0 9.2-2.4 12.9-7.1c3.7-4.8 5.6-10.3 5.6-16.6q0-8.25-5.4-13.5c-3.6-3.5-8.1-5.3-13.7-5.3c-8.1 0-15.6 4-22.5 12.1c-6.9 8-10.7 19.2-11.4 33.4c-.4 6.9-.9 11.8-1.5 14.8s-2.1 6.1-4.4 9.2c-5.5.9-9.7 2.5-12.7 4.8Q.2 92.15.2 96.8c0 1.5.5 2.7 1.5 3.7S4 102 5.5 102c4.4 0 9.3-3 14.8-8.9q4.35 1.2 10.2 3.9c3.8 1.8 7.1 3 9.8 3.8c2.7.7 5.5 1.1 8.4 1.1c10 0 19.7-4.8 29.3-14.5c.7 3.7 2.2 6.9 4.7 9.4c3.4 3.5 7.8 5.3 13.3 5.3q7.35 0 13.5-3.6c3.9-2.3 8.3-5.9 13.2-10.6c.4 3.5 1.6 6.6 3.5 9.2c2.5 3.3 5.5 5 9 5c3.6 0 7.1-1.4 10.6-4.1c3.4-2.7 7.1-7 11.2-12.8c-.4 11.2 2.6 16.9 9 16.9c2.5 0 5.2-.9 8-2.8s7.4-5.8 13.8-12l4.1-4.5c1.1 3.1 1.9 5 2.4 5.8c-3.2 17.6-5.4 31.9-6.7 43c5.9-1.2 10.9-2 15.1-2.6c1.3-10.3 2.8-19.8 4.5-28.7c2.7 1.2 4.8 1.7 6.3 1.7c3.2 0 6.9-1.3 11-3.8c4-2.5 8-6 12.1-10.5c.5 3.7 1.7 6.8 3.7 9.3c2.6 3.3 6.1 5 10.4 5c3.7 0 7.7-1.2 11.8-3.6s8.9-6.1 14.4-11.2c.7 3.8 2.2 6.9 4.7 9.5c3.4 3.5 7.8 5.3 13.3 5.3q7.35 0 13.5-3.6c3.9-2.3 8.3-5.9 13.2-10.6c.2 4 1.3 7.3 3.2 9.8c2.2 2.9 5 4.4 8.4 4.4c3.3 0 6.9-1.2 10.6-3.6s8.1-6.1 13.2-11.2v-7c-4.3 4-7.3 6.8-9.3 8.1m-85.9-56.1c2.8-7.4 5-11.1 6.5-11.1c.7 0 1.2.5 1.7 1.4c.4.9.7 2.1.7 3.6c0 5.1-1.6 11.2-4.8 18.2c-3.2 7.1-7.3 13.4-12.5 19.1q4.05-20.1 8.4-31.2m-39.1-4.8c1.8-4.6 3.6-7 5.4-7c.9 0 1.7.5 2.3 1.6q.9 1.65.9 4.2c0 4-1.3 8.4-4 13.1s-6.4 9.2-11.1 13.3c2.5-12.2 4.7-20.6 6.5-25.2M102.5 54c2.8 0 4.2 1.9 4.2 5.8c0 7.8-5.2 13.2-15.5 16.1c0-6.5 1.2-11.8 3.6-15.8s5-6.1 7.7-6.1m52.2 26.1c-3.6 6.9-7.4 10.3-11.4 10.3c-1.7 0-3-.7-4.1-2s-1.6-3.1-1.6-5.3q0-8.7 5.4-18.9c3.6-6.9 7.4-10.3 11.5-10.3c1.7 0 3 .6 4.1 1.9c1 1.3 1.5 3 1.5 5.3c-.1 5.8-1.9 12.1-5.4 19M301.3 54c2.8 0 4.2 1.9 4.2 5.8c0 7.8-5.2 13.2-15.5 16.1c0-6.5 1.2-11.8 3.6-15.8c2.5-4.1 5.1-6.1 7.7-6.1"/><path fill="url(#i7-SVGUYvxcnue)" d="M377.4 54.3c1.3 1.5 26 9.7 34.5 19.7c8.6 10 12.3 18.9 11.1 27.5s-6.5 8.4-8.7 11.6c-2.3 3.1-5.5 7-11.5 6.6c-8-.5-16.2-4.5-22.1-18.3s-5.5-26.8-5-34c.4-7.3 1.7-13.1 1.7-13.1"/><path fill="url(#i7-SVGAjQeQc5o)" d="m378.1 56.6l37 55.2l-1.7 1.9z"/><path fill="#3d3d3c" d="m236.4 133.3l.3-2.4c9.9-5.3 22.1-7.3 32.1-12.4c3 1.3 4.3-.6 7.5-.4c1.2 1-1.5 2.4 1.7 2.2c7.1.9 14.1-.4 21.1-1c7.4-.6 14.7.1 22-.4c2.3-.1 5.9-3.3 8.7-1.7c1.3 2.3-4.2 2.5-2.7 5.1c14.5 3.4 50.8 17.8 57 2.1c.1 1-1.1 2.8.6 2.6c12.2-5.5 33-17.3 36.7-20.4c4-3.4 9.4-3.3 14.6-4.5c9.5-2.2 19.6-4.4 27.8-9.2c5.1 3.5 15.7 5.3 21.3 4c5.9-1.3 15.1-11.1 20-14.6c1.9-1.4 4.8-4 6.8-2.5c-1.4 1 .2 3.8-1.5 3.3c-.9-1.7-2.7.3-4-.1c-4.9 4.1-10.1 7.9-15.1 11.8c-2.4 1.4 2.3 2.9-.5 3.4c-13 2.6-32.9-3.9-41.1 5.1c-13 4.5-25.3 5.6-38.1 12.5c-7.4 4-16.4 11.2-24.1 15c-1.3.6-3.2.9-4.7 1.8c-1.9 1.1-2.3 2.6-3.9 2.9c-3.9.8-12-1.2-17.2-1.9c-17-2.5-35.2-9.4-51.3-10.3c-6.4-.3-13.9.7-21.1 1c-15.3.7-24.8 1.1-37.1 5.2c-4.8 1.7-12.6 6.2-15.8 3.8"/><path fill="url(#i7-SVGv05LQezO)" d="M472.6 0c-1.7 2.8-40.9 23-52.6 41.9c-11.8 19-15.1 33.9-10.8 47.9s12.4 13.4 17 18s10.9 10.2 21 8c13.2-3 25.9-11.8 32.2-36.4s2.2-46.2-.5-58.1S472.6 0 472.6 0"/><path fill="url(#i7-SVGviccrdMv)" d="M471.9 4.2L424.4 106l2.8 2.8z"/></svg>
 <text x="293.0" y="456.0" fill="#ffffff" font-size="12" font-weight="600">Field map</text>
-<text x="293.0" y="471.0" fill="#94a3b8" font-size="9">field + GGS outlines</text>
+<text x="293.0" y="471.0" fill="#94a3b8" font-size="9">field + pad outlines</text>
 <text x="293.0" y="483.0" fill="#94a3b8" font-size="9">health-coloured wells</text>
 </g>
 <g class="node">
@@ -341,7 +344,7 @@ svg.diagram{display:block;width:100%;height:auto}
 <svg x="219" y="785.0" width="30" height="30" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet"><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4M12 15V4M7.5 8.5L12 4l4.5 4.5" fill="none" stroke="#5f6368" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
 <text x="263" y="791.0" fill="#ffffff" font-size="12" font-weight="600">Data generator</text>
 <text x="263" y="806.0" fill="#94a3b8" font-size="9">synthetic · seeded</text>
-<text x="263" y="818.0" fill="#94a3b8" font-size="9">412 wells · 60 months</text>
+<text x="263" y="818.0" fill="#94a3b8" font-size="9">460 wells · 60 months</text>
 </g>
 <g class="node">
 <rect x="570" y="760" width="190" height="80" rx="6" fill="#0f172a"/>
@@ -363,7 +366,7 @@ svg.diagram{display:block;width:100%;height:auto}
   </g>
 </svg>
 <text x="628" y="791.0" fill="#ffffff" font-size="12" font-weight="600">Cloud Storage</text>
-<text x="628" y="806.0" fill="#94a3b8" font-size="9">data lake bucket</text>
+<text x="628" y="806.0" fill="#94a3b8" font-size="9">urvi-cairn-barmer-ai-agent-datalake</text>
 <text x="628" y="818.0" fill="#94a3b8" font-size="9">bronze/ · documents/</text>
 </g>
 <g class="node">
@@ -386,8 +389,8 @@ svg.diagram{display:block;width:100%;height:auto}
   </g>
 </svg>
 <text x="863" y="791.0" fill="#ffffff" font-size="12" font-weight="600">BigQuery Bronze</text>
-<text x="863" y="806.0" fill="#94a3b8" font-size="9">external tables</text>
-<text x="863" y="818.0" fill="#94a3b8" font-size="9">raw, as landed</text>
+<text x="863" y="806.0" fill="#94a3b8" font-size="9">urvi_cairn_bronze</text>
+<text x="863" y="818.0" fill="#94a3b8" font-size="9">external tables · raw</text>
 </g>
 <g class="node">
 <rect x="1030" y="760" width="180" height="80" rx="6" fill="#0f172a"/>
@@ -409,8 +412,8 @@ svg.diagram{display:block;width:100%;height:auto}
   </g>
 </svg>
 <text x="1088" y="791.0" fill="#ffffff" font-size="12" font-weight="600">BigQuery Silver</text>
-<text x="1088" y="806.0" fill="#94a3b8" font-size="9">partitioned by date</text>
-<text x="1088" y="818.0" fill="#94a3b8" font-size="9">clustered by well</text>
+<text x="1088" y="806.0" fill="#94a3b8" font-size="9">urvi_cairn_silver</text>
+<text x="1088" y="818.0" fill="#94a3b8" font-size="9">partitioned · clustered</text>
 </g>
 <g class="node">
 <rect x="1255" y="760" width="170" height="80" rx="6" fill="#0f172a"/>
@@ -432,8 +435,8 @@ svg.diagram{display:block;width:100%;height:auto}
   </g>
 </svg>
 <text x="1313" y="791.0" fill="#ffffff" font-size="12" font-weight="600">BigQuery Gold</text>
-<text x="1313" y="806.0" fill="#94a3b8" font-size="9">Dataform models</text>
-<text x="1313" y="818.0" fill="#94a3b8" font-size="9">KPIs · facts</text>
+<text x="1313" y="806.0" fill="#94a3b8" font-size="9">urvi_cairn_gold</text>
+<text x="1313" y="818.0" fill="#94a3b8" font-size="9">Dataform KPIs · facts</text>
 </g>
 <g class="node">
 <rect x="1120" y="100" width="290" height="60" rx="6" fill="#0f172a"/>
@@ -548,11 +551,11 @@ svg.diagram{display:block;width:100%;height:auto}
 <text x="42" y="745" fill="#94a3b8" font-size="8">New in target</text>
 <text x="20" y="763" fill="#64748b" font-size="8">Hover any box for details</text>
 </svg>
-<div class="hot down" style="left:1.370%;top:26.042%;width:9.589%;height:11.458%" tabindex="0" aria-label="Users"><div class="tip"><b>Users</b><span>Executive Director, asset / production engineers and field engineers. They use Urvi by mouse, typing or voice (English by default; Hindi / Hinglish on request).</span></div></div>
-<div class="hot down" style="left:1.370%;top:43.750%;width:9.589%;height:6.250%" tabindex="0" aria-label="Esri imagery"><div class="tip"><b>Esri imagery</b><span>Public satellite tiles behind the field map. Well and GGS positions are synthetic.</span></div></div>
+<div class="hot down" style="left:1.370%;top:26.042%;width:9.589%;height:11.458%" tabindex="0" aria-label="Users"><div class="tip"><b>Users</b><span>Asset managers, production engineers and field supervisors. They use Urvi by mouse, typing or voice (English by default; Hindi / Hinglish on request).</span></div></div>
+<div class="hot down" style="left:1.370%;top:43.750%;width:9.589%;height:6.250%" tabindex="0" aria-label="Esri imagery"><div class="tip"><b>Esri imagery</b><span>Public satellite tiles behind the Barmer Basin map. Well and pad positions are synthetic.</span></div></div>
 <div class="hot down" style="left:14.041%;top:26.042%;width:14.521%;height:7.292%" tabindex="0" aria-label="Voice client"><div class="tip"><b>Voice client</b><span>Streams microphone audio to the Live proxy over a WebSocket and plays Urvi&#x27;s reply. A reconnect starts a fresh session (D-43).</span></div></div>
-<div class="hot down" style="left:14.041%;top:35.417%;width:14.521%;height:7.292%" tabindex="0" aria-label="Urvi UI"><div class="tip"><b>Urvi UI</b><span>India → Assam → field → cluster → well drill-down, the well panel and the docked Urvi agent.</span></div></div>
-<div class="hot down" style="left:14.041%;top:44.792%;width:14.521%;height:7.292%" tabindex="0" aria-label="Field map"><div class="tip"><b>Field map</b><span>412 wells coloured Healthy / Needs attention / Not producing, flowlines, and an India view.</span></div></div>
+<div class="hot down" style="left:14.041%;top:35.417%;width:14.521%;height:7.292%" tabindex="0" aria-label="Urvi UI"><div class="tip"><b>Urvi UI</b><span>India → Barmer Basin → field → pad → well drill-down, the well panel and the docked Urvi agent.</span></div></div>
+<div class="hot down" style="left:14.041%;top:44.792%;width:14.521%;height:7.292%" tabindex="0" aria-label="Field map"><div class="tip"><b>Field map</b><span>460 wells coloured Healthy / Needs attention / Not producing, pad flowlines, and an India view.</span></div></div>
 <div class="hot down" style="left:14.041%;top:54.167%;width:14.521%;height:7.292%" tabindex="0" aria-label="Hands-off control"><div class="tip"><b>Hands-off control</b><span>Plain screen commands run in the browser with no model call; the agent can also send allow-listed screen actions (ui_control).</span></div></div>
 <div class="hot up" style="left:14.041%;top:63.542%;width:14.521%;height:6.250%" tabindex="0" aria-label="Answer canvas"><div class="tip"><b>Answer canvas</b><span>Agent answers open the matching view: charts, the completion diagram, comparisons, the printable pre-field well pack.</span></div></div>
 <div class="hot down" style="left:39.041%;top:9.896%;width:14.726%;height:7.292%" tabindex="0" aria-label="Gemini 3.8 Live"><div class="tip"><b>Gemini 3.8 Live</b><span>Speech-to-speech model for voice. The demo runs in us-central1 because Gemini Live is not yet offered in India regions. Numbers come only from tool results.</span></div></div>
@@ -565,20 +568,20 @@ svg.diagram{display:block;width:100%;height:auto}
 <div class="hot down" style="left:39.041%;top:47.917%;width:14.726%;height:7.292%" tabindex="0" aria-label="Document search"><div class="tip"><b>Document search</b><span>Keyword (TF-IDF) retrieval over the synthetic reports and SOP library; 28,675 chunks.</span></div></div>
 <div class="hot up" style="left:39.041%;top:58.333%;width:14.726%;height:6.250%" tabindex="0" aria-label="Field report"><div class="tip"><b>Field report</b><span>Printable pre-field well pack and dossier; every digit traces to a tool return.</span></div></div>
 <div class="hot up" style="left:57.192%;top:58.333%;width:14.726%;height:6.250%" tabindex="0" aria-label="In-memory sessions"><div class="tip"><b>In-memory sessions</b><span>Chat and voice sessions live in memory, hence one Cloud Run instance with session affinity (D-16).</span></div></div>
-<div class="hot up" style="left:14.041%;top:79.167%;width:14.521%;height:8.333%" tabindex="0" aria-label="Data generator"><div class="tip"><b>Data generator</b><span>Deterministic generator for Geleki, Lakwa and Lakhmani (2021-10 → 2026-09). Also baked into the image.</span></div></div>
-<div class="hot up" style="left:39.041%;top:79.167%;width:13.014%;height:8.333%" tabindex="0" aria-label="Cloud Storage"><div class="tip"><b>Cloud Storage</b><span>Raw generator drops, the 20,966 PDFs and Silver exports.</span></div></div>
-<div class="hot up" style="left:55.137%;top:79.167%;width:12.329%;height:8.333%" tabindex="0" aria-label="BigQuery Bronze"><div class="tip"><b>BigQuery Bronze</b><span>Dataset urvi_cairn_bronze: external tables over the bucket.</span></div></div>
-<div class="hot up right" style="left:70.548%;top:79.167%;width:12.329%;height:8.333%" tabindex="0" aria-label="BigQuery Silver"><div class="tip"><b>BigQuery Silver</b><span>Dataset urvi_cairn_silver: typed, de-duplicated tables loaded by MERGE.</span></div></div>
-<div class="hot up right" style="left:85.959%;top:79.167%;width:11.644%;height:8.333%" tabindex="0" aria-label="BigQuery Gold"><div class="tip"><b>BigQuery Gold</b><span>Dataset urvi_cairn_gold built by Dataform: field KPIs and dossier facts.</span></div></div>
+<div class="hot up" style="left:14.041%;top:79.167%;width:14.521%;height:8.333%" tabindex="0" aria-label="Data generator"><div class="tip"><b>Data generator</b><span>Deterministic generator for Mangala, Bhagyam, Aishwariya and Raageshwari (2021-10 → 2026-09). Also baked into the image.</span></div></div>
+<div class="hot up" style="left:39.041%;top:79.167%;width:13.014%;height:8.333%" tabindex="0" aria-label="Cloud Storage"><div class="tip"><b>Cloud Storage</b><span>Bucket gs://urvi-cairn-barmer-ai-agent-datalake storing synthetic landing parquets, PDFs, and Silver exports.</span></div></div>
+<div class="hot up" style="left:55.137%;top:79.167%;width:12.329%;height:8.333%" tabindex="0" aria-label="BigQuery Bronze"><div class="tip"><b>BigQuery Bronze</b><span>Dataset urvi_cairn_bronze (asia-south1): external tables over gs://urvi-cairn-barmer-ai-agent-datalake.</span></div></div>
+<div class="hot up right" style="left:70.548%;top:79.167%;width:12.329%;height:8.333%" tabindex="0" aria-label="BigQuery Silver"><div class="tip"><b>BigQuery Silver</b><span>Dataset urvi_cairn_silver (asia-south1): typed, de-duplicated tables loaded by MERGE.</span></div></div>
+<div class="hot up right" style="left:85.959%;top:79.167%;width:11.644%;height:8.333%" tabindex="0" aria-label="BigQuery Gold"><div class="tip"><b>BigQuery Gold</b><span>Dataset urvi_cairn_gold (asia-south1) built by Dataform: field KPIs and dossier facts.</span></div></div>
 <div class="hot down right" style="left:76.712%;top:10.417%;width:19.863%;height:6.250%" tabindex="0" aria-label="Cloud Build"><div class="tip"><b>Cloud Build</b><span>Builds the image: web app, Python dependencies, document corpus and a self-check.</span></div></div>
 <div class="hot down right" style="left:76.712%;top:18.750%;width:19.863%;height:6.250%" tabindex="0" aria-label="Artifact Registry"><div class="tip"><b>Artifact Registry</b><span>Stores versioned images (V 1.0 = v1-4b8463d); rollback = shift traffic to an earlier revision.</span></div></div>
 <div class="hot down right" style="left:76.712%;top:39.583%;width:19.863%;height:6.250%" tabindex="0" aria-label="Runtime service account"><div class="tip"><b>Runtime service account</b><span>Cloud Run runs as a dedicated service account; Vertex AI and BigQuery via Application Default Credentials.</span></div></div>
 <div class="hot down right" style="left:76.712%;top:47.917%;width:19.863%;height:6.250%" tabindex="0" aria-label="Cloud Logging"><div class="tip"><b>Cloud Logging</b><span>Cloud Run sends request and application logs to Cloud Logging automatically.</span></div></div>
   </div></div>
   <div class="cards"><div class="card"><div class="card-header"><div class="card-dot" style="background:#22d3ee"></div><h3>Agent &amp; voice</h3></div><ul><li>• Chat: ADK agent on Gemini 3.8 Flash, 34 tools</li><li>• Voice: Gemini 3.8 Live via a server WebSocket proxy, 13 tools</li><li>• Hands-off screen control in English, Hinglish and Hindi</li><li>• English by default; Hindi / Hinglish on request</li></ul></div>
-<div class="card"><div class="card-header"><div class="card-dot" style="background:#a78bfa"></div><h3>Data &amp; ML</h3></div><ul><li>• 412 synthetic wells · 3 fields · 60 months</li><li>• Medallion lakehouse: Bronze → Silver → Gold (BigQuery, asia-south1)</li><li>• Intervention classifier + physics checks + success engine</li><li>• Top 3 next best actions with P(success) and look-alike wells</li></ul></div>
+<div class="card"><div class="card-header"><div class="card-dot" style="background:#a78bfa"></div><h3>Data &amp; ML</h3></div><ul><li>• 460 synthetic Barmer wells · 4 fields · 60 months</li><li>• GCS gs://urvi-cairn-barmer-ai-agent-datalake → BigQuery urvi_cairn_{bronze,silver,gold}</li><li>• Intervention classifier + physics checks + success engine</li><li>• Top 3 next best actions with P(success) and look-alike wells</li></ul></div>
 <div class="card"><div class="card-header"><div class="card-dot" style="background:#fb7185"></div><h3>Trust &amp; guardrails</h3></div><ul><li>• Every number comes from a tool result</li><li>• No currency: cost band + rig-days only</li><li>• No API keys: Vertex AI via the runtime service account</li><li>• All data is synthetic and labelled as such</li></ul></div></div>
-  <p class="footer">Urvi AI Agent on WellPulse · V 1.0 · Cloud Run urvi-cairn-app · official Google Cloud icons (go/cloud-icons) · <a href="current-light.html" style="color:inherit">Light version (for decks)</a></p>
+  <p class="footer">Urvi AI Agent · Cairn Oil &amp; Gas (Vedanta) · Cloud Run urvi-cairn-app · official Google Cloud icons (go/cloud-icons) · <a href="current-light.html" style="color:inherit">Light version (for decks)</a></p>
 </div>
 </body>
 </html>

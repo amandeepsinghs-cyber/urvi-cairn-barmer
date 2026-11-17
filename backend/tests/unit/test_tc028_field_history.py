@@ -43,12 +43,17 @@ def _gold_reference(field: str) -> pd.DataFrame:
 def test_60_monthly_points_per_field(hist):
     assert hist.status == ToolStatus.OK
     v = hist.value
-    assert set(v.fields) == {"Geleki", "Lakwa", "Lakhmani"}
-    assert Counter(r["field"] for r in v.series) == {"Geleki": 60, "Lakwa": 60, "Lakhmani": 60}
+    assert set(v.fields) == {"Mangala", "Bhagyam", "Aishwariya", "Raageshwari"}
+    assert Counter(r["field"] for r in v.series) == {
+        "Mangala": 60,
+        "Bhagyam": 60,
+        "Aishwariya": 60,
+        "Raageshwari": 60,
+    }
     for r in v.series:
         for k in ("oil_bopd", "water_cut_pct", "gas_mscfd"):
             assert r[k] is not None
-    last = [r for r in v.series if r["field"] == "Lakwa"][-1]
+    last = [r for r in v.series if r["field"] == "Bhagyam"][-1]
     assert last["period"].isoformat() == "2026-09-01" and last["is_partial"] is True
     assert last["days_in_period"] == settings.AS_OF.day
 
@@ -68,7 +73,7 @@ def test_reconciles_to_well_sums_within_0_1pct(hist):
             assert abs(r["oil_bopd"] - ref) / ref <= 1e-3
 
 
-@pytest.mark.parametrize("field", ["Geleki", "Lakwa", "Lakhmani"])
+@pytest.mark.parametrize("field", ["Mangala", "Bhagyam", "Aishwariya", "Raageshwari"])
 def test_matches_gold_field_kpi_monthly_definitions(hist, field):
     gold = _gold_reference(field).set_index("month")
     rows = [r for r in hist.value.series if r["field"] == field]
@@ -91,12 +96,12 @@ def test_summary_tells_start_end(hist):
         assert x["n_periods"] == 60
         assert x["change_pct"] == pytest.approx((x["end_oil"] - x["start_oil"]) / x["start_oil"] * 100, abs=0.06)
         assert x["wc_change_pp"] is not None and x["end_producing_wells"] is not None
-    assert all(k in hist.message for k in ("Geleki", "Lakwa", "Lakhmani"))
+    assert all(k in hist.message for k in ("Mangala", "Bhagyam", "Aishwariya", "Raageshwari"))
 
 
 def test_freq_and_subset():
-    r = field_production_history(fields="Lakwa", freq="Q")
-    assert r.status == ToolStatus.OK and r.value.fields == ["Lakwa"]
+    r = field_production_history(fields="Bhagyam", freq="Q")
+    assert r.status == ToolStatus.OK and r.value.fields == ["Bhagyam"]
     assert len(r.value.series) == 20  # 2021-Q4 .. 2026-Q3
     assert currency_keys(r.value) == []
 
@@ -104,4 +109,4 @@ def test_freq_and_subset():
 def test_unknown_field_refused():
     r = field_production_history(fields=["Rudrasagar"])
     assert r.status == ToolStatus.UNAVAILABLE and "fields" in r.missing_fields
-    assert "Geleki" in r.message
+    assert "Mangala" in r.message

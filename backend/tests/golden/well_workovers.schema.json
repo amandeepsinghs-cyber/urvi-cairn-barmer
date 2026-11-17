@@ -4,7 +4,17 @@
   "schema": {
     "items": {
       "properties": {
+        "catalogue_job_code": {
+          "type": [
+            "string"
+          ]
+        },
         "contractor": {
+          "type": [
+            "string"
+          ]
+        },
+        "cost_band": {
           "type": [
             "string"
           ]
@@ -19,6 +29,16 @@
             "string"
           ]
         },
+        "end_date": {
+          "type": [
+            "string"
+          ]
+        },
+        "equipment": {
+          "type": [
+            "string"
+          ]
+        },
         "flow_delta_bopd": {
           "type": [
             "number"
@@ -29,9 +49,35 @@
             "string"
           ]
         },
+        "intervention_class": {
+          "type": [
+            "string"
+          ]
+        },
+        "intervention_label": {
+          "type": [
+            "string"
+          ]
+        },
         "outcome": {
           "type": [
             "string"
+          ]
+        },
+        "report_doc_id": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "requires_rig": {
+          "type": [
+            "boolean"
+          ]
+        },
+        "rig_days": {
+          "type": [
+            "number"
           ]
         },
         "type": {
@@ -41,12 +87,21 @@
         }
       },
       "required": [
+        "catalogue_job_code",
         "contractor",
+        "cost_band",
         "date",
         "description",
+        "end_date",
+        "equipment",
         "flow_delta_bopd",
         "id",
+        "intervention_class",
+        "intervention_label",
         "outcome",
+        "report_doc_id",
+        "requires_rig",
+        "rig_days",
         "type"
       ],
       "type": [
@@ -59,8 +114,8 @@
   },
   "status": 200,
   "wells": [
-    "GK-129",
-    "LKW-047",
-    "LKM-061"
+    "MNG-042",
+    "BHG-019",
+    "ASH-023"
   ]
 }

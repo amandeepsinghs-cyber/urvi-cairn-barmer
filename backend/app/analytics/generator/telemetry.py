@@ -1,12 +1,10 @@
-"""Append-only gap columns for the frozen Geleki v0.3.0 core (SDD §5.4, D-19, V-N7).
+"""Append-only gap columns for daily production telemetry (SDD §5.4, D-19, V-N7).
 
 ``wht_degc`` on producing days; ``gl_inj_rate_mscfd`` / ``gl_inj_pressure_kgcm2`` on producing days of
-GAS_LIFT wells only; NULL otherwise. Drawn from a dedicated stream (``[42, 78]``) in core row order,
-so no v0.3.0 draw is touched. Per-well bases come from ``gap_column_bases`` (shared with the prepend,
-so the series join at 2023-10-01).
+GAS_LIFT wells only; NULL otherwise. Drawn from a dedicated stream (``[cfg.seed, 78]``) in row order.
 
-Physics tie-in: a wax build-up in v0.3.0 raises THP by up to +42 %; WHT falls with it
-(−14 °C per +100 % THP above the well's median), matching the native WAX signature (−6 °C at full).
+Physics tie-in: waxy-crude deposition in Barmer flowlines raises THP while WHT falls toward the
+42–43 °C pour point (−14 °C per +100 % THP above the well's median), matching the native WAX signature.
 """
 
 from __future__ import annotations
@@ -16,14 +14,22 @@ import math
 import numpy as np
 import pandas as pd
 
-from .fields.geleki import GELEKI
+from .fields import FIELD_CONFIGS
+from .fields.base import FieldConfig
 from .simulate import gap_column_bases
 
 
-def core_gap_columns(daily: pd.DataFrame, wells: pd.DataFrame) -> pd.DataFrame:
-    bases = gap_column_bases(GELEKI, wells, GELEKI.seed)
+def core_gap_columns(
+    daily: pd.DataFrame,
+    wells: pd.DataFrame,
+    cfg: FieldConfig | None = None,
+) -> pd.DataFrame:
+    if cfg is None:
+        field_name = str(wells["field"].iloc[0]) if len(wells) and "field" in wells.columns else "Mangala"
+        cfg = FIELD_CONFIGS.get(field_name) or next(iter(FIELD_CONFIGS.values()))
+    bases = gap_column_bases(cfg, wells, cfg.seed)
     lift = dict(zip(wells.well_id, wells.lift_type))
-    rng = np.random.default_rng([GELEKI.seed, 78])
+    rng = np.random.default_rng([cfg.seed, 78])
     n = len(daily)
     noise_w = rng.normal(0.0, 0.6, n)
     noise_r = rng.normal(0.0, 0.02, n)

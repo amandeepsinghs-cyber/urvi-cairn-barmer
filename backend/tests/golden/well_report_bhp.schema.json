@@ -86,6 +86,11 @@
           "string"
         ]
       },
+      "survey_id": {
+        "type": [
+          "string"
+        ]
+      },
       "title": {
         "type": [
           "string"
@@ -104,6 +109,7 @@
       "sonolog_fluid_level_m",
       "static_bottomhole_pressure_sbhp_psi",
       "survey_date",
+      "survey_id",
       "title"
     ],
     "type": [
@@ -112,8 +118,8 @@
   },
   "status": 200,
   "wells": [
-    "GK-129",
-    "LKW-047",
-    "LKM-061"
+    "MNG-042",
+    "BHG-019",
+    "ASH-023"
   ]
 }

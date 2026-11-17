@@ -8,17 +8,17 @@
 ## 1. Context (measured, 2026-10-07)
 | Fact | Value | Source |
 |---|---|---|
-| Wells | 412 (Geleki 142, Lakwa 160, Lakhmani 110) | `well_master` |
+| Wells | 460 (Mangala 180, Bhagyam 120, Aishwariya 100, Raageshwari 60) | `well_master` |
 | Window | 2021-10-01 → 2026-09-30 (60 months), AS_OF 2026-09-23 | D-2, D-15 |
-| `daily_production` rows | 752,312 | landing parquet = Bronze = Silver (reconciled) |
-| All 23 landing tables | 839,938 rows, 12 MB parquet | `lakehouse/load/bronze_upload.py` |
+| `daily_production` rows | 839,960 | landing parquet = Bronze = Silver (reconciled) |
+| All 29 landing tables | ~950,000 rows, ~15 MB parquet | `lakehouse/load/bronze_upload.py` |
 | Dominant query shapes | field × month roll-ups over 5 years; one well's history; field comparisons; screening at AS_OF | TC-028, TC-017, TC-024, TC-020 |
 | Write pattern | daily batch (generator / future SCADA allocation), append-mostly | SDD §5.5 |
 
 ## 2. Options considered
 | Option | Fit for this workload | Verdict |
 |---|---|---|
-| **BigQuery** (Silver/Gold) | Columnar storage with partitioning and clustering. Five-year roll-ups over all wells finish in seconds. Native to Dataform (Gold), Looker and Gemini. Supports streaming ingest. 0.75 M daily rows is tiny. Even 1-minute SCADA for 412 wells (~216 M rows/yr) is routine. Pay per byte scanned: partition pruning on `production_date` and clustering on `field, well_id` keep app queries small. | ✅ **Chosen** for Silver/Gold and analytics |
+| **BigQuery** (Silver/Gold) | Columnar storage with partitioning and clustering. Five-year roll-ups over all wells finish in seconds. Native to Dataform (Gold), Looker and Gemini. Supports streaming ingest. 0.84 M daily rows is tiny. Even 1-minute SCADA for 460 wells (~242 M rows/yr) is routine. Pay per byte scanned: partition pruning on `production_date` and clustering on `field, well_id` keep app queries small. | ✅ **Chosen** for Silver/Gold and analytics |
 | Bigtable | High-QPS millisecond point reads/writes on wide time series keyed by `well#timestamp` | ❌ Not now. Use it only if a live per-second SCADA tile is added. It cannot do field × month aggregation without another engine. |
 | AlloyDB / Cloud SQL (Postgres) | OLTP: approvals, `decision_log`, the draft-plan workflow, ADK sessions (D-16) | ❌ Not for time series: row-store scans over multi-year roll-ups, and capacity to manage. ✅ Optional later for workflow and sessions. |
 | Spanner | Global, strongly consistent OLTP | ❌ Overkill for a single-region analytics workload |
@@ -35,7 +35,7 @@
 ## 4. Consequences
 - **Two runtime backends, one code path.** `BigQueryRepository` subclasses `ParquetRepository` and overrides only the raw read (`_read`). All adapters and routes run unchanged on both backends. `tests/integration/test_backend_parity.py` asserts identical frames, identical repository outputs and identical REST responses for the fixture wells.
 - **The demo stays offline-safe.** Cloud Run keeps parquet as the default. BigQuery is an opt-in that proves the Lakehouse story.
-- **Documents.** PDFs and `facts.json` are mirrored to `gs://…/documents/`. `wellpulse_silver.doc_chunks` mirrors the TF-IDF index (D-17). `wellpulse_gold.dossier_facts` holds the grounding facts (the V§5 "grounding cache", derived interpretation). Vertex AI Search remains a drop-in behind TC-026.
+- **Documents.** PDFs and `facts.json` are mirrored to `gs://…/documents/`. `urvi_cairn_silver.doc_chunks` mirrors the TF-IDF index (D-17). `urvi_cairn_gold.dossier_facts` holds the grounding facts (the V§5 "grounding cache", derived interpretation). Vertex AI Search remains a drop-in behind TC-026.
 - **Revisit triggers:**
   - a live per-second SCADA view → add Bigtable for the hot path;
   - approval/workflow writes → add AlloyDB/Cloud SQL for OLTP;
@@ -43,12 +43,12 @@
 
 ## 5. Layout (as built)
 ```
-gs://workover-operations-agentic-ai-datalake/
-  bronze/<table>/dt=2026-09-23/landing_folder=<asset|geleki|lakwa|lakhmani>/part-000.parquet
+gs://urvi-cairn-barmer-ai-agent-datalake/
+  bronze/<table>/dt=2026-09-23/landing_folder=<asset|mangala|bhagyam|aishwariya|raageshwari>/part-000.parquet
   documents/<field>/<Dxx>/<doc_id>.pdf (+ .facts.json)        # when Stage O corpus exists
   silver_exports/<table>/dt=2026-09-23/<table>-*.parquet
 BigQuery (asia-south1):
-  wellpulse_bronze.*   23 external tables (hive keys dt, landing_folder)
-  wellpulse_silver.*   23 contract tables + doc_chunks
-  wellpulse_gold.*     field_kpi_monthly, sick_well_screen (view), intervention_features, nba_lookup, dossier_facts (+ assertions)
+  urvi_cairn_bronze.*   29 external tables (hive keys dt, landing_folder)
+  urvi_cairn_silver.*   29 contract tables + doc_chunks
+  urvi_cairn_gold.*     field_kpi_monthly, sick_well_screen (view), intervention_features, nba_lookup, dossier_facts (+ assertions)
 ```

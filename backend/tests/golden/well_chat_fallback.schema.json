@@ -3,6 +3,1366 @@
   "route": "/api/wells/{well}/chat",
   "schema": {
     "properties": {
+      "actions": {
+        "items": {
+          "properties": {
+            "field": {
+              "type": [
+                "string"
+              ]
+            },
+            "kind": {
+              "type": [
+                "string"
+              ]
+            },
+            "screen": {
+              "type": [
+                "string"
+              ]
+            },
+            "source_tool": {
+              "type": [
+                "string"
+              ]
+            },
+            "well_id": {
+              "type": [
+                "string"
+              ]
+            }
+          },
+          "required": [
+            "field",
+            "kind",
+            "screen",
+            "source_tool",
+            "well_id"
+          ],
+          "type": [
+            "object"
+          ]
+        },
+        "type": [
+          "array"
+        ]
+      },
+      "artifacts": {
+        "items": {
+          "properties": {
+            "data": {
+              "properties": {
+                "actions": {
+                  "items": {
+                    "properties": {
+                      "cost_band": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "deferred_bbl_12mo": {
+                        "type": [
+                          "number"
+                        ]
+                      },
+                      "diagnostic_fit": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "duration_days_max": {
+                        "type": [
+                          "number"
+                        ]
+                      },
+                      "duration_days_min": {
+                        "type": [
+                          "number"
+                        ]
+                      },
+                      "earliest_start_date": {
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      },
+                      "fit_evidence": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "fit_symbol": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "guardrail": {
+                        "type": [
+                          "null"
+                        ]
+                      },
+                      "ic": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "ic_label": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "job_code": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "job_name": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "ml_prob": {
+                        "type": [
+                          "number"
+                        ]
+                      },
+                      "mro_blocker": {
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      },
+                      "mro_status": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "p_success": {
+                        "type": [
+                          "number"
+                        ]
+                      },
+                      "p_success_detail": {
+                        "properties": {
+                          "alpha": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "intervention_class": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "n_asset": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "n_field": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "n_well": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "p_asset": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "p_field": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "p_success": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "s_asset": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "s_field": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "s_well": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "scope": {
+                            "type": [
+                              "string"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "alpha",
+                          "intervention_class",
+                          "n_asset",
+                          "n_field",
+                          "n_well",
+                          "p_asset",
+                          "p_field",
+                          "p_success",
+                          "s_asset",
+                          "s_field",
+                          "s_well",
+                          "scope"
+                        ],
+                        "type": [
+                          "object"
+                        ]
+                      },
+                      "p_success_n": {
+                        "type": [
+                          "number"
+                        ]
+                      },
+                      "rank": {
+                        "type": [
+                          "number"
+                        ]
+                      },
+                      "requires_rig": {
+                        "type": [
+                          "boolean"
+                        ]
+                      },
+                      "rig_days": {
+                        "type": [
+                          "number"
+                        ]
+                      },
+                      "rig_slot": {
+                        "properties": {
+                          "basis": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "message": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "rig_class": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "rig_id": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "start_date": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "status": {
+                            "type": [
+                              "string"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status"
+                        ],
+                        "type": [
+                          "null",
+                          "object"
+                        ]
+                      },
+                      "risk_flags": {
+                        "items": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "type": [
+                          "array"
+                        ]
+                      },
+                      "score": {
+                        "type": [
+                          "number"
+                        ]
+                      },
+                      "sop_doc_id": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "sop_steps": {
+                        "items": {
+                          "properties": {
+                            "phase": {
+                              "type": [
+                                "string"
+                              ]
+                            },
+                            "steps": {
+                              "items": {
+                                "type": [
+                                  "string"
+                                ]
+                              },
+                              "type": [
+                                "array"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "phase",
+                            "steps"
+                          ],
+                          "type": [
+                            "object"
+                          ]
+                        },
+                        "type": [
+                          "array"
+                        ]
+                      },
+                      "sop_title": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "sop_url": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "sources": {
+                        "items": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "type": [
+                          "array"
+                        ]
+                      },
+                      "unit_type": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "uplift_bopd": {
+                        "type": [
+                          "number"
+                        ]
+                      },
+                      "uplift_method": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "why": {
+                        "type": [
+                          "string"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "cost_band",
+                      "deferred_bbl_12mo",
+                      "diagnostic_fit",
+                      "duration_days_max",
+                      "duration_days_min",
+                      "earliest_start_date",
+                      "fit_evidence",
+                      "fit_symbol",
+                      "guardrail",
+                      "ic",
+                      "ic_label",
+                      "job_code",
+                      "job_name",
+                      "ml_prob",
+                      "mro_blocker",
+                      "mro_status",
+                      "p_success",
+                      "p_success_detail",
+                      "p_success_n",
+                      "rank",
+                      "requires_rig",
+                      "rig_days",
+                      "rig_slot",
+                      "risk_flags",
+                      "score",
+                      "sop_doc_id",
+                      "sop_steps",
+                      "sop_title",
+                      "sop_url",
+                      "sources",
+                      "unit_type",
+                      "uplift_bopd",
+                      "uplift_method",
+                      "why"
+                    ],
+                    "type": [
+                      "object"
+                    ]
+                  },
+                  "type": [
+                    "array"
+                  ]
+                },
+                "as_of": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "evidence": {
+                  "properties": {
+                    "failures_24mo": {
+                      "type": [
+                        "number"
+                      ]
+                    },
+                    "health": {
+                      "properties": {
+                        "bucket": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "reason": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "reason_code": {
+                          "type": [
+                            "string"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "bucket",
+                        "reason",
+                        "reason_code"
+                      ],
+                      "type": [
+                        "object"
+                      ]
+                    },
+                    "open_episode": {
+                      "properties": {
+                        "episode_id": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "reason_code": {
+                          "type": [
+                            "null"
+                          ]
+                        },
+                        "start_date": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "status": {
+                          "type": [
+                            "string"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "episode_id",
+                        "reason_code",
+                        "start_date",
+                        "status"
+                      ],
+                      "type": [
+                        "object"
+                      ]
+                    },
+                    "pressure_surveys": {
+                      "properties": {
+                        "doc_id": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "latest": {
+                          "properties": {
+                            "fbhp_kgcm2": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "fluid_level_m": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "pi_bpd_per_kgcm2": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "sbhp_kgcm2": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "survey_date": {
+                              "type": [
+                                "string"
+                              ]
+                            },
+                            "survey_id": {
+                              "type": [
+                                "string"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "fbhp_kgcm2",
+                            "fluid_level_m",
+                            "pi_bpd_per_kgcm2",
+                            "sbhp_kgcm2",
+                            "survey_date",
+                            "survey_id"
+                          ],
+                          "type": [
+                            "object"
+                          ]
+                        },
+                        "n_surveys": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "pi_change_pct": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "previous": {
+                          "properties": {
+                            "fbhp_kgcm2": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "fluid_level_m": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "pi_bpd_per_kgcm2": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "sbhp_kgcm2": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "survey_date": {
+                              "type": [
+                                "string"
+                              ]
+                            },
+                            "survey_id": {
+                              "type": [
+                                "string"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "fbhp_kgcm2",
+                            "fluid_level_m",
+                            "pi_bpd_per_kgcm2",
+                            "sbhp_kgcm2",
+                            "survey_date",
+                            "survey_id"
+                          ],
+                          "type": [
+                            "object"
+                          ]
+                        },
+                        "sbhp_change_pct": {
+                          "type": [
+                            "number"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "doc_id",
+                        "latest",
+                        "n_surveys",
+                        "pi_change_pct",
+                        "previous",
+                        "sbhp_change_pct"
+                      ],
+                      "type": [
+                        "object"
+                      ]
+                    },
+                    "production_casing_age_years": {
+                      "type": [
+                        "number"
+                      ]
+                    },
+                    "tc002_chan": {
+                      "properties": {
+                        "confidence": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "evidence": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "mechanism": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "r_squared": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "status": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "water_cut_end_pct": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "water_cut_start_pct": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "wor_prime_slope": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "wor_slope": {
+                          "type": [
+                            "number"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "confidence",
+                        "evidence",
+                        "mechanism",
+                        "r_squared",
+                        "status",
+                        "water_cut_end_pct",
+                        "water_cut_start_pct",
+                        "wor_prime_slope",
+                        "wor_slope"
+                      ],
+                      "type": [
+                        "object"
+                      ]
+                    },
+                    "tc003_fillage": {
+                      "type": [
+                        "null"
+                      ]
+                    },
+                    "tc004_offsets": {
+                      "properties": {
+                        "excess_residual_pct": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "n_offsets_used": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "offset_median_residual_pct": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "offset_wells": {
+                          "items": {
+                            "properties": {
+                              "distance_m": {
+                                "type": [
+                                  "number"
+                                ]
+                              },
+                              "residual_pct": {
+                                "type": [
+                                  "number"
+                                ]
+                              },
+                              "well_id": {
+                                "type": [
+                                  "string"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "distance_m",
+                              "residual_pct",
+                              "well_id"
+                            ],
+                            "type": [
+                              "object"
+                            ]
+                          },
+                          "type": [
+                            "array"
+                          ]
+                        },
+                        "subject_residual_pct": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "summary": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "verdict": {
+                          "type": [
+                            "string"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "excess_residual_pct",
+                        "n_offsets_used",
+                        "offset_median_residual_pct",
+                        "offset_wells",
+                        "subject_residual_pct",
+                        "summary",
+                        "verdict"
+                      ],
+                      "type": [
+                        "object"
+                      ]
+                    },
+                    "tc005_signature": {
+                      "properties": {
+                        "confidence": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "evidence": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "metrics": {
+                          "properties": {
+                            "chp_change_kgcm2": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "gl_inj_pressure_change_kgcm2": {
+                              "type": [
+                                "null"
+                              ]
+                            },
+                            "gl_inj_rate_change_frac": {
+                              "type": [
+                                "null"
+                              ]
+                            },
+                            "gor_change_frac": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "liquid_change_frac": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "liquid_cv_ratio": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "liquid_step_frac": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "thp_change_frac": {
+                              "type": [
+                                "number"
+                              ]
+                            },
+                            "thp_change_kgcm2": {
+                              "type": [
+                                "number"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "chp_change_kgcm2",
+                            "gl_inj_pressure_change_kgcm2",
+                            "gl_inj_rate_change_frac",
+                            "gor_change_frac",
+                            "liquid_change_frac",
+                            "liquid_cv_ratio",
+                            "liquid_step_frac",
+                            "thp_change_frac",
+                            "thp_change_kgcm2"
+                          ],
+                          "type": [
+                            "object"
+                          ]
+                        },
+                        "signature": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "status": {
+                          "type": [
+                            "string"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "confidence",
+                        "evidence",
+                        "metrics",
+                        "signature",
+                        "status"
+                      ],
+                      "type": [
+                        "object"
+                      ]
+                    },
+                    "water_problem_active": {
+                      "type": [
+                        "boolean"
+                      ]
+                    },
+                    "wht_trend": {
+                      "properties": {
+                        "change_degc": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "first_degc": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "last_degc": {
+                          "type": [
+                            "number"
+                          ]
+                        },
+                        "window_days": {
+                          "type": [
+                            "number"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "change_degc",
+                        "first_degc",
+                        "last_degc",
+                        "window_days"
+                      ],
+                      "type": [
+                        "object"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "failures_24mo",
+                    "health",
+                    "open_episode",
+                    "pressure_surveys",
+                    "production_casing_age_years",
+                    "tc002_chan",
+                    "tc003_fillage",
+                    "tc004_offsets",
+                    "tc005_signature",
+                    "water_problem_active",
+                    "wht_trend"
+                  ],
+                  "type": [
+                    "object"
+                  ]
+                },
+                "field": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "flags": {
+                  "items": {
+                    "type": [
+                      "string"
+                    ]
+                  },
+                  "type": [
+                    "array"
+                  ]
+                },
+                "lift_type": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "ml_suggestion": {
+                  "properties": {
+                    "ic": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "job_code": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "label": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "prob": {
+                      "type": [
+                        "number"
+                      ]
+                    },
+                    "status": {
+                      "type": [
+                        "string"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ic",
+                    "job_code",
+                    "label",
+                    "prob",
+                    "status"
+                  ],
+                  "type": [
+                    "object"
+                  ]
+                },
+                "multimodal": {
+                  "properties": {
+                    "candidates": {
+                      "items": {
+                        "properties": {
+                          "cost_band": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "expected_uplift_bopd": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "job_code": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "job_name": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "lookalikes": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "lookalikes_succeeded": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "p_success_pct": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "rank": {
+                            "type": [
+                              "number"
+                            ]
+                          },
+                          "rig_days": {
+                            "type": [
+                              "number"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "cost_band",
+                          "expected_uplift_bopd",
+                          "job_code",
+                          "job_name",
+                          "lookalikes",
+                          "lookalikes_succeeded",
+                          "p_success_pct",
+                          "rank",
+                          "rig_days"
+                        ],
+                        "type": [
+                          "object"
+                        ]
+                      },
+                      "type": [
+                        "array"
+                      ]
+                    },
+                    "drivers": {
+                      "items": {
+                        "properties": {
+                          "direction": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "modality": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "signal": {
+                            "type": [
+                              "string"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "direction",
+                          "modality",
+                          "signal"
+                        ],
+                        "type": [
+                          "object"
+                        ]
+                      },
+                      "type": [
+                        "array"
+                      ]
+                    },
+                    "engine": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "evidence_chain": {
+                      "properties": {
+                        "candidates": {
+                          "items": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "type": [
+                            "array"
+                          ]
+                        },
+                        "mechanism": {
+                          "type": [
+                            "string"
+                          ]
+                        },
+                        "signals": {
+                          "items": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "type": [
+                            "array"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "candidates",
+                        "mechanism",
+                        "signals"
+                      ],
+                      "type": [
+                        "object"
+                      ]
+                    },
+                    "methodology": {
+                      "type": [
+                        "string"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "candidates",
+                    "drivers",
+                    "engine",
+                    "evidence_chain",
+                    "methodology"
+                  ],
+                  "type": [
+                    "object"
+                  ]
+                },
+                "notes": {
+                  "items": {
+                    "type": [
+                      "string"
+                    ]
+                  },
+                  "type": [
+                    "array"
+                  ]
+                },
+                "physics_route": {
+                  "properties": {
+                    "evidence": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "ic": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "job_code": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "mechanism": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "selection_evidence": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "source": {
+                      "type": [
+                        "string"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "evidence",
+                    "ic",
+                    "job_code",
+                    "mechanism",
+                    "selection_evidence",
+                    "source"
+                  ],
+                  "type": [
+                    "object"
+                  ]
+                },
+                "rejected": {
+                  "items": {
+                    "properties": {
+                      "ic": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "job_code": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "reason": {
+                        "type": [
+                          "string"
+                        ]
+                      },
+                      "source": {
+                        "type": [
+                          "string"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "ic",
+                      "job_code",
+                      "reason",
+                      "source"
+                    ],
+                    "type": [
+                      "object"
+                    ]
+                  },
+                  "type": [
+                    "array"
+                  ]
+                },
+                "score_formula": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "well_id": {
+                  "type": [
+                    "string"
+                  ]
+                }
+              },
+              "required": [
+                "actions",
+                "as_of",
+                "evidence",
+                "field",
+                "flags",
+                "lift_type",
+                "ml_suggestion",
+                "multimodal",
+                "notes",
+                "physics_route",
+                "rejected",
+                "score_formula",
+                "well_id"
+              ],
+              "type": [
+                "object"
+              ]
+            },
+            "kind": {
+              "type": [
+                "string"
+              ]
+            },
+            "message": {
+              "type": [
+                "string"
+              ]
+            },
+            "provenance": {
+              "properties": {
+                "as_of": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "config_version": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "data_backend": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "duration_ms": {
+                  "type": [
+                    "number"
+                  ]
+                },
+                "input_hash": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "ml_model": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "tool_id": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "wrapper_ms": {
+                  "type": [
+                    "number"
+                  ]
+                }
+              },
+              "required": [
+                "as_of",
+                "config_version",
+                "data_backend",
+                "duration_ms",
+                "input_hash",
+                "ml_model",
+                "tool_id",
+                "wrapper_ms"
+              ],
+              "type": [
+                "object"
+              ]
+            },
+            "tool": {
+              "type": [
+                "string"
+              ]
+            },
+            "tool_id": {
+              "type": [
+                "string"
+              ]
+            }
+          },
+          "required": [
+            "data",
+            "kind",
+            "message",
+            "provenance",
+            "tool",
+            "tool_id"
+          ],
+          "type": [
+            "object"
+          ]
+        },
+        "type": [
+          "array"
+        ]
+      },
+      "duration_ms": {
+        "type": [
+          "number"
+        ]
+      },
       "engine": {
         "type": [
           "string"
@@ -14,6 +1374,33 @@
         ]
       },
       "note": {
+        "type": [
+          "string"
+        ]
+      },
+      "number_check": {
+        "properties": {
+          "ok": {
+            "type": [
+              "boolean"
+            ]
+          },
+          "unmatched": {
+            "items": {},
+            "type": [
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "unmatched"
+        ],
+        "type": [
+          "object"
+        ]
+      },
+      "persona": {
         "type": [
           "string"
         ]
@@ -30,9 +1417,145 @@
               "array"
             ]
           },
+          "as_of": {
+            "type": [
+              "string"
+            ]
+          },
+          "catalogue_job_codes": {
+            "items": {
+              "type": [
+                "string"
+              ]
+            },
+            "type": [
+              "array"
+            ]
+          },
+          "cost_band": {
+            "type": [
+              "string"
+            ]
+          },
+          "deferred_bbl_12mo": {
+            "type": [
+              "number"
+            ]
+          },
+          "duration_days_max": {
+            "type": [
+              "number"
+            ]
+          },
+          "duration_days_min": {
+            "type": [
+              "number"
+            ]
+          },
+          "flags": {
+            "items": {
+              "type": [
+                "string"
+              ]
+            },
+            "type": [
+              "array"
+            ]
+          },
+          "intervention_class": {
+            "type": [
+              "string"
+            ]
+          },
+          "job_code": {
+            "type": [
+              "string"
+            ]
+          },
+          "p_success": {
+            "type": [
+              "number"
+            ]
+          },
+          "p_success_n": {
+            "type": [
+              "number"
+            ]
+          },
           "projected_flow_uplift_bopd": {
             "type": [
               "number"
+            ]
+          },
+          "provenance": {
+            "properties": {
+              "as_of": {
+                "type": [
+                  "string"
+                ]
+              },
+              "config_version": {
+                "type": [
+                  "string"
+                ]
+              },
+              "data_backend": {
+                "type": [
+                  "string"
+                ]
+              },
+              "duration_ms": {
+                "type": [
+                  "number"
+                ]
+              },
+              "input_hash": {
+                "type": [
+                  "string"
+                ]
+              },
+              "ml_model": {
+                "type": [
+                  "string"
+                ]
+              },
+              "tool_id": {
+                "type": [
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "as_of",
+              "config_version",
+              "data_backend",
+              "duration_ms",
+              "input_hash",
+              "ml_model",
+              "tool_id"
+            ],
+            "type": [
+              "object"
+            ]
+          },
+          "requires_rig": {
+            "type": [
+              "boolean"
+            ]
+          },
+          "rig_days": {
+            "type": [
+              "number"
+            ]
+          },
+          "risk_flags": {
+            "items": {
+              "type": [
+                "string"
+              ]
+            },
+            "type": [
+              "array"
             ]
           },
           "risk_mitigation": {
@@ -40,7 +1563,22 @@
               "string"
             ]
           },
+          "sop_doc_id": {
+            "type": [
+              "string"
+            ]
+          },
+          "sop_url": {
+            "type": [
+              "string"
+            ]
+          },
           "title": {
+            "type": [
+              "string"
+            ]
+          },
+          "unit_type": {
             "type": [
               "string"
             ]
@@ -54,15 +1592,39 @@
             "type": [
               "string"
             ]
+          },
+          "why": {
+            "type": [
+              "string"
+            ]
           }
         },
         "required": [
           "action_items",
+          "as_of",
+          "catalogue_job_codes",
+          "cost_band",
+          "deferred_bbl_12mo",
+          "duration_days_max",
+          "duration_days_min",
+          "flags",
+          "intervention_class",
+          "job_code",
+          "p_success",
+          "p_success_n",
           "projected_flow_uplift_bopd",
+          "provenance",
+          "requires_rig",
+          "rig_days",
+          "risk_flags",
           "risk_mitigation",
+          "sop_doc_id",
+          "sop_url",
           "title",
+          "unit_type",
           "urgency",
-          "urgency_badge"
+          "urgency_badge",
+          "why"
         ],
         "type": [
           "object"
@@ -73,6 +1635,64 @@
           "string"
         ]
       },
+      "session_id": {
+        "type": [
+          "string"
+        ]
+      },
+      "status": {
+        "type": [
+          "string"
+        ]
+      },
+      "tool_calls": {
+        "items": {
+          "properties": {
+            "args": {
+              "properties": {
+                "well_id": {
+                  "type": [
+                    "string"
+                  ]
+                }
+              },
+              "required": [
+                "well_id"
+              ],
+              "type": [
+                "object"
+              ]
+            },
+            "duration_ms": {
+              "type": [
+                "number"
+              ]
+            },
+            "name": {
+              "type": [
+                "string"
+              ]
+            },
+            "status": {
+              "type": [
+                "string"
+              ]
+            }
+          },
+          "required": [
+            "args",
+            "duration_ms",
+            "name",
+            "status"
+          ],
+          "type": [
+            "object"
+          ]
+        },
+        "type": [
+          "array"
+        ]
+      },
       "well_id": {
         "type": [
           "string"
@@ -80,11 +1700,19 @@
       }
     },
     "required": [
+      "actions",
+      "artifacts",
+      "duration_ms",
       "engine",
       "language",
       "note",
+      "number_check",
+      "persona",
       "recommendation",
       "response",
+      "session_id",
+      "status",
+      "tool_calls",
       "well_id"
     ],
     "type": [
@@ -93,8 +1721,8 @@
   },
   "status": 200,
   "wells": [
-    "GK-129",
-    "LKW-047",
-    "LKM-061"
+    "MNG-042",
+    "BHG-019",
+    "ASH-023"
   ]
 }

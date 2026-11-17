@@ -3,8 +3,8 @@ intervention_class: IC-06
 title: Standard Operating Procedure for Sand Cleanout, Bailing, and Sand Control
 purpose: Establish uniform guidelines for clearing sand plugs by hydrostatic bailing, coiled tubing washing, or reverse circulation,
   and installing downhole sand control systems.
-scope: Applies to all sand cleanout and sand control operations on unconsolidated sandstone reservoirs across Assam assets
-  ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
+scope: Applies to all sand cleanout and sand control operations on unconsolidated Fatehgarh sandstone reservoirs across Cairn Oil
+  & Gas Barmer Basin assets ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
 applicability:
 - Sand fill obstructing perforated intervals, tailpipe, or bottomhole intake.
 - Severe sand cutting of surface chokes, flowlines, and artificial lift pump components.

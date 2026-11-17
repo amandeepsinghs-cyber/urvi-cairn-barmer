@@ -13,6 +13,7 @@ from app.agent import rbac
 router = APIRouter()
 
 
+@router.get("/me")
 @router.get("/me/capabilities")
 def me_capabilities(persona: str = Depends(rbac.get_persona)):
     return {"status": "OK", "data": rbac.capabilities_for(persona), "message": "", "missing_fields": [],

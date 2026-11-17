@@ -33,9 +33,9 @@
   "doc_title": {
    "source": "corpus",
    "examples": [
-    "SOP IC-03 \u2014 Tubing leak repair",
-    "SOP IC-11 \u2014 Water shut-off squeeze",
-    "SOP IC-14 \u2014 Surface and integrity repair"
+    "SOP IC-03 — Tubing leak repair",
+    "SOP IC-11 — Water shut-off squeeze",
+    "SOP IC-14 — Surface and integrity repair"
    ],
    "missing_share": 0.0
   },
@@ -53,17 +53,20 @@
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "ALL"
+    "Aishwariya",
+    "Bhagyam",
+    "Mangala",
+    "Raageshwari"
    ]
   },
   "asset": {
    "source": "field_master.asset",
    "examples": [
-    "Assam"
+    "Barmer Basin"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Assam"
+    "Barmer Basin"
    ]
   },
   "as_of": {
@@ -253,7 +256,7 @@
    "source": "workover_history (all fields)",
    "example_rows": [
     {
-     "field": "Geleki",
+     "field": "Mangala",
      "jobs": "190",
      "success_pct": "62.6%",
      "failed": "20",
@@ -262,7 +265,7 @@
      "median_run_life_days": "144"
     },
     {
-     "field": "Geleki",
+     "field": "Mangala",
      "jobs": "17",
      "success_pct": "58.8%",
      "failed": "4",

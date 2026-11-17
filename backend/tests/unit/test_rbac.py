@@ -65,8 +65,8 @@ def test_rbac_me_capabilities_matches_matrix(client):
 @pytest.mark.parametrize("path,cap", [
     ("/api/fields/compare", "field.aggregate"),
     ("/api/fields/history", "field.aggregate"),
-    ("/api/fields/Lakwa/history", "field.aggregate"),
-    ("/api/fields/Lakwa/attribution", "field.attribution"),
+    ("/api/fields/Bhagyam/history", "field.aggregate"),
+    ("/api/fields/Bhagyam/attribution", "field.attribution"),
 ])
 def test_rbac_field_engineer_denied_rollups(client, path, cap):
     r = client.get(path, headers=H[FE])
@@ -80,47 +80,47 @@ def test_rbac_field_engineer_denied_rollups(client, path, cap):
 
 
 def test_rbac_field_engineer_gets_single_well_sop_documents(client):
-    prof = client.get("/api/wells/LKW-047/profile", headers=H[FE])
+    prof = client.get("/api/wells/BHG-019/profile", headers=H[FE])
     assert prof.status_code == 200 and prof.json()["status"] == "OK"
     assert isinstance(prof.json()["data"]["construction"]["casing"], list)  # full mechanical view incl. tallies
-    assert client.get("/api/wells/LKW-047/production?months=24", headers=H[FE]).status_code == 200
-    docs = client.get("/api/wells/LKW-047/documents", headers=H[FE]).json()
+    assert client.get("/api/wells/BHG-019/production?months=24", headers=H[FE]).status_code == 200
+    docs = client.get("/api/wells/BHG-019/documents", headers=H[FE]).json()
     assert docs["status"] == "OK" and {"D04"} <= {d["doc_type_id"] for d in docs["data"]}
-    sop = client.get("/api/docs/search", params={"q": "gas lift valve change-out SOP", "doc_types": "D11"}, headers=H[FE])
+    sop = client.get("/api/docs/search", params={"q": "pump overhaul hot oil SOP", "doc_types": "D11"}, headers=H[FE])
     assert sop.status_code == 200 and sop.json()["data"] and all(h["doc_type_id"] == "D11" for h in sop.json()["data"])
 
 
 def test_rbac_field_engineer_own_cluster_scoping(client):
-    r = client.get("/api/fields/Lakwa/health", headers=H[FE])
+    r = client.get("/api/fields/Bhagyam/health", headers=H[FE])
     assert r.status_code == 403 and "own cluster" in r.json()["message"]
-    ok = client.get("/api/fields/Lakwa/health?well_id=LKW-047", headers=H[FE]).json()
-    full = client.get("/api/fields/Lakwa/health", headers=H[AM]).json()
-    assert ok["status"] == "OK" and ok["data"]["cluster_id"] == "LKW-GGS-I"
+    ok = client.get("/api/fields/Bhagyam/health?well_id=BHG-019", headers=H[FE]).json()
+    full = client.get("/api/fields/Bhagyam/health", headers=H[AM]).json()
+    assert ok["status"] == "OK" and ok["data"]["cluster_id"] == "BHG-PAD-1"
     assert sum(ok["data"]["counts"].values()) < sum(full["data"]["counts"].values())
-    pq = client.get("/api/fields/Lakwa/priority?well_id=LKW-047", headers=H[FE]).json()
+    pq = client.get("/api/fields/Bhagyam/priority?well_id=BHG-019", headers=H[FE]).json()
     rows = pq["data"]["rig_queue"] + pq["data"]["rigless_queue"]
-    assert rows and {x["cluster_id"] for x in rows} == {"LKW-GGS-I"}
+    assert rows and {x["cluster_id"] for x in rows} == {"BHG-PAD-1"}
     assert all("cost_band" not in x for x in rows)  # cost_band.view ✘ for FE
-    am = client.get("/api/fields/Lakwa/priority", headers=H[AM]).json()
+    am = client.get("/api/fields/Bhagyam/priority", headers=H[AM]).json()
     assert all("cost_band" in x for x in am["data"]["rig_queue"])
 
 
 def test_rbac_same_question_scoped_ed_vs_field_engineer(client):
-    """BDD-F16-S01 (API level): 'Tell me about LKW-047' — ED: summary without casing tallies; FE: tallies."""
-    ed = client.get("/api/wells/LKW-047/profile", headers=H[ED]).json()["data"]
-    fe = client.get("/api/wells/LKW-047/profile", headers=H[FE]).json()["data"]
+    """BDD-F16-S01 (API level): 'Tell me about BHG-019' — ED: summary without casing tallies; FE: tallies."""
+    ed = client.get("/api/wells/BHG-019/profile", headers=H[ED]).json()["data"]
+    fe = client.get("/api/wells/BHG-019/profile", headers=H[FE]).json()["data"]
     assert ed["construction"]["tallies_redacted"] is True and "casing" not in ed["construction"]
     assert ed["construction"]["casing_strings"] == len(fe["construction"]["casing"])
     assert ed["identity"] == fe["identity"] and ed["status"] == fe["status"]  # same well facts, scoped detail
     # ED keeps field context; FE does not get field roll-ups
-    assert client.get("/api/fields/Lakwa/attribution", headers=H[ED]).status_code == 200
-    assert client.get("/api/fields/Lakwa/attribution", headers=H[FE]).status_code == 403
+    assert client.get("/api/fields/Bhagyam/attribution", headers=H[ED]).status_code == 200
+    assert client.get("/api/fields/Bhagyam/attribution", headers=H[FE]).status_code == 403
 
 
 def test_rbac_doc_type_gating(client):
-    ed_list = client.get("/api/wells/LKW-047/documents", headers=H[ED]).json()["data"]
+    ed_list = client.get("/api/wells/BHG-019/documents", headers=H[ED]).json()["data"]
     assert ed_list and not ({"D04", "D05"} & {d["doc_type_id"] for d in ed_list})
-    fe_list = client.get("/api/wells/LKW-047/documents", headers=H[FE]).json()["data"]
+    fe_list = client.get("/api/wells/BHG-019/documents", headers=H[FE]).json()["data"]
     tally = next(d for d in fe_list if d["doc_type_id"] == "D04")
     denied = client.get(f"/api/docs/{tally['doc_id']}.pdf", headers=H[ED])
     assert denied.status_code == 403 and denied.json()["message"].startswith("not permitted for persona ED: well.construction")
@@ -156,8 +156,8 @@ def test_rbac_gated_attribution_scope_and_redaction():
         return {"status": "OK", "data": {"well_id": well_id, "field": field, "cost_band": "MED"}}
 
     with rbac.persona_scope(FE):
-        assert attr(well_id="LKW-047")["data"] == {"well_id": "LKW-047", "field": ""}  # allowed, cost_band dropped
-        denied = attr(field="Lakwa")
+        assert attr(well_id="BHG-019")["data"] == {"well_id": "BHG-019", "field": ""}  # allowed, cost_band dropped
+        denied = attr(field="Bhagyam")
         assert denied["status"] == "UNAVAILABLE" and denied["data"] is None
 
 
@@ -172,10 +172,10 @@ def test_rbac_voice_tools_honour_persona():
     r = voice_tools.execute_voice_tool("compare_fields", {"period": "QTD"}, FE)
     assert r["status"] == "UNAVAILABLE" and r["data"] is None
     assert r["message"].startswith("not permitted for persona FIELD_ENGINEER")
-    assert voice_tools.execute_voice_tool("attribute_decline", {"field": "Lakwa"}, FE)["status"] == "UNAVAILABLE"
-    ok = voice_tools.execute_voice_tool("attribute_decline", {"well_id": "LKW-047"}, FE)
+    assert voice_tools.execute_voice_tool("attribute_decline", {"field": "Bhagyam"}, FE)["status"] == "UNAVAILABLE"
+    ok = voice_tools.execute_voice_tool("attribute_decline", {"well_id": "BHG-019"}, FE)
     assert ok["status"] != "UNAVAILABLE"
-    ed_prof = voice_tools.execute_voice_tool("well_profile", {"well_id": "LKW-047"}, ED)
+    ed_prof = voice_tools.execute_voice_tool("well_profile", {"well_id": "BHG-019"}, ED)
     assert ed_prof["data"]["construction"]["tallies_redacted"] is True
 
 
@@ -184,7 +184,7 @@ def test_gis_map_header_counts_equal_tc020(client):
     kpis = client.get("/api/wells/kpis").json()
     fields = client.get("/api/fields").json()["data"]["fields"]
     m = client.get("/api/fields/map").json()["data"]
-    assert sorted(m["fields"]) == ["Geleki", "Lakhmani", "Lakwa"] and len(m["boundaries"]) == 3
+    assert sorted(m["fields"]) == ["Aishwariya", "Bhagyam", "Mangala", "Raageshwari"] and len(m["boundaries"]) == 4
     assert all(b.get("is_synthetic_geometry") for b in m["boundaries"])  # D-3 label source
     assert m["cluster_polygons"] and len(m["points"]) == kpis["total_wells"]
     summed = {k: sum(f["health_counts"][k] for f in fields) for k in fields[0]["health_counts"]}
@@ -206,8 +206,8 @@ def test_gis_drawer_profile_equals_tc029(client):
 
     from app.analytics.tools.well_profile import well_profile
 
-    body = client.get("/api/wells/LKW-047/profile", headers=H[AM]).json()
-    tool = json.loads(json.dumps(well_profile("LKW-047").envelope()))
+    body = client.get("/api/wells/BHG-019/profile", headers=H[AM]).json()
+    tool = json.loads(json.dumps(well_profile("BHG-019").envelope()))
     for env in (body, tool):
         env["provenance"].pop("duration_ms", None)  # wall-clock timing, not data
     assert body == tool

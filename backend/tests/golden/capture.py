@@ -1,8 +1,8 @@
-"""Capture golden API *shape* snapshots of the v0.3 WellPulse backend (Stage M).
+"""Capture golden API *shape* snapshots of the Urvi Cairn Barmer backend (Stage M).
 
 Usage (from ``backend/``)::
 
-    uv run python -m tests.golden.capture --wells GK-129,LKW-047,LKM-061
+    uv run python -m tests.golden.capture --wells MNG-042,BHG-019,ASH-023
 
 Writes ``tests/golden/<route_name>.schema.json`` for every route in
 ``tests/golden/routes.py`` plus the live websocket. Per-well routes merge the

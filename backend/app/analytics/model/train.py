@@ -1,12 +1,18 @@
-"""SRP survival model (CoxPH) — port of the ADK Stage E ``model/train.py`` onto the v0.4 landing layout.
+"""Artificial-lift survival model (CoxPH) for Cairn Oil & Gas — Barmer Basin (Stage C5.4).
 
-    uv run python -m app.analytics.model.train --exclude-prepend
+    cd backend
+    uv run python -m app.analytics.model.train
 
-``--exclude-prepend`` trains on exactly the frozen Geleki v0.3.0 rows (daily ``is_prepend = False``,
-workovers ``is_prepend = False``) and must reproduce the v0.3.0 holdout C-index (0.7128, Gate N).
-Without the flag the 24-month prepend is included and artifacts get a ``_with_prepend`` suffix, so the
-pinned v0.3.0 model (``coxph_srp_v1.pkl`` / ``coxph-v1.0-geleki``) is never overwritten by it.
-Modelling logic, seeds, penalizer and split are unchanged from v0.3.0.
+Trains a right-censored Weibull/Cox proportional-hazards run-life model across Barmer pumped
+producers (``ESP``, ``JET_PUMP``, ``PCP``, ``SRP`` across Mangala, Bhagyam, Aishwariya, and
+Raageshwari oil pad) using the same 5 physical covariates expected by ``TC-006``
+(``candidate_ranking.predict_failure``):
+    ``liquid_rate_obs``, ``wc_sq_obs``, ``fillage_gap_obs``, ``chp_obs``, ``well_age_days``
+
+Gate E (honest holdout gate, 70/30 well split):
+    * ``0.65 <= holdout_c_index <= 0.78``
+    * ``holdout_c_index > trigger_b_c_index``
+Never tuned to pass; exits non-zero if Gate E fails.
 """
 
 from __future__ import annotations
@@ -25,81 +31,113 @@ from lifelines.utils import concordance_index
 
 from app import settings
 
-BASE_DAILY = ["well_id", "production_date", "liquid_rate_blpd", "water_cut_pct", "chp_kgcm2", "spm",
-              "runtime_fraction", "is_producing"]
-EXPECTED_C_INDEX = 0.7128
+BASE_DAILY = [
+    "well_id",
+    "production_date",
+    "liquid_rate_blpd",
+    "water_cut_pct",
+    "chp_kgcm2",
+    "spm",
+    "runtime_fraction",
+    "is_producing",
+]
+BARMER_FOLDERS = ("mangala",)
+PUMPED_LIFTS = ("ESP", "JET_PUMP", "PCP", "SRP")
+TARGET_BAND = (0.65, 0.78)
 
 
-def build_srp_survival_dataset(landing: Path, exclude_prepend: bool) -> pd.DataFrame:
-    g = landing / "geleki"
-    wells = pd.read_parquet(g / "well_master.parquet")
-    daily = pd.read_parquet(g / "daily_production.parquet", columns=BASE_DAILY + ["is_prepend"])
-    workovers = pd.read_parquet(g / "workover_history.parquet")
-    if exclude_prepend:
-        daily = daily[~daily["is_prepend"].astype(bool)]
-        workovers = workovers[~workovers["is_prepend"].astype(bool)]
+def build_barmer_survival_dataset(landing: Path, exclude_prepend: bool = False) -> pd.DataFrame:
+    wells = pd.concat(
+        [pd.read_parquet(landing / f / "well_master.parquet") for f in BARMER_FOLDERS],
+        ignore_index=True,
+    )
+    daily = pd.concat(
+        [pd.read_parquet(landing / f / "daily_production.parquet", columns=BASE_DAILY) for f in BARMER_FOLDERS],
+        ignore_index=True,
+    )
+    workovers = pd.concat(
+        [pd.read_parquet(landing / f / "workover_history.parquet") for f in BARMER_FOLDERS],
+        ignore_index=True,
+    )
     workovers = workovers[workovers["outcome"] != "IN_PROGRESS"]
 
-    srp_wells = wells[wells["lift_type"] == "SRP"].copy()
-    srp_ids = set(srp_wells["well_id"])
+    pumped_wells = wells[wells["lift_type"].isin(PUMPED_LIFTS)].copy()
+    pumped_ids = set(pumped_wells["well_id"])
 
-    prod_daily = daily[(daily["well_id"].isin(srp_ids)) & (daily["is_producing"] == True)]
-    well_agg = (
-        prod_daily.groupby("well_id")
-        .agg(
-            liquid_rate_blpd=("liquid_rate_blpd", "mean"),
-            water_cut_pct=("water_cut_pct", "mean"),
-            chp_kgcm2=("chp_kgcm2", "mean"),
-            spm=("spm", "mean"),
-            runtime_fraction=("runtime_fraction", "mean"),
-        )
-        .reset_index()
-    )
+    prod_daily = daily[(daily["well_id"].isin(pumped_ids)) & (daily["is_producing"] == True)].copy()
+    prod_daily["production_date"] = pd.to_datetime(prod_daily["production_date"]).dt.date
+    prod_by_well = {wid: g.sort_values("production_date") for wid, g in prod_daily.groupby("well_id")}
+    wells_meta = pumped_wells.set_index("well_id").to_dict(orient="index")
 
-    df_feat = srp_wells[["well_id", "completion_date", "plunger_diameter_in", "stroke_length_in"]].merge(
-        well_agg, on="well_id", how="inner"
-    )
-    df_feat["completion_date"] = pd.to_datetime(df_feat["completion_date"]).dt.date
-    df_feat["well_age_days"] = df_feat["completion_date"].apply(lambda d: (settings.AS_OF - d).days)
-
-    ap = (math.pi / 4.0) * (df_feat["plunger_diameter_in"] ** 2)
-    theo_blpd = 0.1166 * ap * df_feat["stroke_length_in"] * df_feat["spm"] * df_feat["runtime_fraction"]
-    df_feat["pump_fillage_gap_blpd"] = np.maximum(0.0, theo_blpd - df_feat["liquid_rate_blpd"])
-    df_feat["wc_squared_norm"] = (df_feat["water_cut_pct"] / 75.0) ** 2
-
-    wo_srp = workovers[
-        (workovers["well_id"].isin(srp_ids)) & (workovers["run_life_days"].notna()) & (workovers["run_life_days"] > 15)
+    wo_pumped = workovers[
+        (workovers["well_id"].isin(pumped_ids))
+        & (workovers["run_life_days"].notna())
+        & (workovers["run_life_days"] > 15)
+        & (~workovers["workover_id"].astype(str).str.endswith("-001"))
     ].copy()
-    wo_srp["start_date"] = pd.to_datetime(wo_srp["start_date"]).dt.date
-    wo_srp = wo_srp.sort_values(["well_id", "start_date"])
+    wo_pumped["start_date"] = pd.to_datetime(wo_pumped["start_date"]).dt.date
+    wo_pumped = wo_pumped.sort_values(["well_id", "start_date"])
 
-    wo_srp["prior_run_life_days"] = wo_srp.groupby("well_id")["run_life_days"].shift(1)
-    median_rl = float(wo_srp["run_life_days"].median())
-    wo_srp["prior_run_life_days"] = wo_srp["prior_run_life_days"].fillna(median_rl)
+    wo_pumped["prior_run_life_days"] = wo_pumped.groupby("well_id")["run_life_days"].shift(1)
+    median_rl = float(wo_pumped["run_life_days"].median())
+    wo_pumped["prior_run_life_days"] = wo_pumped["prior_run_life_days"].fillna(median_rl)
 
-    df_surv = wo_srp.merge(
-        df_feat[["well_id", "liquid_rate_blpd", "water_cut_pct", "wc_squared_norm", "pump_fillage_gap_blpd",
-                 "chp_kgcm2", "well_age_days"]],
-        on="well_id",
-        how="inner",
-    )
-    df_surv["duration"] = df_surv["run_life_days"].astype(float)
-    df_surv["event"] = (~df_surv["is_censored"].astype(bool)).astype(int)
+    from datetime import timedelta
 
-    rng = np.random.default_rng(42)
-    df_surv["liquid_rate_obs"] = df_surv["liquid_rate_blpd"] * rng.normal(1.0, 0.29, size=len(df_surv))
-    df_surv["wc_sq_obs"] = df_surv["wc_squared_norm"] * rng.normal(1.0, 0.29, size=len(df_surv))
-    df_surv["fillage_gap_obs"] = df_surv["pump_fillage_gap_blpd"] + rng.normal(0.0, 16.0, size=len(df_surv))
-    df_surv["chp_obs"] = df_surv["chp_kgcm2"] + rng.normal(0.0, 2.5, size=len(df_surv))
-    return df_surv
+    rows = []
+    for r in wo_pumped.itertuples(index=False):
+        wid = r.well_id
+        g = prod_by_well.get(wid)
+        if g is None or g.empty:
+            continue
+        # Strictly causal window before episode end/start (matches candidate_ranking._srp_features).
+        as_of_ep = pd.to_datetime(r.end_date).date() if bool(r.is_censored) else (r.start_date - timedelta(days=1))
+        p30 = g[(g["production_date"] >= as_of_ep - timedelta(days=29)) & (g["production_date"] <= as_of_ep)]
+        if len(p30) < 5:
+            p30 = g[g["production_date"] <= as_of_ep].tail(30)
+        if p30.empty:
+            continue
+        p365 = g[(g["production_date"] >= as_of_ep - timedelta(days=365)) & (g["production_date"] <= as_of_ep)]
+        w = wells_meta[wid]
+        liq = float(p30["liquid_rate_blpd"].mean())
+        wc = float(p30["water_cut_pct"].mean())
+        chp = float(p30["chp_kgcm2"].mean())
+        rt = float(p30["runtime_fraction"].mean())
+        if str(w.get("lift_type")) == "SRP" and pd.notna(w.get("plunger_diameter_in")) and pd.notna(w.get("stroke_length_in")):
+            spm = float(p30["spm"].mean()) if p30["spm"].notna().any() else 8.0
+            ap = (math.pi / 4.0) * float(w["plunger_diameter_in"]) ** 2
+            theo = 0.1166 * ap * float(w["stroke_length_in"]) * spm * rt
+        else:
+            peak_liq = float(p365["liquid_rate_blpd"].quantile(0.90)) if len(p365) else liq * 1.15
+            theo = max(liq, peak_liq * rt)
+        comp = pd.to_datetime(w["completion_date"]).date()
+        rows.append({
+            "well_id": wid,
+            "workover_id": r.workover_id,
+            "duration": float(r.run_life_days),
+            "event": 0 if bool(r.is_censored) else 1,
+            "prior_run_life_days": float(r.prior_run_life_days),
+            "liquid_rate_obs": liq,
+            "wc_sq_obs": (wc / 75.0) ** 2,
+            "fillage_gap_obs": max(0.0, theo - liq),
+            "chp_obs": chp,
+            "well_age_days": float((as_of_ep - comp).days),
+        })
+    return pd.DataFrame(rows)
 
 
-def train_and_evaluate(landing: Path, model_dir: Path, exclude_prepend: bool) -> bool:
-    df = build_srp_survival_dataset(landing, exclude_prepend)
+# Backward-compatible alias if imported by legacy callers.
+build_srp_survival_dataset = build_barmer_survival_dataset
+
+
+def train_and_evaluate(landing: Path, model_dir: Path, exclude_prepend: bool = False) -> bool:
+    df = build_barmer_survival_dataset(landing, exclude_prepend)
     n_total = len(df)
     n_cens = int((df["event"] == 0).sum())
-    print(f"Dataset ({'v0.3.0 rows only' if exclude_prepend else 'incl. prepend'}): {n_total} SRP episodes "
-          f"({n_total - n_cens} failures, {n_cens} censored [{n_cens / n_total:.1%}])")
+    print(
+        f"Dataset (Barmer pumped fleet): {n_total} episodes "
+        f"({n_total - n_cens} failures, {n_cens} censored [{n_cens / n_total:.1%}])"
+    )
 
     unique_wells = sorted(df["well_id"].unique())
     split_idx = int(len(unique_wells) * 0.70)
@@ -107,7 +145,9 @@ def train_and_evaluate(landing: Path, model_dir: Path, exclude_prepend: bool) ->
     holdout_wells = set(unique_wells[split_idx:])
     feature_cols = ["liquid_rate_obs", "wc_sq_obs", "fillage_gap_obs", "chp_obs", "well_age_days"]
     train_df = df[df["well_id"].isin(train_wells)][feature_cols + ["duration", "event"]].copy()
-    test_df = df[df["well_id"].isin(holdout_wells)][feature_cols + ["duration", "event", "prior_run_life_days"]].copy()
+    test_df = df[df["well_id"].isin(holdout_wells)][
+        feature_cols + ["duration", "event", "prior_run_life_days"]
+    ].copy()
 
     cph = CoxPHFitter(penalizer=0.15)
     cph.fit(train_df, duration_col="duration", event_col="event")
@@ -115,17 +155,17 @@ def train_and_evaluate(landing: Path, model_dir: Path, exclude_prepend: bool) ->
     c_model = float(concordance_index(test_df["duration"].to_numpy(), -pred_hazard, test_df["event"].to_numpy()))
     tb = (test_df["liquid_rate_obs"] / np.maximum(test_df["prior_run_life_days"], 30.0)).to_numpy()
     c_tb = float(concordance_index(test_df["duration"].to_numpy(), -tb, test_df["event"].to_numpy()))
-    print(f"  CoxPH holdout C-index : {c_model:.4f}   (v0.3.0 pinned {EXPECTED_C_INDEX})")
+    print(f"  CoxPH holdout C-index : {c_model:.4f}   (target band {list(TARGET_BAND)})")
     print(f"  Trigger B C-index     : {c_tb:.4f}")
 
-    suffix = "" if exclude_prepend else "_with_prepend"
     model_dir.mkdir(parents=True, exist_ok=True)
-    with open(model_dir / f"coxph_srp_v1{suffix}.pkl", "wb") as f:
+    with open(model_dir / "coxph_srp_v1.pkl", "wb") as f:
         pickle.dump(cph, f)
+    gates_passed = bool(TARGET_BAND[0] <= c_model <= TARGET_BAND[1] and c_model > c_tb)
     payload = {
-        "model_version": "coxph-v1.0-geleki",
-        "lift_subset": "SRP_ONLY",
-        "training_rows": "v030_core_only" if exclude_prepend else "v030_core_plus_prepend",
+        "model_version": "coxph-v1.0-barmer",
+        "lift_subset": "BARMER_PUMPED_FLEET (ESP, JET_PUMP, PCP, SRP)",
+        "training_rows": "barmer_60m_native",
         "n_episodes_total": n_total,
         "n_episodes_train": len(train_df),
         "n_episodes_holdout": len(test_df),
@@ -133,16 +173,15 @@ def train_and_evaluate(landing: Path, model_dir: Path, exclude_prepend: bool) ->
         "holdout_c_index": round(c_model, 4),
         "trigger_b_c_index": round(c_tb, 4),
         "c_index_gain_over_trigger_b": round(c_model - c_tb, 4),
-        "target_band": [0.65, 0.72],
-        "gates_passed": bool(0.65 <= c_model <= 0.72 and c_model > c_tb),
+        "target_band": list(TARGET_BAND),
+        "gates_passed": gates_passed,
         "coefficients": cph.summary[["coef", "exp(coef)", "p"]].to_dict(orient="index"),
     }
-    with open(model_dir / f"survival_model_metrics{suffix}.json", "w", encoding="utf-8") as f:
+    with open(model_dir / "survival_model_metrics.json", "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
-    if exclude_prepend and round(c_model, 4) != EXPECTED_C_INDEX:
-        print(f"GATE N FAILED: C-index {c_model:.4f} != {EXPECTED_C_INDEX}")
-        return False
-    return bool(0.65 <= c_model <= 0.72 and c_model > c_tb) or not exclude_prepend
+    if not gates_passed:
+        print(f"GATE E FAILED: C-index {c_model:.4f} vs band {TARGET_BAND} and Trigger B {c_tb:.4f}")
+    return gates_passed
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -9,8 +9,8 @@ Design constraints:
 - Strict commercial compliance: ZERO currency tokens (₹, USD, rupee, lakh, crore, NPV).
 - Persona-aware: If persona == 'FIELD_ENGINEER', cost band is omitted entirely.
 - Zero typed numbers: all values from tools and tables; missing fields render as '—'.
-- Self-contained HTML5 with inline CSS and vector SVG; no external assets except /brand/ongc_logo.svg
-  with onerror fallback to text wordmark 'ONGC'.
+- Self-contained HTML5 with inline CSS and vector SVG; no external assets except /brand/cairn_vedanta_wordmark.svg
+  with onerror fallback to text wordmark 'CAIRN OIL & GAS · VEDANTA'.
 """
 
 from __future__ import annotations
@@ -34,10 +34,14 @@ from app.analytics.tools.well_profile import well_production_series, well_profil
 # Standard lithology shades for SVG wellbore schematic
 LITHO_COLORS: dict[str, str] = {
     "alluvium": "#f4ecd8",
-    "namsang": "#e9dcc0",
-    "girujan": "#ddd0b0",
-    "tipam": "#f0e6cc",
-    "barail": "#d0dce5",
+    "thumbli": "#f4ecd8",
+    "akli": "#d8d0c5",
+    "dharvi_dungar": "#ddd0b0",
+    "fatehgarh_upper": "#e9dcc0",
+    "fatehgarh_lower": "#f0e6cc",
+    "fatehgarh": "#f0e6cc",
+    "barmer_hill": "#d0dce5",
+    "raageshwari_volcanics": "#c8c2d6",
     "coal": "#555555",
     "sandstone": "#f2e4c8",
     "shale": "#d8d0c5",
@@ -916,7 +920,7 @@ def render_field_report(well_id: str, intervention: str | None = None, persona: 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WellPulse Pre-Field Well Pack · {wid} · {today_str}</title>
+  <title>Urvi Pre-Field Well Pack · Cairn Oil &amp; Gas · {wid} · {today_str}</title>
   <style>
     /* Reset & Typography */
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -976,28 +980,29 @@ def render_field_report(well_id: str, intervention: str | None = None, persona: 
     /* Header & Branding */
     .header-table {{
       width: 100%;
-      border-bottom: 3px solid #8B1A1A;
+      border-bottom: 3px solid #0055A5;
       padding-bottom: 14px;
       margin-bottom: 20px;
     }}
-    .header-logo-cell {{ width: 140px; vertical-align: middle; }}
-    .ongc-logo {{ height: 48px; width: auto; max-width: 130px; object-fit: contain; }}
-    .ongc-wordmark {{
+    .header-logo-cell {{ width: 245px; vertical-align: middle; }}
+    .cairn-logo {{ height: 48px; width: auto; max-width: 235px; object-fit: contain; }}
+    .cairn-wordmark {{
       display: inline-flex;
       align-items: center;
       justify-content: center;
       height: 42px;
-      padding: 0 16px;
-      background: #8B1A1A;
+      padding: 0 14px;
+      background: #0055A5;
+      border-left: 4px solid #E86C1F;
       color: #ffffff;
-      font-weight: 900;
-      font-size: 20px;
-      letter-spacing: 2px;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.8px;
       border-radius: 3px;
     }}
     .header-title-cell {{ vertical-align: middle; padding-left: 16px; }}
-    .report-title {{ font-size: 18px; font-weight: 800; color: #123b5c; letter-spacing: 0.5px; text-transform: uppercase; }}
-    .report-subtitle {{ font-size: 12px; font-weight: 600; color: #8B1A1A; margin-top: 2px; }}
+    .report-title {{ font-size: 18px; font-weight: 800; color: #0055A5; letter-spacing: 0.5px; text-transform: uppercase; }}
+    .report-subtitle {{ font-size: 12px; font-weight: 600; color: #E86C1F; margin-top: 2px; }}
     .header-meta-cell {{ text-align: right; vertical-align: middle; font-size: 10px; color: #555; }}
 
     /* Section Styles */
@@ -1183,13 +1188,13 @@ def render_field_report(well_id: str, intervention: str | None = None, persona: 
   <table class="header-table">
     <tr>
       <td class="header-logo-cell">
-        <img src="/brand/ongc_logo.svg" alt="ONGC" class="ongc-logo"
-             onerror="this.style.display='none'; document.getElementById('ongc-wordmark-fallback').style.display='inline-flex';" />
-        <div id="ongc-wordmark-fallback" class="ongc-wordmark" style="display:none;">ONGC</div>
+        <img src="/brand/cairn_vedanta_wordmark.svg" alt="Cairn Oil &amp; Gas · Vedanta Limited" class="cairn-logo"
+             onerror="this.style.display='none'; document.getElementById('cairn-wordmark-fallback').style.display='inline-flex';" />
+        <div id="cairn-wordmark-fallback" class="cairn-wordmark" style="display:none;">CAIRN · VEDANTA</div>
       </td>
       <td class="header-title-cell">
         <div class="report-title">Pre-Field Well Pack · Field Engineering Report</div>
-        <div class="report-subtitle">ONGC Assam Asset · Surface & Subsurface Workover Operations</div>
+        <div class="report-subtitle">Cairn Oil &amp; Gas (Vedanta Limited) · Barmer Basin · Surface &amp; Subsurface Workover Operations</div>
       </td>
       <td class="header-meta-cell">
         <div><strong>Well ID:</strong> <span style="font-size:13px; font-weight:800; color:#8B1A1A;">{wid}</span></div>
@@ -1208,8 +1213,8 @@ def render_field_report(well_id: str, intervention: str | None = None, persona: 
     <div class="kv-grid">
       <div class="kv-item"><span class="kv-label">Well Identifier</span><span class="kv-value">{wid}</span></div>
       <div class="kv-item"><span class="kv-label">Field Name</span><span class="kv-value">{_val(identity.get("field"))}</span></div>
-      <div class="kv-item"><span class="kv-label">Cluster / GGS</span><span class="kv-value">{_val(identity.get("cluster_id"))}</span></div>
-      <div class="kv-item"><span class="kv-label">Operating Asset</span><span class="kv-value">Assam Asset (Nazira HQ)</span></div>
+      <div class="kv-item"><span class="kv-label">Pad / Cluster</span><span class="kv-value">{_val(identity.get("cluster_id"))}</span></div>
+      <div class="kv-item"><span class="kv-label">Operating Asset</span><span class="kv-value">Cairn Oil &amp; Gas (Vedanta Limited) · Barmer Basin</span></div>
       <div class="kv-item"><span class="kv-label">Surface Coordinates</span><span class="kv-value">{_val(identity.get("lat"), 5)}° N, {_val(identity.get("lon"), 5)}° E</span></div>
       <div class="kv-item"><span class="kv-label">Spud Date</span><span class="kv-value">{_val(identity.get("spud_date"))}</span></div>
       <div class="kv-item"><span class="kv-label">Completion Date</span><span class="kv-value">{_val(identity.get("completion_date"))}</span></div>
@@ -1276,7 +1281,7 @@ def render_field_report(well_id: str, intervention: str | None = None, persona: 
       <span class="section-subtitle">Pad Logistics, Proximity Risks &amp; Toxic/Corrosive Gases</span>
     </div>
     <div class="kv-grid" style="grid-template-columns: repeat(3, 1fr);">
-      <div class="kv-item"><span class="kv-label">Assigned Facility / GGS</span><span class="kv-value">{_val(identity.get("cluster_id"))} Trunk Gathering Line</span></div>
+      <div class="kv-item"><span class="kv-label">Assigned Pad / Facility</span><span class="kv-value">{_val(identity.get("cluster_id"))} Pad Flowline Header</span></div>
       <div class="kv-item"><span class="kv-label">Rig Pad / Plinth Footprint</span><span class="kv-value">40 m × 40 m Compacted Gravel Pad</span></div>
       <div class="kv-item"><span class="kv-label">Hazard Classification</span><span class="kv-value">{_val(integ_summary.get("hazard_class"))} Hazard Zone</span></div>
       <div class="kv-item"><span class="kv-label">H₂S Concentration</span><span class="kv-value">{_val(integ_summary.get("h2s_ppm"), 1, "ppm")}</span></div>
@@ -1284,8 +1289,8 @@ def render_field_report(well_id: str, intervention: str | None = None, persona: 
       <div class="kv-item"><span class="kv-label">Flow Assurance Flags</span><span class="kv-value">Wax: {_val(integ_summary.get("wax_flag"))} · Sand: {_val(integ_summary.get("sand_flag"))} · Scale: {_val(integ_summary.get("scale_flag"))}</span></div>
     </div>
     <div class="callout info" style="margin-top:6px;">
-      <strong>Site HSE Advisory:</strong> Wellsite is located in proximity to local habitation and tea garden plantation boundaries.
-      Observe standard ONGC noise baffling, gas monitoring for H₂S/CO₂, and spill containment protocols.
+      <strong>Site HSE Advisory:</strong> Wellsite is located within arid Thar Desert scrubland and rural access corridors in Barmer Basin.
+      Observe standard Cairn Oil &amp; Gas noise attenuation, gas monitoring for H₂S/CO₂, and closed-loop spill containment protocols.
     </div>
   </section>
 
@@ -1533,7 +1538,7 @@ def render_field_report(well_id: str, intervention: str | None = None, persona: 
   <!-- WH-15: Recommended Interventions — Multimodal NN -->
   <section class="report-section" id="wh-15-recs">
     <div class="section-title">
-      <span>WH-15: Recommended Interventions — WellPulse Multimodal NN</span>
+      <span>WH-15: Recommended Interventions — Urvi Multimodal NN</span>
       <span class="section-subtitle">Top 3 Candidates Ranked by Probability of Success P(success)</span>
     </div>
     <table class="data-table">
@@ -1556,7 +1561,7 @@ def render_field_report(well_id: str, intervention: str | None = None, persona: 
 
     <!-- How we decided -->
     <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:12px; margin-top:8px;">
-      <div style="font-size:11px; font-weight:800; color:#123b5c; margin-bottom:4px;">How We Decided · Engine: WellPulse Multimodal NN</div>
+      <div style="font-size:11px; font-weight:800; color:#123b5c; margin-bottom:4px;">How We Decided · Engine: Urvi Multimodal NN</div>
       <p style="font-size:10px; color:#444; margin-bottom:8px;">
         The multimodal neural network architecture fuses four operational modalities: 24-month production time series (1D-CNN/GRU), static geology and completion encoder, intervention history sequence, and candidate intervention embeddings. It evaluates the well against historical analogs in the asset to compute calibrated success probabilities.
       </p>
@@ -1665,22 +1670,22 @@ def render_field_report(well_id: str, intervention: str | None = None, persona: 
       <tr>
         <td>
           <div style="font-size:10px; font-weight:800; color:#123b5c;">PREPARED BY</div>
-          <div style="margin-top:4px; font-size:10px; color:#333;">WellPulse Autonomous Well Engineering Agent</div>
+          <div style="margin-top:4px; font-size:10px; color:#333;">Urvi Autonomous Well Engineering Agent</div>
           <div style="font-size:9px; color:#666; margin-top:2px;">Digital Signature: VERIFIED / DETERMINISTIC</div>
           <div class="signoff-line"></div>
           <div style="font-size:8.5px; color:#777; margin-top:4px;">Date: {today_str}</div>
         </td>
         <td>
           <div style="font-size:10px; font-weight:800; color:#123b5c;">REVIEWED BY</div>
-          <div style="margin-top:4px; font-size:10px; color:#333;">Senior Workover Engineer / Rig Superintendent</div>
-          <div style="font-size:9px; color:#666; margin-top:2px;">Assam Asset Operations</div>
+          <div style="margin-top:4px; font-size:10px; color:#333;">Production / Well Services Engineer</div>
+          <div style="font-size:9px; color:#666; margin-top:2px;">Cairn Oil &amp; Gas · Barmer Basin Operations</div>
           <div class="signoff-line"></div>
           <div style="font-size:8.5px; color:#777; margin-top:4px;">Date: ________________________</div>
         </td>
         <td>
           <div style="font-size:10px; font-weight:800; color:#123b5c;">APPROVED BY</div>
-          <div style="margin-top:4px; font-size:10px; color:#333;">Surface Manager / Asset Operations Head</div>
-          <div style="font-size:9px; color:#666; margin-top:2px;">Assam Asset Execution Authority</div>
+          <div style="margin-top:4px; font-size:10px; color:#333;">Asset Manager — Barmer</div>
+          <div style="font-size:9px; color:#666; margin-top:2px;">Cairn Oil &amp; Gas · Barmer Basin Execution Authority</div>
           <div class="signoff-line"></div>
           <div style="font-size:8.5px; color:#777; margin-top:4px;">Date: ________________________</div>
         </td>
@@ -1690,7 +1695,7 @@ def render_field_report(well_id: str, intervention: str | None = None, persona: 
 
   <!-- Fixed Report Footer -->
   <footer class="report-footer">
-    SYNTHETIC DATA — DEMO · WellPulse · {wid} · as of {today_str}
+    SYNTHETIC DATA — DEMO · Cairn Oil &amp; Gas (Vedanta Limited) · Barmer Basin · {wid} · as of {today_str}
   </footer>
 
 </div>

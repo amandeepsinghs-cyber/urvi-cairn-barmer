@@ -11,7 +11,7 @@ def _failure_why_chain(spec) -> list[str]:
             "Observed symptom: Progressive decline in pump displacement efficiency, erratic polish rod load readings, and diminished liquid delivery at the surface header.",
             "Physical mechanism: Abrasive scoring and clearance enlargement across the pump barrel and plunger assembly caused by abrasive fines and repeated mechanical cycling.",
             "Intervention shortfall: The executed workover addressed component replacement but did not resolve downhole sand ingress or abrasive fluid conditioning, leading to rapid re-wear.",
-            "Latent root cause: Inadequate bottomhole filtration and sand management coupled with sub-optimal pump metallurgy for high-solids Assam formation fluids.",
+            "Latent root cause: Inadequate bottomhole filtration and sand management coupled with sub-optimal pump metallurgy for high-solids Barmer Basin formation fluids.",
         ]
     if fc == "ROD_PART":
         return [
@@ -29,8 +29,8 @@ def _failure_why_chain(spec) -> list[str]:
         ]
     if fc == "WAX":
         return [
-            "Observed symptom: Gradual rise in flowline pressure, progressive choking of tubing flow paths, and declining liquid recovery at the gathering station.",
-            "Physical mechanism: High-molecular-weight paraffin wax crystallization and deposition on conduit walls below the cloud point depth in the Upper Assam reservoir column.",
+            "Observed symptom: Gradual rise in flowline pressure, progressive choking of tubing flow paths, and declining liquid recovery at the central processing facility.",
+            "Physical mechanism: High-molecular-weight paraffin wax crystallization and deposition on conduit walls below the wax appearance temperature in the Barmer Basin reservoir column.",
             "Intervention shortfall: Thermal and chemical scraping or soaking provided transient wax clearance without elevating long-term near-wellbore formation temperature or sustaining inhibitor film coverage.",
             "Latent root cause: Elevated paraffin content in crude oil combined with ambient shallow thermal cooling during lift, requiring continuous automated chemical dosing.",
         ]
@@ -44,7 +44,7 @@ def _failure_why_chain(spec) -> list[str]:
     if fc == "SAND":
         return [
             "Observed symptom: Solids accumulation in surface separator boots, abrasive cut-out of chokes, and sand pack-off arresting downhole pump action.",
-            "Physical mechanism: Hydrodynamic drag from formation fluid mobilization exceeding unconfined compressive rock strength in weakly consolidated Tipam and Barail sands.",
+            "Physical mechanism: Hydrodynamic drag from formation fluid mobilization exceeding unconfined compressive rock strength in weakly consolidated Fatehgarh and Barmer Hill sands.",
             "Intervention shortfall: Mechanical bailing or cleanout evacuated wellbore sand fill without stabilizing the unconsolidated perforations or installing mechanical sand retention screens.",
             "Latent root cause: Inappropriate drawdown pressure management and absence of downhole gravel pack or slotted liner completion in friable sand packages.",
         ]
@@ -183,7 +183,7 @@ def _recommendations(spec) -> list[str]:
         return [
             "Transition from batch scraping to automated capillary chemical injection of crystal modifier wax inhibitors at the pump intake.",
             "Monitor thermal loss profiles along the upper tubing string and insulate wellhead piping to maintain fluid temperature above the cloud point.",
-            "Establish weekly fluid sampling and pour point verification at the group gathering station to monitor inhibitor coverage.",
+            "Establish weekly fluid sampling and pour point verification at the central processing facility to monitor inhibitor coverage.",
         ]
     return [
         "Enhance pre-job diagnostic surveillance including diagnostic pressure testing and acoustic fluid level determination.",

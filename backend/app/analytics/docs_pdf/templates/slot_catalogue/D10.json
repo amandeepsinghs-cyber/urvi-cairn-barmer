@@ -7,9 +7,9 @@
   "doc_id": {
    "source": "corpus",
    "examples": [
-    "MPR-LKM-2024-03",
-    "MPR-LKW-2022-08",
-    "MPR-LKW-2024-08"
+    "MPR-ASH-2024-03",
+    "MPR-BHG-2022-08",
+    "MPR-BHG-2024-08"
    ],
    "missing_share": 0.0
   },
@@ -33,9 +33,9 @@
   "doc_title": {
    "source": "corpus",
    "examples": [
-    "Lakhmani Monthly Production Report March 2024",
-    "Lakwa Monthly Production Report August 2022",
-    "Lakwa Monthly Production Report August 2024"
+    "Aishwariya Monthly Production Report March 2024",
+    "Bhagyam Monthly Production Report August 2022",
+    "Bhagyam Monthly Production Report August 2024"
    ],
    "missing_share": 0.0
   },
@@ -51,25 +51,26 @@
   "field": {
    "source": "field_master.field",
    "examples": [
-    "Lakhmani",
-    "Lakwa",
-    "Geleki"
+    "Aishwariya",
+    "Bhagyam",
+    "Mangala"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Geleki",
-    "Lakhmani",
-    "Lakwa"
+    "Aishwariya",
+    "Bhagyam",
+    "Mangala",
+    "Raageshwari"
    ]
   },
   "asset": {
    "source": "field_master.asset",
    "examples": [
-    "Assam"
+    "Barmer Basin"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Assam"
+    "Barmer Basin"
    ]
   },
   "as_of": {
@@ -400,13 +401,13 @@
    "source": "daily_production + well_master.cluster_id",
    "example_rows": [
     {
-     "cluster_id": "LKM-GGS-I",
+     "cluster_id": "ASH-PAD-1",
      "wells": "67",
      "oil": "132,566",
      "avg_oil_bopd": "4,276.3"
     },
     {
-     "cluster_id": "LKW-GGS-I",
+     "cluster_id": "BHG-PAD-1",
      "wells": "61",
      "oil": "114,391",
      "avg_oil_bopd": "3,690.0"
@@ -424,13 +425,13 @@
    "source": "daily_production",
    "example_rows": [
     {
-     "well_id": "LKM-002",
+     "well_id": "ASH-002",
      "oil": "5,144",
      "avg_oil_bopd": "165.9",
      "days_on": "30"
     },
     {
-     "well_id": "LKW-016",
+     "well_id": "BHG-016",
      "oil": "5,551",
      "avg_oil_bopd": "179.1",
      "days_on": "31"
@@ -451,8 +452,8 @@
    "source": "workover_history",
    "example_rows": [
     {
-     "well_id": "LKM-005",
-     "workover_id": "WO-LKM-005-005",
+     "well_id": "ASH-005",
+     "workover_id": "WO-ASH-005-005",
      "catalogue_job_code": "GLV_REPLACE",
      "intervention_class": "IC-07",
      "start_date": "2024-03-14",
@@ -460,8 +461,8 @@
      "outcome": "PARTIAL"
     },
     {
-     "well_id": "LKW-005",
-     "workover_id": "WO-LKW-005-002",
+     "well_id": "BHG-005",
+     "workover_id": "WO-BHG-005-002",
      "catalogue_job_code": "RE_PERFORATION",
      "intervention_class": "IC-10",
      "start_date": "2022-08-06",
@@ -476,10 +477,10 @@
   "month"
  ],
  "sample_doc_ids": [
-  "MPR-LKM-2024-03",
-  "MPR-LKW-2022-08",
-  "MPR-LKW-2024-08",
-  "MPR-LKM-2025-03",
-  "MPR-LKM-2023-01"
+  "MPR-ASH-2024-03",
+  "MPR-BHG-2022-08",
+  "MPR-BHG-2024-08",
+  "MPR-ASH-2025-03",
+  "MPR-ASH-2023-01"
  ]
 }

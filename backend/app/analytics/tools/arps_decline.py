@@ -1,6 +1,6 @@
 """TC-001 ``fit_decline_curve`` — Arps hyperbolic decline fit (port of ADK ``tools/arps_decline.py``).
 
-Numerics are unchanged from v0.3.0 (same weights, bounds, baseline mask and rounding) so Geleki fits
+Numerics are unchanged from v0.3.0 (same weights, bounds, baseline mask and rounding) so baseline fits
 reproduce the ADK values. Changes in the port: field-aware tables, ``as_of`` = ``settings.AS_OF``
 (D-15), memoised per input, and an additive ``fit_origin_date`` so TC-019 can evaluate the curve.
 
@@ -8,7 +8,7 @@ Stage P fallback: when the 36-month fit is LOW_CONFIDENCE (r² < 0.5, typically 
 workovers reset the curve) the fit is redone on the current cycle only — producing days after the last
 completed workover, its 30-day transient excluded — provided it has ≥ ``FALLBACK_MIN_POINTS`` (90) points
 and is itself not LOW. ``fit_basis`` says which fit was used. An OK full-window fit is never replaced, so
-Geleki fits that were OK in v0.3.0 are unchanged.
+baseline fits that were OK in v0.3.0 are unchanged.
 """
 
 from __future__ import annotations

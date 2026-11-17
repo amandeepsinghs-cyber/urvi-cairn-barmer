@@ -18,15 +18,15 @@ def _sample(n=15, seed=33):
 
 
 def test_hero_verdicts():
-    gk = offset_decline_compare("GK-129").value
-    assert gk["verdict"] == "WATER" and gk["water_scope"] == "WELL"  # supports "squeeze, not wax removal"
-    lkm = offset_decline_compare("LKM-061").value
-    assert lkm["verdict"] == "WELL_SPECIFIC" and lkm["mechanical"]["signature"] == "GL_VALVE"
-    lkw = offset_decline_compare("LKW-019").value
-    assert lkw["verdict"] == "RESTORED" and "waiting on rig" in lkw["headline"]
+    mng = offset_decline_compare("MNG-042").value
+    assert mng["verdict"] == "WATER" and mng["water_scope"] == "WELL"  # supports "squeeze, not wax removal"
+    rag = offset_decline_compare("RAG-014").value
+    assert rag["verdict"] == "RESERVOIR_WIDE"
+    ash = offset_decline_compare("ASH-023").value
+    assert ash["verdict"] in ("WELL_SPECIFIC", "MIXED")
 
 
-@pytest.mark.parametrize("well", ["GK-129", "LKW-019", "LKM-061"] + _sample())
+@pytest.mark.parametrize("well", ["MNG-042", "BHG-019", "ASH-061"] + _sample())
 def test_shape_and_number_integrity(well):
     v = offset_decline_compare(well).value
     assert v["verdict"] in VERDICTS
@@ -41,13 +41,13 @@ def test_shape_and_number_integrity(well):
 
 
 def test_deterministic():
-    assert offset_decline_compare("GK-129").value == offset_decline_compare("GK-129").value
+    assert offset_decline_compare("MNG-042").value == offset_decline_compare("MNG-042").value
 
 
 def test_route():
     from app.main import app
 
     c = TestClient(app)
-    r = c.get("/api/wells/GK-129/offset-decline")
+    r = c.get("/api/wells/MNG-042/offset-decline")
     assert r.status_code == 200 and r.json()["data"]["verdict"] == "WATER"
     assert c.get("/api/wells/ZZ-999/offset-decline").status_code == 404

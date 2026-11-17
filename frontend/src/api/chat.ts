@@ -1,12 +1,12 @@
 /**
- * chat.ts — Typed client and session handling for WellPulse ADK Copilot (POST /api/chat).
+ * chat.ts — Typed client and session handling for Urvi ADK Copilot (POST /api/chat).
  */
 
 import { getPersona } from '../state/persona';
 import type { UiCommand } from '../agent/uiCommands';
 
 export type ChatLanguage = 'english' | 'hinglish' | 'hindi';
-export type ChatField = 'Geleki' | 'Lakwa' | 'Lakhmani';
+export type ChatField = 'Mangala' | 'Bhagyam' | 'Aishwariya' | 'Raageshwari';
 
 export interface ChatRequest {
   message: string;

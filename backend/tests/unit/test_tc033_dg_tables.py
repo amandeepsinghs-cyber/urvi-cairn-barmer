@@ -10,7 +10,7 @@ from app.analytics.generator.fields import field_of
 from app.analytics.tools.common import ToolStatus, currency_keys
 from app.analytics.tools.dg_tables import deviation_survey, integrity, tubing_tally
 
-TEST_WELLS = ["GK-129", "LKW-047", "LKM-061"]
+TEST_WELLS = ["MNG-042", "BHG-019", "ASH-061", "RAG-014"]
 
 
 def _landing_table(table_name: str, well_id: str) -> pd.DataFrame:

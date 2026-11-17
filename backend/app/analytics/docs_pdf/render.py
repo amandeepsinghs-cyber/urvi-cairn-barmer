@@ -1,6 +1,6 @@
 """Render DocSpecs to PDFs (reportlab) + ``<doc_id>.facts.json``.
 
-    uv run python -m app.analytics.docs_pdf.render --field all [--types D1,D2] [--wells GK-129] [--workers 16]
+    uv run python -m app.analytics.docs_pdf.render --field all [--types D1,D2] [--wells MNG-042] [--workers 16]
 """
 from __future__ import annotations
 
@@ -42,8 +42,8 @@ from app.analytics.docs_pdf.paths import docs_dir, facts_path, pdf_path
 from app.analytics.docs_pdf.templates import load_template
 
 HERO_FILE = Path(__file__).parent / "templates" / "hero_text.yaml"
-FOOTER_PREFIX = "WellPulse synthetic document corpus"
-BANNER = "SYNTHETIC DATA - generated from WellPulse landing tables - not for operational use"
+FOOTER_PREFIX = "Cairn Oil & Gas (Vedanta Limited) · Barmer Basin (SYNTHETIC)"
+BANNER = "SYNTHETIC DATA - Cairn Oil & Gas (Vedanta Limited) · Barmer Basin - not for operational use"
 PAGE_W, PAGE_H = A4
 MARGIN = 16 * mm
 
@@ -327,7 +327,7 @@ def render_spec(spec: ir.DocSpec, root: Path | None = None) -> dict:
     out.parent.mkdir(parents=True, exist_ok=True)
     footer_id = filler.fill("{doc_id}")
     doc = SimpleDocTemplate(str(out), pagesize=A4, leftMargin=MARGIN, rightMargin=MARGIN, topMargin=14 * mm,
-                            bottomMargin=14 * mm, title=spec.title, author="WellPulse corpus generator",
+                            bottomMargin=14 * mm, title=spec.title, author="Cairn Oil & Gas (Vedanta Limited) · Barmer Basin",
                             subject=DOC_TYPES[spec.doc_type])
     doc.build(story, canvasmaker=_numbered_canvas(footer_id))
     rec = {
@@ -389,7 +389,7 @@ def main(argv: list[str] | None = None) -> int:
         per: Counter = Counter()
         keep = []
         for s in specs:
-            if per[s.doc_type] < a.limit or s.well_id in ("GK-129",):
+            if per[s.doc_type] < a.limit or s.well_id in ("MNG-042", "BHG-019", "BHG-088", "ASH-023", "ASH-061", "RAG-014"):
                 keep.append(s)
                 per[s.doc_type] += 1
         specs = keep

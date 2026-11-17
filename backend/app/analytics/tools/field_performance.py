@@ -181,7 +181,7 @@ def compare_fields(asset: str = ASSET, as_of: date | None = None, period: str = 
     as_of = as_of or settings.AS_OF
     period = (period or "QTD").upper()
     params = {"asset": asset, "as_of": str(as_of), "period": period}
-    if asset and str(asset).strip().upper() not in (ASSET, "ASSAM", "ALL"):
+    if asset and str(asset).strip().upper() not in (ASSET, "BARMER", "RAJASTHAN", "RJ-ON-90/1", "ALL"):
         return unavailable("TC-024", params, t0, ["asset"], f"Unknown asset '{asset}'. Only {ASSET} is in the dataset.")
     win = period_window(period, as_of)
     if win is None:

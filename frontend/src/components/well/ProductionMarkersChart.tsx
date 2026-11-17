@@ -68,7 +68,7 @@ export const ProductionMarkersChart: React.FC<ProductionMarkersChartProps> = ({
           <span className="text-xs font-mono uppercase text-textMuted font-bold">
             Oil & water cut with interventions
           </span>
-          <div className="flex items-center gap-4 text-xs font-mono">
+          <div className="flex items-center gap-4 text-xs font-mono flex-wrap">
             <span className="flex items-center gap-1.5 text-emerald-400">
               <span className="w-2.5 h-2.5 rounded-sm bg-[#2ea043]"></span> Oil (
               {data.units?.oil || 'BOPD'})
@@ -82,6 +82,10 @@ export const ProductionMarkersChart: React.FC<ProductionMarkersChartProps> = ({
             <span className="flex items-center gap-1.5 text-amber-400">
               <span className="w-2.5 h-2.5 rounded-sm bg-[#d29922]"></span> Water Cut (
               {data.units?.water_cut || '%'})
+            </span>
+            <span className="flex items-center gap-1.5 text-sky-300">
+              <span className="h-3 w-0 border-l-2 border-dashed border-sky-400"></span> Interventions (
+              {data.interventions.length})
             </span>
           </div>
         </div>
@@ -155,18 +159,49 @@ export const ProductionMarkersChart: React.FC<ProductionMarkersChartProps> = ({
               />
               {data.interventions.map((m, idx) => {
                 const strokeColor = getOutcomeColor(m.outcome);
+                const shortCode = (m.job_code || 'WO').slice(0, 14);
                 return (
                   <ReferenceLine
                     key={m.workover_id || `${m.date}-${m.job_code}-${idx}`}
                     x={m.date}
                     yAxisId="left"
                     stroke={strokeColor}
-                    strokeDasharray="3 3"
-                    label={{
-                      value: m.job_code,
-                      fill: strokeColor,
-                      fontSize: 9,
-                      position: 'insideTop',
+                    strokeWidth={2}
+                    strokeDasharray="4 3"
+                    ifOverflow="extendDomain"
+                    label={(props: any) => {
+                      const vb = props?.viewBox;
+                      if (!vb || typeof vb.x !== 'number' || typeof vb.y !== 'number') return <g />;
+                      const badgeW = Math.max(44, shortCode.length * 5.8 + 10);
+                      const badgeH = 15;
+                      const laneY = vb.y + 4 + (idx % 3) * 17;
+                      const clampedX = Math.max(vb.x - badgeW / 2, 36);
+                      return (
+                        <g>
+                          <rect
+                            x={clampedX}
+                            y={laneY}
+                            width={badgeW}
+                            height={badgeH}
+                            rx={3}
+                            fill="#0d1117"
+                            fillOpacity={0.92}
+                            stroke={strokeColor}
+                            strokeWidth={1}
+                          />
+                          <text
+                            x={clampedX + badgeW / 2}
+                            y={laneY + 10.5}
+                            textAnchor="middle"
+                            fill={strokeColor}
+                            fontSize={9}
+                            fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
+                            fontWeight={700}
+                          >
+                            {shortCode}
+                          </text>
+                        </g>
+                      );
                     }}
                   />
                 );
@@ -234,11 +269,25 @@ export const ProductionMarkersChart: React.FC<ProductionMarkersChartProps> = ({
           )}
 
           {data.historical_interventions && data.historical_interventions.length > 0 && (
-            <div className="mt-3 text-xs font-mono text-textMuted">
-              <span className="font-semibold text-textMuted">Historical (before window): </span>
-              {data.historical_interventions
-                .map((h) => `${h.year} ${h.job_name || h.job_code} (${h.outcome})`)
-                .join(', ')}
+            <div className="mt-3 pt-2 border-t border-border/40">
+              <div className="text-[11px] font-mono uppercase text-textMuted font-semibold mb-1.5">
+                Earlier workovers ({data.historical_interventions.length} before window)
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {data.historical_interventions.map((h, i) => (
+                  <span
+                    key={`${h.date}-${h.job_code}-${i}`}
+                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono ${getOutcomePillStyle(
+                      h.outcome
+                    )}`}
+                  >
+                    <span>{h.date || h.year}</span>
+                    <span>·</span>
+                    <span className="font-semibold text-white">{h.job_code}</span>
+                    <span>({h.outcome})</span>
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>

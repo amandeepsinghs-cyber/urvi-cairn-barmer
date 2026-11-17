@@ -2,7 +2,7 @@ config {
   type: "table",
   description: "Next-Best-Action (NBA) intervention performance lookup table by field and catalogue job code, including field='ALL' benchmarks.",
   columns: {
-    field: "Field name (e.g., Geleki, Lakwa, Lakhmani) or 'ALL' for portfolio-wide benchmark",
+    field: "Field name (e.g., Mangala, Bhagyam, Aishwariya, Raageshwari) or 'ALL' for portfolio-wide benchmark",
     job_code: "Standard catalogue job code",
     job_name: "Human-readable job description",
     category: "Intervention category (e.g., ARTIFICIAL_LIFT, RESERVOIR, INTEGRITY)",

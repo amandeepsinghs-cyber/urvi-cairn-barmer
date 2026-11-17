@@ -25,7 +25,7 @@ MASK = "«see table»"
 MAX_LIST = 30
 SMALL_INT_MAX = 10  # cardinals/ordinals ("top 3", "two wells") are language, not data
 
-# Identifiers that contain digits but are not quantities: GK-129, LKW-047, IC-08, TC-022, D11, SOP-IC-04, L1..L5, Q3
+# Identifiers that contain digits but are not quantities: MNG-042, BHG-019, IC-08, TC-022, D11, SOP-IC-04, L1..L5, Q3
 _IDENT_RE = re.compile(r"\b(?:[A-Za-z]{1,8}[-_]?)+\d+(?:[-_][A-Za-z0-9]+)*\b")
 _DATE_RE = re.compile(r"\b\d{4}-\d{2}(?:-\d{2})?\b")
 _NUM_RE = re.compile(r"(?<![\w.])[-+−]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?![\w])")

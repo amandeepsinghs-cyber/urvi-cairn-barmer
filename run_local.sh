@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# WellPulse: Local Platform Launcher
-# Boots FastAPI Backend (port 8000) and React+Vite Frontend (port 5173)
+# Urvi Cairn Barmer: Local Platform Launcher
+# Boots FastAPI Backend (port 8002) and React+Vite Frontend (port 5180)
 # ==============================================================================
 
 set -e
@@ -11,7 +11,7 @@ BACKEND_DIR="${PROJECT_ROOT}/backend"
 FRONTEND_DIR="${PROJECT_ROOT}/frontend"
 
 echo "======================================================================"
-echo "           WellPulse - Energy Well Operations & Voice AI              "
+echo "     Urvi AI Agent — Cairn Oil & Gas (Barmer Basin RJ-ON-90/1)        "
 echo "======================================================================"
 
 # 1. Check prerequisites (uv only for Python, npm only for the frontend: D-14)
@@ -23,9 +23,9 @@ command -v npm >/dev/null 2>&1 || { echo "[!] Error: npm is required."; exit 1; 
 echo "[*] Syncing backend environment with uv (uv.lock)..."
 (cd "${BACKEND_DIR}" && uv sync --frozen)
 
-# 3. Ensure the v0.4 landing dataset exists (committed; regenerate only if missing, D-18)
+# 3. Ensure the Barmer landing dataset exists (committed; regenerate only if missing, D-18)
 if [ ! -f "${BACKEND_DIR}/app/data/landing/asset/field_targets.parquet" ]; then
-    echo "[*] Generating synthetic landing data (Geleki, Lakwa, Lakhmani; 2021-10-01..2026-09-30)..."
+    echo "[*] Generating synthetic landing data (Mangala, Bhagyam, Aishwariya, Raageshwari; 2021-10-01..2026-09-30)..."
     (cd "${BACKEND_DIR}" && uv run python -m app.analytics.generator.generate --field all --start 2021-10-01 --end 2026-09-30)
 fi
 
@@ -44,14 +44,14 @@ fi
 # 5. Clean up any existing background tasks on exit
 cleanup() {
     echo ""
-    echo "[*] Shutting down WellPulse services..."
+    echo "[*] Shutting down Urvi Cairn Barmer services..."
     if [ -n "${BACKEND_PID}" ]; then
         kill "${BACKEND_PID}" 2>/dev/null || true
     fi
     if [ -n "${FRONTEND_PID}" ]; then
         kill "${FRONTEND_PID}" 2>/dev/null || true
     fi
-    echo "[✓] All WellPulse services terminated."
+    echo "[✓] All Urvi Cairn Barmer services terminated."
     exit 0
 }
 
@@ -62,23 +62,33 @@ echo "[*] Starting FastAPI Backend on http://localhost:8002..."
 (cd "${BACKEND_DIR}" && exec uv run --frozen python run.py) &
 BACKEND_PID=$!
 
-# Wait for backend health check
-echo "[*] Waiting for backend to become ready..."
-for i in {1..30}; do
-    if curl -s http://localhost:8002/api/health >/dev/null 2>&1; then
-        echo "[✓] Backend is healthy!"
+# Wait for backend health + 460-well fleet readiness before launching Vite
+echo "[*] Waiting for backend to load 460 Barmer wells..."
+BACKEND_READY=0
+for i in {1..60}; do
+    if ! kill -0 "${BACKEND_PID}" 2>/dev/null; then
+        echo "[!] Backend exited unexpectedly during startup."
+        exit 1
+    fi
+    if curl -sf http://127.0.0.1:8002/api/wells/kpis >/dev/null 2>&1; then
+        echo "[✓] Backend is healthy and 460 Barmer wells are ready!"
+        BACKEND_READY=1
         break
     fi
     sleep 0.5
 done
+if [ "${BACKEND_READY}" -ne 1 ]; then
+    echo "[!] Backend did not become ready within 30s."
+    exit 1
+fi
 
 # 7. Launch Frontend
-echo "[*] Starting React + Vite Frontend on http://localhost:5180..."
-(cd "${FRONTEND_DIR}" && npm run dev -- --host 0.0.0.0 --port 5180) &
+echo "[*] Starting React + Vite Frontend on http://localhost:5180 (dual-stack IPv6/IPv4)..."
+(cd "${FRONTEND_DIR}" && npm run dev -- --host "::" --port 5180) &
 FRONTEND_PID=$!
 
 echo "======================================================================"
-echo "[✓] WellPulse is live and running!"
+echo "[✓] Urvi Cairn Barmer is live and running!"
 echo "    • Operations Dashboard: http://localhost:5180"
 echo "    • Backend API / Docs:   http://localhost:8002/docs"
 echo "======================================================================"

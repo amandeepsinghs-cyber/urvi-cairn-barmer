@@ -3,6 +3,11 @@
   "route": "/api/wells/{well}/export",
   "schema": {
     "properties": {
+      "as_of": {
+        "type": [
+          "string"
+        ]
+      },
       "coordinates": {
         "properties": {
           "lat": {
@@ -75,6 +80,16 @@
           "object"
         ]
       },
+      "doc_id": {
+        "type": [
+          "string"
+        ]
+      },
+      "dossier_url": {
+        "type": [
+          "string"
+        ]
+      },
       "export_timestamp": {
         "type": [
           "string"
@@ -86,6 +101,16 @@
         ]
       },
       "formation": {
+        "type": [
+          "string"
+        ]
+      },
+      "health_rule": {
+        "type": [
+          "string"
+        ]
+      },
+      "pdf_url": {
         "type": [
           "string"
         ]
@@ -177,6 +202,11 @@
                   "string"
                 ]
               },
+              "survey_id": {
+                "type": [
+                  "string"
+                ]
+              },
               "title": {
                 "type": [
                   "string"
@@ -195,6 +225,7 @@
               "sonolog_fluid_level_m",
               "static_bottomhole_pressure_sbhp_psi",
               "survey_date",
+              "survey_id",
               "title"
             ],
             "type": [
@@ -286,6 +317,11 @@
                       "number"
                     ]
                   },
+                  "first_test_in_record": {
+                    "type": [
+                      "string"
+                    ]
+                  },
                   "flowing_tubing_pressure_psi": {
                     "type": [
                       "number"
@@ -309,6 +345,7 @@
                 },
                 "required": [
                   "choke_mm",
+                  "first_test_in_record",
                   "flowing_tubing_pressure_psi",
                   "gas_rate_mcfd",
                   "oil_rate_bopd",
@@ -384,6 +421,11 @@
                   "string"
                 ]
               },
+              "cost_band": {
+                "type": [
+                  "string"
+                ]
+              },
               "date": {
                 "type": [
                   "string"
@@ -430,9 +472,19 @@
                   "string"
                 ]
               },
+              "report_doc_id": {
+                "type": [
+                  "string"
+                ]
+              },
               "report_id": {
                 "type": [
                   "string"
+                ]
+              },
+              "rig_days": {
+                "type": [
+                  "number"
                 ]
               },
               "shift_hours": {
@@ -450,6 +502,11 @@
                   "string"
                 ]
               },
+              "workover_id": {
+                "type": [
+                  "string"
+                ]
+              },
               "workover_rig": {
                 "type": [
                   "string"
@@ -458,15 +515,19 @@
             },
             "required": [
               "contractor",
+              "cost_band",
               "date",
               "hourly_logs",
               "issuing_authority",
               "operation_type",
               "outcome_summary",
+              "report_doc_id",
               "report_id",
+              "rig_days",
               "shift_hours",
               "supervising_engineer",
               "title",
+              "workover_id",
               "workover_rig"
             ],
             "type": [
@@ -645,12 +706,44 @@
               "number"
             ]
           },
+          "cost_band_mix": {
+            "properties": {
+              "HIGH": {
+                "type": [
+                  "number"
+                ]
+              },
+              "LOW": {
+                "type": [
+                  "number"
+                ]
+              },
+              "MED": {
+                "type": [
+                  "number"
+                ]
+              }
+            },
+            "required": [
+              "HIGH",
+              "LOW",
+              "MED"
+            ],
+            "type": [
+              "object"
+            ]
+          },
           "min_oil_bopd": {
             "type": [
               "number"
             ]
           },
           "peak_oil_bopd": {
+            "type": [
+              "number"
+            ]
+          },
+          "total_rig_days": {
             "type": [
               "number"
             ]
@@ -663,8 +756,10 @@
         },
         "required": [
           "avg_oil_bopd",
+          "cost_band_mix",
           "min_oil_bopd",
           "peak_oil_bopd",
+          "total_rig_days",
           "total_workovers"
         ],
         "type": [
@@ -684,7 +779,17 @@
       "workovers": {
         "items": {
           "properties": {
+            "catalogue_job_code": {
+              "type": [
+                "string"
+              ]
+            },
             "contractor": {
+              "type": [
+                "string"
+              ]
+            },
+            "cost_band": {
               "type": [
                 "string"
               ]
@@ -699,6 +804,16 @@
                 "string"
               ]
             },
+            "end_date": {
+              "type": [
+                "string"
+              ]
+            },
+            "equipment": {
+              "type": [
+                "string"
+              ]
+            },
             "flow_delta_bopd": {
               "type": [
                 "number"
@@ -709,9 +824,35 @@
                 "string"
               ]
             },
+            "intervention_class": {
+              "type": [
+                "string"
+              ]
+            },
+            "intervention_label": {
+              "type": [
+                "string"
+              ]
+            },
             "outcome": {
               "type": [
                 "string"
+              ]
+            },
+            "report_doc_id": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "requires_rig": {
+              "type": [
+                "boolean"
+              ]
+            },
+            "rig_days": {
+              "type": [
+                "number"
               ]
             },
             "type": {
@@ -721,12 +862,21 @@
             }
           },
           "required": [
+            "catalogue_job_code",
             "contractor",
+            "cost_band",
             "date",
             "description",
+            "end_date",
+            "equipment",
             "flow_delta_bopd",
             "id",
+            "intervention_class",
+            "intervention_label",
             "outcome",
+            "report_doc_id",
+            "requires_rig",
+            "rig_days",
             "type"
           ],
           "type": [
@@ -739,11 +889,16 @@
       }
     },
     "required": [
+      "as_of",
       "coordinates",
       "current_metrics",
+      "doc_id",
+      "dossier_url",
       "export_timestamp",
       "field",
       "formation",
+      "health_rule",
+      "pdf_url",
       "reports",
       "status",
       "telemetry_summary",
@@ -757,8 +912,8 @@
   },
   "status": 200,
   "wells": [
-    "GK-129",
-    "LKW-047",
-    "LKM-061"
+    "MNG-042",
+    "BHG-019",
+    "ASH-023"
   ]
 }

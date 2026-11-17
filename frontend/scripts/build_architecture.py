@@ -14,8 +14,8 @@ Standards followed:
   Priority products use their unique icon (BigQuery, Cloud Run, Cloud Storage, Apigee, Vertex AI); every other
   product uses its category icon; Gemini uses the Gemini spark. Real third-party products shown in the customer
   architecture use their own official mark (SAP, AVEVA PI, Esri, Leaflet, OSDU); everything else (our own code,
-  ONGC-internal systems, people) uses a generic single-colour glyph. The product name is always printed next to
-  its icon. No ONGC logo (R-5).
+  enterprise-internal systems, people) uses a generic single-colour glyph. The product name is always printed next to
+  its icon.
 * **Reading order:** left → right, users on the left. Numbered badges show the main path (① … typed question),
   lettered badges the voice path (Ⓐ …), D-badges the data path (target). Secondary flows (offline, build,
   identity) are thin and muted.
@@ -60,7 +60,7 @@ ICONS = {
 }
 
 # Generic single-colour glyphs (24 × 24, outline) for boxes that are not a branded product: our own code,
-# ONGC-internal systems and concepts. Same style everywhere so the branded icons stand out.
+# internal enterprise systems and concepts. Same style everywhere so the branded icons stand out.
 _G = 'fill="none" stroke="#5f6368" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"'
 GENERIC = {
     "g:person": f'<circle cx="12" cy="8" r="3.6" {_G}/><path d="M4.5 20c.8-3.8 3.9-6 7.5-6s6.7 2.2 7.5 6" {_G}/>',
@@ -387,6 +387,8 @@ body{{padding:1.25rem 1.5rem 1.5rem}}
 @keyframes pulse{{0%,100%{{opacity:1}}50%{{opacity:.45}}}}
 h1{{font-size:1.2rem;font-weight:700;letter-spacing:-.01em}}
 .badge-pill{{border:1px solid {T['border']};border-radius:999px;color:{T['sub']};font-size:.65rem;padding:.1rem .55rem}}
+.thesis-banner{{background:{T['kind']['frontend'][0]};border:1px solid {T['color']['cyan']};border-left:4px solid {T['color']['cyan']};border-radius:.5rem;color:{T['text']};font-size:.74rem;line-height:1.45;margin:.45rem 0 .45rem 1.4rem;padding:.45rem .75rem}}
+.thesis-banner b{{color:{T['color']['blue']}}}
 .subtitle{{color:{T['sub']};font-size:.78rem;margin-left:1.4rem}}
 .steps{{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin:.6rem 0 .8rem 1.4rem;font-size:.7rem;color:{T['sub']}}}
 .steps b{{color:{T['text']};font-weight:700}}
@@ -452,6 +454,7 @@ def render(d: Diagram, theme: str) -> str:
   <div class="header">
     <div class="header-row"><div class="pulse-dot"></div><h1>{esc(d.title)}</h1>
       <span class="badge-pill">synthetic demo data</span></div>
+    <div class="thesis-banner"><b>Single-Agent, Multi-Tool Hybrid Architecture:</b> Natural spoken &amp; typed language in (Gemini ADK / Live) → deterministic engineering physics, ML models &amp; numeric-grounding guards underneath — best of both worlds with minimal hallucination.</div>
     <p class="subtitle">{esc(d.subtitle)}</p>
     <div class="steps">{steps}</div>
   </div>
@@ -485,18 +488,18 @@ def current_view() -> tuple[list[Box], list[Node], list[Arrow], list[tuple[str, 
         Box(190, 715, 242, 160, "Offline · build time", "slate"),
     ]
     nodes = [
-        Node(20, 250, 140, 110, "external", "Users", ["ED · Asset Manager", "Field Engineer", "Chrome + microphone"],
-             tip="Executive Director, asset / production engineers and field engineers. They use Urvi by mouse, typing "
+        Node(20, 250, 140, 110, "external", "Users", ["Asset Manager", "Production Engineer", "Chrome + microphone"],
+             tip="Asset managers, production engineers and field supervisors. They use Urvi by mouse, typing "
                  "or voice (English by default; Hindi / Hinglish on request)."),
         Node(20, 420, 140, 60, "external", "Esri imagery", ["satellite basemap"],
-             tip="Public satellite tiles behind the field map. Well and GGS positions are synthetic."),
+             tip="Public satellite tiles behind the Barmer Basin map. Well and pad positions are synthetic."),
         Node(BX, 250, BW, 70, "frontend", "Voice client", ["16 kHz in · 24 kHz out", "barge-in"],
              tip="Streams microphone audio to the Live proxy over a WebSocket and plays Urvi's reply. A reconnect starts "
                  "a fresh session (D-43)."),
         Node(BX, 340, BW, 70, "frontend", "Urvi UI", ["single-page web app", "map-first"],
-             tip="India → Assam → field → cluster → well drill-down, the well panel and the docked Urvi agent."),
-        Node(BX, 430, BW, 70, "frontend", "Field map", ["field + GGS outlines", "health-coloured wells"],
-             tip="412 wells coloured Healthy / Needs attention / Not producing, flowlines, and an India view."),
+             tip="India → Barmer Basin → field → pad → well drill-down, the well panel and the docked Urvi agent."),
+        Node(BX, 430, BW, 70, "frontend", "Field map", ["field + pad outlines", "health-coloured wells"],
+             tip="460 wells coloured Healthy / Needs attention / Not producing, pad flowlines, and an India view."),
         Node(BX, 520, BW, 70, "frontend", "Hands-off control", ["screen commands", "EN / Hinglish / Hindi"],
              tip="Plain screen commands run in the browser with no model call; the agent can also send allow-listed "
                  "screen actions (ui_control)."),
@@ -529,16 +532,16 @@ def current_view() -> tuple[list[Box], list[Node], list[Arrow], list[tuple[str, 
              tip="Printable pre-field well pack and dossier; every digit traces to a tool return."),
         Node(RX, 560, CW, 60, "backend", "In-memory sessions", ["fresh per demo"],
              tip="Chat and voice sessions live in memory, hence one Cloud Run instance with session affinity (D-16)."),
-        Node(205, 760, 212, 80, "external", "Data generator", ["synthetic · seeded", "412 wells · 60 months"],
-             tip="Deterministic generator for Geleki, Lakwa and Lakhmani (2021-10 → 2026-09). Also baked into the image."),
-        Node(570, 760, 190, 80, "data", "Cloud Storage", ["data lake bucket", "bronze/ · documents/"], icon="cloud-storage",
-             tip="Raw generator drops, the 20,966 PDFs and Silver exports."),
-        Node(805, 760, 180, 80, "data", "BigQuery Bronze", ["external tables", "raw, as landed"], icon="bigquery",
-             tip="Dataset urvi_cairn_bronze: external tables over the bucket."),
-        Node(1030, 760, 180, 80, "data", "BigQuery Silver", ["partitioned by date", "clustered by well"], icon="bigquery",
-             tip="Dataset urvi_cairn_silver: typed, de-duplicated tables loaded by MERGE."),
-        Node(1255, 760, 170, 80, "data", "BigQuery Gold", ["Dataform models", "KPIs · facts"], icon="bigquery",
-             tip="Dataset urvi_cairn_gold built by Dataform: field KPIs and dossier facts."),
+        Node(205, 760, 212, 80, "external", "Data generator", ["synthetic · seeded", "460 wells · 60 months"],
+             tip="Deterministic generator for Mangala, Bhagyam, Aishwariya and Raageshwari (2021-10 → 2026-09). Also baked into the image."),
+        Node(570, 760, 190, 80, "data", "Cloud Storage", ["urvi-cairn-barmer-ai-agent-datalake", "bronze/ · documents/"], icon="cloud-storage",
+             tip="Bucket gs://urvi-cairn-barmer-ai-agent-datalake storing synthetic landing parquets, PDFs, and Silver exports."),
+        Node(805, 760, 180, 80, "data", "BigQuery Bronze", ["urvi_cairn_bronze", "external tables · raw"], icon="bigquery",
+             tip="Dataset urvi_cairn_bronze (asia-south1): external tables over gs://urvi-cairn-barmer-ai-agent-datalake."),
+        Node(1030, 760, 180, 80, "data", "BigQuery Silver", ["urvi_cairn_silver", "partitioned · clustered"], icon="bigquery",
+             tip="Dataset urvi_cairn_silver (asia-south1): typed, de-duplicated tables loaded by MERGE."),
+        Node(1255, 760, 170, 80, "data", "BigQuery Gold", ["urvi_cairn_gold", "Dataform KPIs · facts"], icon="bigquery",
+             tip="Dataset urvi_cairn_gold (asia-south1) built by Dataform: field KPIs and dossier facts."),
         Node(PX, 100, PW, 60, "cloud", "Cloud Build", ["builds the container image"], icon="devops",
              tip="Builds the image: web app, Python dependencies, document corpus and a self-check."),
         Node(PX, 180, PW, 60, "cloud", "Artifact Registry", ["urvi-cairn-app images"], icon="devops",
@@ -586,119 +589,115 @@ def current_view() -> tuple[list[Box], list[Node], list[Arrow], list[tuple[str, 
 
 # ----------------------------------------------------------------------------------------------- target
 def target_view() -> tuple[list[Box], list[Node], list[Arrow], list[tuple[str, str]]]:
-    """ONGC production in India regions (BL-10, docs/data_access_plan.md). AI runs in the cloud (RFP §3.1.3)."""
+    """Cairn Oil & Gas / Vedanta production in Google Cloud India regions (docs/data_access_plan.md)."""
     boxes = [
-        Box(190, 40, 250, 870, "ONGC data centres · on-prem (Category A stays)", "slate", "8,4"),
+        Box(190, 40, 250, 870, "Cairn / Vedanta site & enterprise systems [verify]", "slate", "8,4"),
         Box(470, 30, 970, 900, "Google Cloud India · asia-south1 Mumbai (primary) + asia-south2 Delhi (DR) · "
-            "MeitY-empanelled · VPC Service Controls · CMEK", "amber", "8,4", big=True, bottom=True),
+            "VPC Service Controls · CMEK", "amber", "8,4", big=True, bottom=True),
         Box(490, 70, 945, 130, "Vertex AI · India regional endpoints", "blue", icon="vertex-ai"),
         Box(490, 230, 620, 330, "Urvi · Cloud Run asia-south1 · autoscaled", "emerald", icon="cloud-run", bottom=True),
         Box(1130, 230, 305, 340, "Security · operations", "rose"),
-        Box(490, 600, 945, 245, "ONGC EDP · cloud zone (placement decided by ONGC)", "violet"),
+        Box(490, 600, 945, 245, "Vedanta Enterprise Data Lakehouse · asia-south1 (Mumbai)", "violet"),
     ]
     S = 205, 220
     nodes = [
-        Node(20, 140, 150, 100, "external", "Users", ["ONGC ED · asset team", "field engineers", "browser + mic"],
-             tip="ONGC users sign in with their ONGC identity. English by default; Hindi / Hinglish on request."),
-        Node(20, 270, 150, 60, "external", "ONGC AD / SSO", ["identity provider"],
-             tip="ONGC's directory. Identity-Aware Proxy federates with it; the same identity drives role-based access."),
-        Node(S[0], 80, S[1], 56, "external", "Production / DPR", ["rates · allocation · tests"],
-             tip="Daily production reports, allocation and well tests (exact system to confirm with Assam Asset)."),
-        Node(S[0], 146, S[1], 56, "external", "SCADA + OSI PI", ["AVEVA PI · THP · BHP"],
-             tip="OT telemetry. Raw OT data stays on-prem (Category A); only derived hourly / daily aggregates are placed "
-                 "in the cloud zone. Urvi never writes back."),
-        Node(S[0], 212, S[1], 56, "external", "WIS / EDS", ["well master · completion"],
-             tip="Well master, construction, completion, deviation and formation tops."),
-        Node(S[0], 278, S[1], 56, "external", "SAP (PM / MM / FI)", ["jobs · rigs · materials"],
-             tip="Work orders, rig and material waits, cost bands (LOW / MED / HIGH only)."),
-        Node(S[0], 344, S[1], 56, "external", "LIMS", ["fluids · wax · sand"], tip="Lab results for wax / sand and water chemistry."),
-        Node(S[0], 410, S[1], 56, "external", "DISHA EDMS", ["reports · CBL · SOPs"],
-             tip="Engineering documents: indexed for search; facts extracted by Gemini for the models."),
-        Node(S[0], 500, S[1], 90, "data", "EDP on-prem zone", ["Delhi + Vadodara DCs", "Bronze / Silver / Gold", "Category A stays"],
-             tip="ONGC Enterprise Data Platform, on-prem side (RFP ZV7AL26011, §3.1.2). Ingests the sources via UDEL."),
-        Node(S[0], 640, S[1], 70, "external", "Pilot extract", ["Route P · masked wells", "before the EDP is live"], new=True,
-             tip="Pilot bridge: 10–20 mature Assam wells, masked, exported to an India-region landing bucket."),
+        Node(20, 140, 150, 100, "external", "Users", ["COO / CIO", "Asset Manager · Prod Eng", "browser + mic"],
+             tip="Vedanta / Cairn users (COO / CIO, Asset Manager, Production Engineer) sign in via Vedanta SSO. "
+                 "English by default; Hindi / Hinglish on request."),
+        Node(20, 270, 150, 60, "external", "Vedanta SSO / RBAC", ["identity provider"],
+             tip="Vedanta enterprise identity directory. Identity-Aware Proxy federates with it to enforce persona RBAC."),
+        Node(S[0], 80, S[1], 72, "external", "AVEVA PI & SCADA [verify]", ["MPT Nagana · RGT", "Jet-Pump / ESP telemetry"],
+             tip="AVEVA / OSIsoft PI Historian & Pad SCADA across MPT Nagana, RGT, and Jet-Pump/ESP pads [verify]. "
+                 "Raw OT tags remain on-site; hourly/daily aggregates feed the Lakehouse. Urvi never writes back."),
+        Node(S[0], 172, S[1], 72, "external", "SAP S/4HANA PM/MM [verify]", ["work orders · rig schedule", "MRO spares"],
+             tip="SAP S/4HANA PM/MM for workover orders, rig scheduling, MRO spares, and cost bands [verify]."),
+        Node(S[0], 264, S[1], 72, "external", "WellView / Well-File DMS [verify]", ["DWRs · CBLs · tallies"],
+             tip="WellView / Subsurface Well-File DMS holding completion tallies, DWRs, CBLs, and SOPs [verify]."),
+        Node(S[0], 356, S[1], 72, "external", "Production & LIMS [verify]", ["allocation · wax · HPAM"],
+             tip="Daily field allocation, well tests, HPAM polymer diagnostics, and LIMS wax/sand chemistry [verify]."),
+        Node(S[0], 485, S[1], 95, "data", "On-site Lakehouse Gateway", ["OPC UA / CDC collectors", "OSDU-aligned staging", "raw OT stays local"],
+             tip="On-site enterprise ingestion collector bridging AVEVA PI, SAP S/4HANA, and WellView to Cloud Interconnect."),
+        Node(S[0], 640, S[1], 70, "external", "Pilot extract", ["Route P · masked wells", "Barmer pilot slice"], new=True,
+             tip="Pilot bridge: masked slice of Mangala / Bhagyam / Aishwariya / Raageshwari wells landed in Mumbai GCS."),
         Node(600, 110, 240, 70, "ai", "Gemini 3.8 Flash", ["text agent model", "India regional endpoint"], icon="gemini",
-             tip="Text agent model on a Vertex AI India endpoint. Customer data is not used to train models."),
+             tip="Text agent model on a Vertex AI India endpoint. Cairn / Vedanta data is never used to train models."),
         Node(855, 110, 240, 70, "ai", "Gemini 3.8 Live", ["native audio voice", "India regional endpoint"], icon="gemini",
-             tip="Voice model on an India endpoint at go-live (the demo runs in us-central1 only because Live is not yet "
-                 "offered in India regions)."),
-        Node(1110, 110, 150, 70, "ai", "AI Search", ["Vertex AI", "docs + SOPs"], icon="vertex-ai",
-             tip="Vertex AI Search over the EDMS extract: grounded answers with citations, in an India region."),
+             tip="Voice model on an India endpoint at go-live (demo uses us-central1 while Live rolls out in India)."),
+        Node(1110, 110, 150, 70, "ai", "AI Search", ["Vertex AI", "DWRs · CBLs · SOPs"], icon="vertex-ai",
+             tip="Vertex AI Search over the WellView / Well-File DMS extract: grounded answers with citations in India."),
         Node(1275, 110, 150, 70, "ai", "Training", ["Vertex AI", "Model Registry"], icon="vertex-ai",
-             tip="Trains the recommendation models on EDP Gold history, versions them in Model Registry, writes nightly "
-                 "scores to Gold (docs/ml_recommendation_engine.md Part B)."),
-        Node(505, 270, 80, 130, "security", "IAP", ["ONGC", "SSO"], icon="security",
-             tip="Identity-Aware Proxy: only signed-in, authorised ONGC users reach Urvi (web and voice)."),
-        Node(600, 270, 240, 70, "backend", "ADK agent runner", ["34 tools · number guardrail", "role access"], icon="agents",
-             tip="Same agent as the demo: Google ADK, the 5-level drill-down, numbers checked against tool results."),
+             tip="Trains recommendation models on Lakehouse Gold history, versions in Model Registry, writes nightly scores."),
+        Node(505, 270, 80, 130, "security", "IAP", ["Vedanta", "SSO · RBAC"], icon="security",
+             tip="Identity-Aware Proxy: only authenticated Vedanta / Cairn users reach Urvi (COO/CIO, Asset Manager, Prod Eng)."),
+        Node(600, 270, 240, 70, "backend", "ADK agent runner", ["34 tools · number guardrail", "Vedanta RBAC"], icon="agents",
+             tip="Same agent as the demo: Google ADK, 5-level Barmer drill-down, numbers verified against tool results."),
         Node(855, 270, 240, 70, "backend", "Gemini Live proxy", ["WS /ws/live · voice tools", "screen context"],
-             tip="Server-side voice bridge; runs voice tools on the server."),
+             tip="Server-side voice bridge; executes analytics voice tools on Cloud Run."),
         Node(600, 360, 240, 70, "backend", "Urvi API + web app", ["REST /api · /api/chat"],
-             tip="The same API and web app as the demo, served from Cloud Run in Mumbai."),
+             tip="The same API and web app as the demo, served from Cloud Run (urvi-cairn-app) in Mumbai."),
         Node(855, 360, 240, 70, "backend", "Analytics & ML", ["TC-001…035 tools", "nightly model scores"],
-             tip="Engineering tools and the recommendation models' nightly scores, read through the EDP adapter."),
+             tip="Engineering tools and recommendation models' nightly scores, read through the Lakehouse adapter."),
         Node(600, 450, 240, 62, "data", "Session store", ["Memorystore · CMEK"], icon="databases",
-             tip="External session state so Cloud Run can scale. Each demo still starts fresh (D-43)."),
-        Node(855, 450, 240, 62, "backend", "EDP data adapter", ["DATA_BACKEND=edp · API only"],
-             tip="New adapter in Urvi's data-access layer; reads the EDP consumption API (no direct database queries)."),
-        Node(1145, 262, 275, 50, "security", "Cloud KMS · CMEK / EKM", ["ONGC-held keys"], icon="security",
-             tip="ONGC holds the encryption keys (RFP §3.2.6 'enhanced encryption')."),
+             tip="External session state so Cloud Run can autoscale cleanly in asia-south1."),
+        Node(855, 450, 240, 62, "backend", "Lakehouse adapter", ["DATA_BACKEND=lakehouse", "governed API / views"],
+             tip="Adapter in Urvi's data-access layer reading curated Lakehouse Well Health tables via governed API."),
+        Node(1145, 262, 275, 50, "security", "Cloud KMS · CMEK / EKM", ["Vedanta-held keys"], icon="security",
+             tip="Vedanta holds encryption keys (CMEK / EKM) inside VPC Service Controls."),
         Node(1145, 324, 275, 50, "security", "Access Approval", ["+ Access Transparency"], icon="security",
-             tip="Any Google support access needs ONGC approval and is logged."),
+             tip="Any Google support access requires explicit Vedanta approval and is audit-logged."),
         Node(1145, 386, 275, 50, "security", "Secret Manager", ["config · API credentials"], icon="security",
-             tip="Credentials for the EDP API and configuration, versioned and audited."),
+             tip="Credentials for Lakehouse API and integration endpoints, versioned and audited."),
         Node(1145, 448, 275, 50, "cloud", "Logging + Monitoring", ["India sinks · 180 days"], icon="observability",
-             tip="Every agent turn and tool call logged in India, kept ≥ 180 days (CERT-In), exported to ONGC SIEM."),
+             tip="Every agent turn and tool call logged in India, retained ≥ 180 days, exported to Vedanta SIEM."),
         Node(1145, 510, 275, 50, "cloud", "Cloud Build + Registry", ["images built in asia-south1"], icon="devops",
-             tip="Builds and stores Urvi images in India; deploys new Cloud Run revisions."),
-        Node(505, 640, 190, 70, "data", "UDEL ingestion", ["CDC · streams · files", "Dataflow / Data Fusion"], icon="data-analytics",
-             tip="EDP Unified Data Exchange Layer, cloud side: validates, classifies and lands data placed in the cloud zone."),
-        Node(715, 640, 160, 70, "data", "Bronze", ["raw, as landed"], icon="bigquery", tip="Raw layer (Cloud Storage / BigQuery, India)."),
+             tip="Builds and stores Urvi images in India; deploys Cloud Run revisions."),
+        Node(505, 640, 190, 70, "data", "Ingestion layer", ["CDC · streams · files", "Dataflow / Pub/Sub"], icon="data-analytics",
+             tip="Vedanta Enterprise Data Lakehouse ingestion in asia-south1: validates and lands source feeds."),
+        Node(715, 640, 160, 70, "data", "Bronze", ["raw, as landed"], icon="bigquery", tip="Raw layer (GCS / BigQuery asia-south1)."),
         Node(895, 640, 160, 70, "data", "Silver", ["cleaned, typed"], icon="bigquery", tip="Cleaned, typed, de-duplicated tables."),
         Node(1075, 640, 160, 70, "data", "Gold", ["Well Health data"], icon="bigquery",
-             tip="Curated 'Well Health & Opportunity' data product (RFP Annex H 1.5) + nightly recommendation scores."),
-        Node(1255, 640, 170, 70, "data", "Consume API", ["OpenAPI / GraphQL"], icon="apigee",
-             tip="EDP consumption layer (API gateway). Urvi reads only through here, with a scoped service identity."),
-        Node(505, 750, 250, 62, "data", "Dataplex catalogue", ["lineage · classification tags"], icon="data-analytics",
-             tip="Catalogue, lineage and classification labels for every dataset Urvi reads."),
-        Node(775, 750, 230, 62, "data", "Cloud Storage landing", ["pilot + EDP drops"], icon="cloud-storage",
-             tip="India-region landing bucket for the pilot extract and EDP file loads, CMEK-encrypted."),
+             tip="Curated Barmer Basin Well Health & Opportunity tables + nightly recommendation scores."),
+        Node(1255, 640, 170, 70, "data", "Consume API", ["Apigee / GraphQL"], icon="apigee",
+             tip="Lakehouse consumption gateway. Urvi reads governed well data through scoped service identity."),
+        Node(505, 750, 250, 62, "data", "Dataplex catalogue", ["lineage · RBAC tags"], icon="data-analytics",
+             tip="Catalogue, lineage and column-level governance tags for every Lakehouse dataset Urvi reads."),
+        Node(775, 750, 230, 62, "data", "Cloud Storage landing", ["pilot + batch drops"], icon="cloud-storage",
+             tip="Mumbai asia-south1 landing bucket for pilot extracts and batch files, CMEK-encrypted."),
     ]
     arrows = [
         # main path
-        Arrow("M 95 140 L 95 18 L 480 18 L 480 220 L 545 220 L 545 268", "slate", "HTTPS + voice · ONGC SSO", 300, 12,
+        Arrow("M 95 140 L 95 18 L 480 18 L 480 220 L 545 220 L 545 268", "slate", "HTTPS + voice · Vedanta SSO", 300, 12,
               badge="1", bx=140, by=18),
         Arrow("M 585 395 L 598 395", "rose", badge="2", bx=591, by=395),
         Arrow("M 720 360 L 720 342", "emerald", badge="3", bx=720, by=351),
         Arrow("M 720 270 L 720 182", "blue", "prompt + tool results", 735, 232, both=True, anchor="start", badge="4", bx=720, by=226),
         Arrow("M 840 320 L 847 320 L 847 385 L 853 385", "emerald", badge="5", bx=847, by=352),
         Arrow("M 975 430 L 975 448", "emerald", badge="6", bx=975, by=439),
-        Arrow("M 1340 638 L 1340 590 L 1030 590 L 1030 514", "violet", "Well Health data product (API)", 1185, 586,
+        Arrow("M 1340 638 L 1340 590 L 1030 590 L 1030 514", "violet", "Well Health tables (API)", 1185, 586,
               badge="7", bx=1340, by=614),
         # voice
         Arrow("M 975 270 L 975 182", "blue", "audio", 990, 232, both=True, anchor="start", badge="B", bx=975, by=226),
         Arrow("M 975 340 L 975 358", "emerald", badge="C", bx=1000, by=349),
         # data path D1 → D4
-        Arrow(f"M {S[0] + S[1] / 2} 466 L {S[0] + S[1] / 2} 498", "slate", "UDEL: CDC · OPC UA · WITSML", S[0] + S[1] / 2 + 16, 487,
-              anchor="start", badge="D1", bx=S[0] + S[1] / 2, by=482),
-        Arrow("M 425 515 L 455 515 L 455 675 L 503 675", "amber", "Interconnect", 459, 733, anchor="start", badge="D2", bx=455, by=600),
+        Arrow(f"M {S[0] + S[1] / 2} 428 L {S[0] + S[1] / 2} 483", "slate", "CDC · OPC UA · DMS", S[0] + S[1] / 2 + 16, 458,
+              anchor="start", badge="D1", bx=S[0] + S[1] / 2, by=455),
+        Arrow("M 425 530 L 455 530 L 455 675 L 503 675", "amber", "Interconnect", 459, 733, anchor="start", badge="D2", bx=455, by=600),
         Arrow("M 695 675 L 713 675", "violet", badge="D3", bx=704, by=660),
         Arrow("M 875 675 L 893 675", "violet"),
         Arrow("M 1055 675 L 1073 675", "violet"),
         Arrow("M 1235 675 L 1253 675", "violet", badge="D4", bx=1244, by=660),
         # secondary / alternatives
-        Arrow("M 425 575 L 465 575 L 465 590 L 990 590 L 990 514", secondary=True, label="Route B · on-prem API (private)", lx=640, ly=584),
+        Arrow("M 425 565 L 465 565 L 465 590 L 990 590 L 990 514", secondary=True, label="Route B · on-site API (private)", lx=640, ly=584),
         Arrow("M 425 675 L 440 675 L 440 875 L 890 875 L 890 814", secondary=True, label="Route P · pilot extract", lx=680, ly=869),
         Arrow("M 820 748 L 820 712", secondary=True),
         Arrow("M 1095 395 L 1118 395 L 1118 182", secondary=True, label="docs", lx=1114, ly=300, anchor="end"),
         Arrow("M 1425 145 L 1433 145 L 1433 630 L 1155 630 L 1155 638", secondary=True, label="nightly scores", lx=1300, ly=626),
         Arrow("M 1145 287 L 1112 287", secondary=True, label="CMEK", lx=1128, ly=281),
     ]
-    steps = [("①", "user signs in (IAP + ONGC SSO)"), ("②", "web app / API"), ("③", "agent"), ("④", "agent ↔ Gemini (India)"),
-             ("⑤", "analytics tools"), ("⑥", "EDP data adapter"), ("⑦", "reads the Well Health product via API"),
+    steps = [("①", "user signs in (IAP + Vedanta SSO)"), ("②", "web app / API"), ("③", "agent"), ("④", "agent ↔ Gemini (India)"),
+             ("⑤", "analytics tools"), ("⑥", "Lakehouse adapter"), ("⑦", "reads Well Health tables via API"),
              ("Ⓑ–Ⓒ", "voice: Live proxy ↔ Gemini Live → same tools"),
-             ("D1–D4", "data: ONGC sources → EDP on-prem → Interconnect → Bronze / Silver / Gold → API")]
+             ("D1–D4", "data: AVEVA PI / SAP / WellView → Interconnect → Vedanta Lakehouse (asia-south1) → API")]
     return boxes, nodes, arrows, steps
 
 
@@ -707,8 +706,8 @@ CARDS_CURRENT = [
                                "Voice: Gemini 3.8 Live via a server WebSocket proxy, 13 tools",
                                "Hands-off screen control in English, Hinglish and Hindi",
                                "English by default; Hindi / Hinglish on request"]),
-    ("Data & ML", "violet", ["412 synthetic wells · 3 fields · 60 months",
-                             "Medallion lakehouse: Bronze → Silver → Gold (BigQuery, asia-south1)",
+    ("Data & ML", "violet", ["460 synthetic Barmer wells · 4 fields · 60 months",
+                             "GCS gs://urvi-cairn-barmer-ai-agent-datalake → BigQuery urvi_cairn_{bronze,silver,gold}",
                              "Intervention classifier + physics checks + success engine",
                              "Top 3 next best actions with P(success) and look-alike wells"]),
     ("Trust & guardrails", "rose", ["Every number comes from a tool result",
@@ -717,32 +716,33 @@ CARDS_CURRENT = [
                                     "All data is synthetic and labelled as such"]),
 ]
 CARDS_TARGET = [
-    ("Where the data comes from", "violet", ["ONGC sources: DPR / production, SCADA + PI, WIS / EDS, SAP, LIMS, DISHA",
-                                             "Ingested once by the ONGC EDP (RFP ZV7AL26011), not by Urvi",
-                                             "Urvi reads the 'Well Health & Opportunity' product via API",
-                                             "Category A raw data stays on-prem; AI runs in the cloud"]),
-    ("Stays in India", "amber", ["Mumbai asia-south1 primary, Delhi asia-south2 DR",
-                                 "Gemini on India endpoints; no training on ONGC data",
-                                 "CMEK / EKM keys held by ONGC; VPC Service Controls perimeter",
-                                 "Logs in India ≥ 180 days; Access Approval for support"]),
+    ("Upstream sources [verify]", "violet", ["AVEVA / OSIsoft PI Historian & Pad SCADA (MPT Nagana, RGT, Jet-Pump/ESP) [verify]",
+                                              "SAP S/4HANA PM/MM (work orders, rig schedule, MRO spares) [verify]",
+                                              "WellView / Subsurface Well-File DMS (DWRs, CBLs, completion tallies) [verify]",
+                                              "Ingested into Vedanta Enterprise Data Lakehouse in asia-south1 (Mumbai)"]),
+    ("India residency & security", "amber", ["Mumbai asia-south1 primary, Delhi asia-south2 DR",
+                                             "Gemini on India endpoints; no training on Cairn / Vedanta data",
+                                             "CMEK / EKM keys + VPC Service Controls perimeter",
+                                             "Logs in India ≥ 180 days; Access Approval for support"]),
     ("Same agent as the demo", "emerald", ["ADK agent, 34 tools, number grounding",
                                            "Voice via Gemini Live; English default",
-                                           "IAP + ONGC SSO; role-based access enforced",
+                                           "Vedanta SSO + RBAC (COO / CIO, Asset Manager, Production Engineer)",
                                            "Routes A / B / P: docs/data_access_plan.md"]),
 ]
 
 
 # Icon for every box that is not a Google product: real logo where the box IS that product, else a generic glyph.
 ICON_FOR = {
-    "Users": "g:person", "ONGC AD / SSO": "g:badge",
+    "Users": "g:person", "Vedanta SSO / RBAC": "g:badge",
     "Esri imagery": "esri", "Field map": "leaflet",
     "Voice client": "g:mic", "Urvi UI": "g:browser", "Hands-off control": "g:cursor", "Answer canvas": "g:canvas",
     "Gemini Live proxy": "g:wave", "Urvi API": "g:server", "Urvi API + web app": "g:server",
-    "Analytics & ML": "g:insights", "Data access layer": "g:database", "EDP data adapter": "g:plug",
+    "Analytics & ML": "g:insights", "Data access layer": "g:database", "Lakehouse adapter": "g:plug",
     "Document search": "g:search-doc", "Field report": "g:document", "In-memory sessions": "g:memory",
     "Data generator": "g:upload", "Pilot extract": "g:upload",
-    "Production / DPR": "g:database", "SCADA + OSI PI": "aveva", "WIS / EDS": "g:database",
-    "SAP (PM / MM / FI)": "sap", "LIMS": "g:flask", "DISHA EDMS": "g:document", "EDP on-prem zone": "osdu",
+    "Production & LIMS [verify]": "g:database", "AVEVA PI & SCADA [verify]": "aveva",
+    "SAP S/4HANA PM/MM [verify]": "sap", "WellView / Well-File DMS [verify]": "g:document",
+    "On-site Lakehouse Gateway": "osdu",
 }
 
 
@@ -759,13 +759,13 @@ def diagrams() -> list[Diagram]:
     cn, tn = _with_icons(cn), _with_icons(tn)
     return [
         Diagram("current", "Urvi AI Agent · Architecture · Current (V 1.0 demo)",
-                "As built and running today. The demo runs in us-central1 because Gemini Live is not yet offered in India "
-                "regions; it uses only synthetic data.", cb, cn, ca, CARDS_CURRENT,
-                "Urvi AI Agent on WellPulse · V 1.0 · Cloud Run urvi-cairn-app · official Google Cloud icons (go/cloud-icons)", cs),
-        Diagram("target", "Urvi AI Agent · Architecture · Target (ONGC production, India regions)",
-                "Data comes from ONGC systems through the ONGC Enterprise Data Platform; Urvi and Gemini run in Google Cloud "
-                "India regions; nothing leaves India.", tb, tn, ta, CARDS_TARGET,
-                "Urvi AI Agent on WellPulse · target architecture (not built) · docs/data_access_plan.md · official Google Cloud icons (go/cloud-icons)", ts),
+                "As built and running today on Barmer Basin synthetic data (460 wells). Demo uses us-central1 for Gemini Live; "
+                "data lakehouse sits in asia-south1.", cb, cn, ca, CARDS_CURRENT,
+                "Urvi AI Agent · Cairn Oil & Gas (Vedanta) · Cloud Run urvi-cairn-app · official Google Cloud icons (go/cloud-icons)", cs),
+        Diagram("target", "Urvi AI Agent · Architecture · Target (Cairn / Vedanta, India regions)",
+                "Upstream Cairn / Vedanta systems feed the Vedanta Enterprise Data Lakehouse in asia-south1 (Mumbai); "
+                "Urvi and Gemini run in Google Cloud India regions with VPC-SC and CMEK.", tb, tn, ta, CARDS_TARGET,
+                "Urvi AI Agent · Cairn Oil & Gas (Vedanta) · target architecture (not built) · docs/data_access_plan.md · official Google Cloud icons (go/cloud-icons)", ts),
     ]
 
 

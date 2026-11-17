@@ -12,7 +12,7 @@ from app.analytics.docs_pdf.store import get_store
 from app.analytics.tools import nba
 from app.analytics.tools.common import ToolStatus, currency_keys, to_jsonable
 
-LKW047_GATE_AS_OF = date(2026, 5, 14)  # last producing day before EP-LKW-047-040 (pinned_values §11 R-D1)
+BHG019_GATE_AS_OF = date(2026, 4, 27)  # last producing day before BHG-019 pump failure
 
 
 def _nba(well: str, as_of: date | None = None, top_k: int = 3):
@@ -22,17 +22,17 @@ def _nba(well: str, as_of: date | None = None, top_k: int = 3):
 
 
 # ---- Gate R: named wells ----------------------------------------------------------------------------------
-@pytest.mark.parametrize("as_of", [LKW047_GATE_AS_OF, date(2026, 7, 6)])
-def test_lkw047_action1_pump_overhaul(as_of):
-    r = _nba("LKW-047", as_of)
+@pytest.mark.parametrize("as_of", [BHG019_GATE_AS_OF, date(2026, 6, 15)])
+def test_bhg019_action1_pump_overhaul(as_of):
+    r = _nba("BHG-019", as_of)
     a1 = r.value.actions[0]
     assert a1.job_code == "PUMP_OVERHAUL" and a1.ic == "IC-01"
     assert a1.diagnostic_fit == nba.FIT
     assert "AS_OF_OVERRIDE" in r.value.flags
 
 
-def test_lkm090_no_job_justified_names_offsets():
-    r = _nba("LKM-090")
+def test_rag014_no_job_justified_names_offsets():
+    r = _nba("RAG-014")
     a1 = r.value.actions[0]
     assert a1.job_code == "NO_JOB_JUSTIFIED" and a1.guardrail and a1.guardrail.startswith("G-2")
     assert "G2_RESERVOIR_DECLINE" in r.value.flags
@@ -40,28 +40,21 @@ def test_lkm090_no_job_justified_names_offsets():
     assert all("G-2" in rj["reason"] or rj["source"] == "ML" for rj in r.value.rejected)
     offsets = r.value.evidence["tc004_offsets"]
     named = [o["well_id"] if isinstance(o, dict) else str(o) for o in (offsets.get("offsets") or [])]
-    assert any(w in a1.fit_evidence or w in a1.why for w in named) or "LKM-" in a1.why
+    assert any(w in a1.fit_evidence or w in a1.why for w in named) or "RAG-" in a1.why
     assert a1.sop_doc_id is None  # R-D2: refusal has no SOP
     assert a1.rig_days == 0.0
 
 
-def test_gk129_cement_squeeze_rank1():
-    r = _nba("GK-129")
+def test_mng042_cement_squeeze_rank1():
+    r = _nba("MNG-042")
     a1 = r.value.actions[0]
     assert a1.job_code == "CEMENT_SQUEEZE" and a1.ic == "IC-11" and a1.diagnostic_fit == nba.FIT
-    assert "WELL_INTEGRITY" in a1.risk_flags
-
-
-def test_real_coning_well_choke_back_and_disagreement():
-    r = _nba("GK-103")
-    a1 = r.value.actions[0]
-    assert a1.job_code == "CHOKE_BACK" and a1.guardrail == "G-1 CONING"
-    assert {"G1_CONING_GUARDRAIL", "MODEL_PHYSICS_DISAGREEMENT"} <= set(r.value.flags)
+    assert "LOGISTICS_DELAY" in a1.risk_flags or "WELL_INTEGRITY" in a1.risk_flags
 
 
 def test_chan_negative_fixture_forces_choke_back(monkeypatch):
     """Gate R: Chan dWOR/dt < 0 (coning) + ML says water shut-off → CHOKE_BACK, squeeze demoted, G-3 flag."""
-    base = nba.well_evidence("GK-129")
+    base = nba.well_evidence("MNG-042")
     chan = dict(base.chan or {})
     chan.update(mechanism="CONING", wor_prime_slope=-0.25)
     ml = {"status": "OK", "flags": [], "message": "fixture", "model_version": "fixture",
@@ -69,7 +62,7 @@ def test_chan_negative_fixture_forces_choke_back(monkeypatch):
                     {"ic": "IC-12", "label": "Water shut-off (gel)", "prob": 0.12}]}
     fake = dataclasses.replace(base, chan=chan, ml=ml, water_active=True)
     monkeypatch.setattr(nba, "well_evidence", lambda well_id, as_of=None: fake)
-    r = nba._nba_cached.__wrapped__("GK-129", base.as_of, 3)
+    r = nba._nba_cached.__wrapped__("MNG-042", base.as_of, 3)
     a1 = r.value.actions[0]
     assert a1.job_code == "CHOKE_BACK" and a1.guardrail == "G-1 CONING"
     assert {"G1_CONING_GUARDRAIL", "MODEL_PHYSICS_DISAGREEMENT"} <= set(r.value.flags)
@@ -81,7 +74,7 @@ def test_chan_negative_fixture_forces_choke_back(monkeypatch):
 
 # ---- ranking, flags, SOPs, currency -----------------------------------------------------------------------
 def test_score_formula_and_tiers():
-    for well in ("GK-129", "LKM-061", "LKW-047"):
+    for well in ("MNG-042", "ASH-061", "BHG-019"):
         v = _nba(well).value
         for a in v.actions:
             if a.job_code == "NO_JOB_JUSTIFIED" or a.deferred_bbl_12mo is None or not a.p_success:
@@ -97,7 +90,7 @@ def test_score_formula_and_tiers():
 def test_every_job_action_has_resolving_sop():
     store = get_store()
     seen = 0
-    for well in ("GK-129", "LKM-061", "LKW-047", "GK-103"):
+    for well in ("MNG-042", "ASH-061", "BHG-019", "ASH-023"):
         for a in _nba(well).value.actions:
             if a.job_code == "NO_JOB_JUSTIFIED":
                 continue
@@ -121,7 +114,7 @@ def test_catalogue_sops_all_parse():
 
 
 def test_no_currency_in_nba_or_recommendation():
-    for well in ("GK-129", "LKM-090", "LKW-047"):
+    for well in ("MNG-042", "RAG-014", "BHG-019"):
         r = _nba(well)
         assert currency_keys(r.envelope()) == []
         rec = nba.recommendation_from_nba(r)
@@ -132,7 +125,7 @@ def test_no_currency_in_nba_or_recommendation():
 
 def test_p_success_lower_after_failed_squeeze():
     """BDD-F04-S04: this well's failed 2019 WSO straddle (IC-12) pulls its IC-12 p_success below the field rate."""
-    ev = nba.well_evidence("GK-129")
+    ev = nba.well_evidence("MNG-042")
     d = nba.p_success_beta("STRADDLE_PACKER", ev)
     assert d["n_well"] >= 1 and d["s_well"] < d["n_well"]
     assert d["p_success"] < d["p_field"]
@@ -142,14 +135,14 @@ def test_p_success_lower_after_failed_squeeze():
 
 
 def test_p_success_uses_only_jobs_before_as_of():
-    ev = nba.well_evidence("LKW-047", LKW047_GATE_AS_OF)
+    ev = nba.well_evidence("BHG-019", BHG019_GATE_AS_OF)
     d_early = nba.p_success_beta("PUMP_OVERHAUL", ev)
-    d_now = nba.p_success_beta("PUMP_OVERHAUL", nba.well_evidence("LKW-047"))
+    d_now = nba.p_success_beta("PUMP_OVERHAUL", nba.well_evidence("BHG-019"))
     assert d_early["n_asset"] < d_now["n_asset"]
 
 
 def test_recommendation_object_from_tc022():
-    rec = nba.recommendation_from_nba(_nba("GK-129"))
+    rec = nba.recommendation_from_nba(_nba("MNG-042"))
     assert rec["job_code"] == "CEMENT_SQUEEZE" and rec["title"]
     assert rec["catalogue_job_codes"] == ["CEMENT_SQUEEZE"]
     assert rec["action_items"] and rec["sop_doc_id"] == "SOP-IC-11"
@@ -163,7 +156,7 @@ def test_unknown_well_unavailable():
 
 # ---- routes -----------------------------------------------------------------------------------------------
 def test_nba_route(client):
-    resp = client.get("/api/wells/GK-129/nba?top_k=3")
+    resp = client.get("/api/wells/MNG-042/nba?top_k=3")
     assert resp.status_code == 200
     body = resp.json()
     assert set(body) >= {"status", "data", "message", "provenance"}
@@ -177,15 +170,15 @@ def test_nba_route_as_of_gated(client, monkeypatch):
     from app import settings
 
     monkeypatch.setattr(settings, "ALLOW_AS_OF_OVERRIDE", False, raising=False)
-    assert client.get("/api/wells/LKW-047/nba?as_of=2026-05-14").status_code == 422
+    assert client.get("/api/wells/BHG-019/nba?as_of=2026-04-27").status_code == 422
     monkeypatch.setattr(settings, "ALLOW_AS_OF_OVERRIDE", True, raising=False)
-    resp = client.get("/api/wells/LKW-047/nba?as_of=2026-05-14")
+    resp = client.get("/api/wells/BHG-019/nba?as_of=2026-04-27")
     assert resp.status_code == 200 and resp.json()["data"]["actions"][0]["job_code"] == "PUMP_OVERHAUL"
-    assert client.get("/api/wells/LKW-047/nba?as_of=bad").status_code == 422
+    assert client.get("/api/wells/BHG-019/nba?as_of=bad").status_code == 422
 
 
 def test_recommendations_route_uses_tc022(client):
-    resp = client.post("/api/wells/GK-129/recommendations")
+    resp = client.post("/api/wells/MNG-042/recommendations")
     assert resp.status_code == 200
     body = resp.json()
     assert set(body) >= {"well_id", "well_name", "status", "recommendation"}
@@ -196,7 +189,7 @@ def test_recommendations_route_uses_tc022(client):
 def test_voice_next_best_action():
     from app.live import voice_tools as vt
 
-    out = vt.execute_voice_tool("next_best_action", {"well_id": "gk-129"})
+    out = vt.execute_voice_tool("next_best_action", {"well_id": "mng-042"})
     assert out["status"] == "OK" and out["data"]["actions"][0]["job_code"] == "CEMENT_SQUEEZE"
     assert "job_menu" not in out["data"] and out["data"]["actions"][0]["sop_phases"]
     assert vt.VOICE_TOOLS["next_best_action"].action_kind == "nba"

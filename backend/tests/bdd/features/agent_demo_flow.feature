@@ -7,9 +7,9 @@ Feature: Five-level drill-down in one session
       | level | prompt                                                                      | required tool calls                      |
       | L1    | Can you give me the past 5 year production data field-wise?                 | field_production_history                 |
       | L1    | Can you give me a plot?                                                     | field_production_history (artifact field_history_chart) |
-      | L2    | How many wells in Geleki are either sick or have lost production?           | classify_well_health, attribute_decline  |
+      | L2    | How many wells in Mangala are either sick or have lost production?          | classify_well_health, attribute_decline  |
       | L3    | Can you give me a priority list of all the wells that need intervention?    | rank_candidates                          |
-      | L4    | Tell me more about GK-129 and show me its production history                | well_profile, plot_production            |
+      | L4    | Tell me more about MNG-042 and show me its production history               | well_profile, plot_production            |
       | L5    | What are the next best recommended interventions?                           | recommend_next_best_action               |
       | L5    | Why not just wax removal?                                                   | compare_interventions                    |
     Then each turn calls its required tools
@@ -21,14 +21,14 @@ Feature: Five-level drill-down in one session
   @BDD-F18-S02 @ui @ws @demo
   Scenario: Same run by voice drives the screens
     When I run the demo turns in order
-    Then the field chart opens at L1, the map filters to Geleki at L2, the priority table shows at L3, the GK-129 drawer opens at L4 and the Recommendation Card shows at L5
+    Then the field chart opens at L1, the map filters to Mangala at L2, the priority table shows at L3, the MNG-042 drawer opens at L4 and the Recommendation Card shows at L5
 
   @BDD-F18-S03 @ws @voice
   Scenario: Hinglish L2
-    When I say "Geleki mein kitne wells sick hain ya production lose kar rahe hain?"
+    When I say "Mangala mein kitne wells sick hain ya production lose kar rahe hain?"
     Then the answer equals the English L2 answer's counts
 
   @BDD-F18-S04 @api
   Scenario: Sessions do not leak tool calls between turns
-    When I ask about GK-129 and then ask about Geleki well health in the same session
+    When I ask about MNG-042 and then ask about Mangala well health in the same session
     Then the second turn does not contain well profile tool calls or artifacts

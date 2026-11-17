@@ -4,7 +4,7 @@
 
 Steps
   1. render   all D1..D11 PDFs + ``.facts.json`` into ``data/docs_pdf`` (``--clean``)
-  2. scanify  ~10% of D1/D5 (plus DOC-CBL-GK129-1998) into image-only PDFs
+  2. scanify  ~10% of D1/D5 (plus DOC-CBL-MNG042-2014) into image-only PDFs
   3. validate full-corpus fact / stray-digit / scanned gate (skippable)
   4. index    ``data/index`` (document_index.parquet, doc_chunks.parquet, tfidf.pkl, corpus_manifest.json)
 """

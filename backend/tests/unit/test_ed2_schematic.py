@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from app.analytics.tools.common import load_table, well_rows
 from app.analytics.tools.field_report import render_well_schematic_svg
 
-CORE = ["GK-129", "LKW-019", "LKM-061"]
+CORE = ["MNG-042", "BHG-019", "ASH-061"]
 
 
 def _sample(n: int = 10, seed: int = 28) -> list[str]:
@@ -33,6 +33,6 @@ def test_route_svg_and_404():
     from app.main import app
 
     c = TestClient(app)
-    r = c.get("/api/wells/GK-129/schematic.svg")
+    r = c.get("/api/wells/MNG-042/schematic.svg")
     assert r.status_code == 200 and r.headers["content-type"].startswith("image/svg+xml")
     assert c.get("/api/wells/ZZ-999/schematic.svg").status_code == 404

@@ -50,7 +50,7 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Lakwa",
+        "field": "Bhagyam",
         "well_id": null,
         "screen": "map"
       },
@@ -59,7 +59,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Which wells in Lakwa are sick?"
+            "text": "Which wells in Bhagyam are sick?"
           }
         ]
       },
@@ -88,7 +88,7 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Lakwa",
+        "field": "Bhagyam",
         "well_id": null,
         "screen": "map"
       },
@@ -126,8 +126,8 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-019",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well"
       },
       "history": [],
@@ -135,7 +135,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Tell me about LKW-019"
+            "text": "Tell me about BHG-019"
           }
         ]
       },
@@ -166,18 +166,18 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-019",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well"
       },
       "history": [
-        "Tell me about LKW-019"
+        "Tell me about BHG-019"
       ],
       "prompt": {
         "role": "user",
         "parts": [
           {
-            "text": "Show production history for LKW-019"
+            "text": "Show production history for BHG-019"
           }
         ]
       },
@@ -206,18 +206,18 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-019",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well"
       },
       "history": [
-        "Show production history for LKW-019"
+        "Show production history for BHG-019"
       ],
       "prompt": {
         "role": "user",
         "parts": [
           {
-            "text": "Show past interventions for LKW-019"
+            "text": "Show past interventions for BHG-019"
           }
         ]
       },
@@ -246,18 +246,18 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-019",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well"
       },
       "history": [
-        "Show past interventions for LKW-019"
+        "Show past interventions for BHG-019"
       ],
       "prompt": {
         "role": "user",
         "parts": [
           {
-            "text": "Show wellbore diagram and completion details for LKW-019"
+            "text": "Show wellbore diagram and completion details for BHG-019"
           }
         ]
       },
@@ -286,8 +286,8 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-019",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well"
       },
       "history": [],
@@ -295,7 +295,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Why is production declining on LKW-019?"
+            "text": "Why is production declining on BHG-019?"
           }
         ]
       },
@@ -325,18 +325,18 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-019",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well"
       },
       "history": [
-        "Why is production declining on LKW-019?"
+        "Why is production declining on BHG-019?"
       ],
       "prompt": {
         "role": "user",
         "parts": [
           {
-            "text": "What should we do for LKW-019?"
+            "text": "What should we do for BHG-019?"
           }
         ]
       },
@@ -365,18 +365,18 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-019",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well"
       },
       "history": [
-        "What should we do for LKW-019?"
+        "What should we do for BHG-019?"
       ],
       "prompt": {
         "role": "user",
         "parts": [
           {
-            "text": "Why not sand cleanout for LKW-019?"
+            "text": "Why not sand cleanout for BHG-019?"
           }
         ]
       },
@@ -405,12 +405,12 @@
       "persona": "FIELD_ENGINEER",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-019",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well"
       },
       "history": [
-        "What should we do for LKW-019?"
+        "What should we do for BHG-019?"
       ],
       "prompt": {
         "role": "user",
@@ -446,8 +446,8 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-019",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well"
       },
       "history": [],
@@ -455,7 +455,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Tell me about LKW-019 and dump full history"
+            "text": "Tell me about BHG-019 and dump full history"
           }
         ]
       },

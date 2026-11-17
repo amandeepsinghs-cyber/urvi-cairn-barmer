@@ -3,8 +3,8 @@ intervention_class: IC-12
 title: Standard Operating Procedure for Zonal Isolation and Zone Transfer
 purpose: Establish operating requirements and barrier isolation standards for mechanical zone transfers, setting bridge plugs,
   and installing straddle packer assemblies.
-scope: Covers mechanical and chemical zonal isolation operations across Assam field assets ({n_job_codes} catalogue job codes)
-  utilizing {equipment_list}.
+scope: Covers mechanical and chemical zonal isolation operations across Cairn Oil & Gas Barmer Basin field assets ({n_job_codes}
+  catalogue job codes) utilizing {equipment_list}.
 applicability:
 - Depletion of currently producing reservoir zone requiring permanent isolation and uphole recompletion.
 - Severe casing damage, collapse, or unauthorized perforations requiring straddle isolation.

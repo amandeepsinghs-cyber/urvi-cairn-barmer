@@ -1,5 +1,5 @@
 {
-  "name": "wellpulse-v04",
+  "name": "urvi-cairn-barmer-v04",
   "version": 1,
   "eval_cases": [
     {
@@ -227,7 +227,7 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Geleki",
+        "field": "Mangala",
         "well_id": null,
         "screen": "map"
       },
@@ -236,7 +236,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "How many wells in Geleki are either sick or have lost production?"
+            "text": "How many wells in Mangala are either sick or have lost production?"
           }
         ]
       },
@@ -263,7 +263,7 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Geleki",
+        "field": "Mangala",
         "well_id": null,
         "screen": "map"
       },
@@ -272,7 +272,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "How many wells in Geleki are either sick or have lost production?"
+            "text": "How many wells in Mangala are either sick or have lost production?"
           }
         ]
       },
@@ -298,8 +298,8 @@
       "persona": "FIELD_ENGINEER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "map"
       },
       "history": [],
@@ -307,7 +307,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "How many wells in Geleki are either sick or have lost production?"
+            "text": "How many wells in Mangala are either sick or have lost production?"
           }
         ]
       },
@@ -332,7 +332,7 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Geleki",
+        "field": "Mangala",
         "well_id": null,
         "screen": "priority_table"
       },
@@ -366,7 +366,7 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Geleki",
+        "field": "Mangala",
         "well_id": null,
         "screen": "priority_table"
       },
@@ -400,8 +400,8 @@
       "persona": "FIELD_ENGINEER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "priority_table"
       },
       "history": [],
@@ -434,8 +434,8 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "well_drawer"
       },
       "history": [],
@@ -443,7 +443,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Tell me more about GK-129 and show me its production history"
+            "text": "Tell me more about MNG-042 and show me its production history"
           }
         ]
       },
@@ -469,8 +469,8 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "well_drawer"
       },
       "history": [],
@@ -478,7 +478,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Tell me more about GK-129 and show me its production history"
+            "text": "Tell me more about MNG-042 and show me its production history"
           }
         ]
       },
@@ -504,8 +504,8 @@
       "persona": "FIELD_ENGINEER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "well_drawer"
       },
       "history": [],
@@ -513,7 +513,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Tell me more about GK-129 and show me its production history"
+            "text": "Tell me more about MNG-042 and show me its production history"
           }
         ]
       },
@@ -539,8 +539,8 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "recommendation"
       },
       "history": [],
@@ -573,8 +573,8 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "recommendation"
       },
       "history": [],
@@ -607,8 +607,8 @@
       "persona": "FIELD_ENGINEER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "recommendation"
       },
       "history": [],
@@ -641,8 +641,8 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "recommendation"
       },
       "history": [
@@ -677,8 +677,8 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "recommendation"
       },
       "history": [
@@ -713,8 +713,8 @@
       "persona": "FIELD_ENGINEER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "recommendation"
       },
       "history": [
@@ -748,7 +748,7 @@
       "persona": "ED",
       "language": "hinglish",
       "context": {
-        "field": "Geleki",
+        "field": "Mangala",
         "well_id": null,
         "screen": "map"
       },
@@ -757,7 +757,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Geleki mein kitne wells sick hain ya production lose kar rahe hain?"
+            "text": "Mangala mein kitne wells sick hain ya production lose kar rahe hain?"
           }
         ]
       },
@@ -782,8 +782,8 @@
       "persona": "ASSET_MANAGER",
       "language": "hinglish",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "recommendation"
       },
       "history": [
@@ -793,7 +793,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "GK-129 pe wax removal kyun nahi? Squeeze hi kyun?"
+            "text": "MNG-042 pe wax removal kyun nahi? Squeeze hi kyun?"
           }
         ]
       },
@@ -818,7 +818,7 @@
       "persona": "ASSET_MANAGER",
       "language": "hinglish",
       "context": {
-        "field": "Lakhmani",
+        "field": "Aishwariya",
         "well_id": null,
         "screen": "map"
       },
@@ -827,7 +827,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Lakhmani mein kitne wells theek chal rahe hain aur kitne band hain?"
+            "text": "Aishwariya mein kitne wells theek chal rahe hain aur kitne band hain?"
           }
         ]
       },
@@ -852,8 +852,8 @@
       "persona": "FIELD_ENGINEER",
       "language": "hinglish",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-047",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well_drawer"
       },
       "history": [],
@@ -861,7 +861,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Main kal LKW-047 ja raha hoon, iski poori history de do"
+            "text": "Main kal BHG-019 ja raha hoon, iski poori history de do"
           }
         ]
       },
@@ -886,7 +886,7 @@
       "persona": "ASSET_MANAGER",
       "language": "hinglish",
       "context": {
-        "field": "Lakwa",
+        "field": "Bhagyam",
         "well_id": null,
         "screen": "map"
       },
@@ -895,7 +895,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Lakwa mein sabse kharab well kaun sa hai?"
+            "text": "Bhagyam mein sabse kharab well kaun sa hai?"
           }
         ]
       },
@@ -920,7 +920,7 @@
       "persona": "ASSET_MANAGER",
       "language": "hindi",
       "context": {
-        "field": "Lakwa",
+        "field": "Bhagyam",
         "well_id": null,
         "screen": "map"
       },
@@ -929,7 +929,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "लकवा में सबसे खराब कुआँ कौन सा है?"
+            "text": "भाग्यम में सबसे खराब कुआँ कौन सा है?"
           }
         ]
       },
@@ -954,8 +954,8 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-047",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well_drawer"
       },
       "history": [],
@@ -963,7 +963,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Why did LKW-047's production decline over the last 6 months?"
+            "text": "Why did BHG-019's production decline over the last 6 months?"
           }
         ]
       },
@@ -1013,7 +1013,7 @@
       ]
     },
     {
-      "eval_case_id": "f04_s03_refusal_lkm090",
+      "eval_case_id": "f04_s03_refusal_rag014",
       "bdd": [
         "BDD-F04-S03"
       ],
@@ -1021,8 +1021,8 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Lakhmani",
-        "well_id": "LKM-090",
+        "field": "Raageshwari",
+        "well_id": "RAG-014",
         "screen": "well_drawer"
       },
       "history": [],
@@ -1030,7 +1030,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "What should we do on LKM-090?"
+            "text": "What should we do on RAG-014?"
           }
         ]
       },
@@ -1088,7 +1088,7 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Lakwa",
+        "field": "Bhagyam",
         "well_id": null,
         "screen": "map"
       },
@@ -1097,7 +1097,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Which is the worst well in Lakwa?"
+            "text": "Which is the worst well in Bhagyam?"
           }
         ]
       },
@@ -1154,7 +1154,7 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Lakwa",
+        "field": "Bhagyam",
         "well_id": null,
         "screen": "map"
       },
@@ -1222,8 +1222,8 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "well_drawer"
       },
       "history": [],
@@ -1231,7 +1231,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Tell me more about GK-129 and show me its 3-year production history"
+            "text": "Tell me more about MNG-042 and show me its 3-year production history"
           }
         ]
       },
@@ -1249,7 +1249,7 @@
       ]
     },
     {
-      "eval_case_id": "f13_s01_gk129_wax_removal",
+      "eval_case_id": "f13_s01_mng042_wax_removal",
       "bdd": [
         "BDD-F13-S01"
       ],
@@ -1257,8 +1257,8 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "recommendation"
       },
       "history": [
@@ -1285,7 +1285,7 @@
       ]
     },
     {
-      "eval_case_id": "f13_s01_gk129_reperforation",
+      "eval_case_id": "f13_s01_mng042_reperforation",
       "bdd": [
         "BDD-F13-S01"
       ],
@@ -1293,8 +1293,8 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "recommendation"
       },
       "history": [
@@ -1322,7 +1322,7 @@
       ]
     },
     {
-      "eval_case_id": "f13_s01_lkm061_reperforation",
+      "eval_case_id": "f13_s01_ash061_reperforation",
       "bdd": [
         "BDD-F13-S01"
       ],
@@ -1330,8 +1330,8 @@
       "persona": "ASSET_MANAGER",
       "language": "english",
       "context": {
-        "field": "Lakhmani",
-        "well_id": "LKM-061",
+        "field": "Aishwariya",
+        "well_id": "ASH-061",
         "screen": "recommendation"
       },
       "history": [
@@ -1367,8 +1367,8 @@
       "persona": "FIELD_ENGINEER",
       "language": "english",
       "context": {
-        "field": "Geleki",
-        "well_id": "GK-129",
+        "field": "Mangala",
+        "well_id": "MNG-042",
         "screen": "recommendation"
       },
       "history": [
@@ -1430,7 +1430,7 @@
       ]
     },
     {
-      "eval_case_id": "f16_s01_tell_lkw047_ed",
+      "eval_case_id": "f16_s01_tell_bhg019_ed",
       "bdd": [
         "BDD-F16-S01"
       ],
@@ -1438,8 +1438,8 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-047",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well_drawer"
       },
       "history": [],
@@ -1447,7 +1447,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Tell me about LKW-047"
+            "text": "Tell me about BHG-019"
           }
         ]
       },
@@ -1462,7 +1462,7 @@
       ]
     },
     {
-      "eval_case_id": "f16_s01_tell_lkw047_fe",
+      "eval_case_id": "f16_s01_tell_bhg019_fe",
       "bdd": [
         "BDD-F16-S01"
       ],
@@ -1470,8 +1470,8 @@
       "persona": "FIELD_ENGINEER",
       "language": "english",
       "context": {
-        "field": "Lakwa",
-        "well_id": "LKW-047",
+        "field": "Bhagyam",
+        "well_id": "BHG-019",
         "screen": "well_drawer"
       },
       "history": [],
@@ -1479,7 +1479,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Tell me about LKW-047"
+            "text": "Tell me about BHG-019"
           }
         ]
       },
@@ -1570,7 +1570,7 @@
       "persona": "ED",
       "language": "english",
       "context": {
-        "field": "Lakwa",
+        "field": "Bhagyam",
         "well_id": null,
         "screen": "map"
       },
@@ -1579,7 +1579,7 @@
         "role": "user",
         "parts": [
           {
-            "text": "Is this real Lakwa data?"
+            "text": "Is this real Bhagyam data?"
           }
         ]
       },

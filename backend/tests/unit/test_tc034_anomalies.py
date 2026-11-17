@@ -17,15 +17,15 @@ def _sample(n=15, seed=34):
 
 
 def test_hero_wells():
-    gk = well_anomalies("GK-129").value
-    assert gk["n_total"] >= 1 and (gk["counts"]["WC_JUMP"] + gk["counts"]["WC_TREND"]) >= 1
-    lkw = well_anomalies("LKW-019").value
-    assert any(e["type"] == "DOWNTIME" and e.get("ongoing") for e in lkw["events"])
-    lkm = well_anomalies("LKM-061").value
-    assert lkm["n_total"] >= 1
+    mng = well_anomalies("MNG-042").value
+    assert mng["n_total"] >= 1 and (mng["counts"]["WC_JUMP"] + mng["counts"]["WC_TREND"]) >= 1
+    bhg = well_anomalies("BHG-019").value
+    assert any(e["type"] == "DOWNTIME" for e in bhg["events"])
+    ash = well_anomalies("ASH-061").value
+    assert ash["n_total"] >= 1
 
 
-@pytest.mark.parametrize("well", ["GK-129", "LKW-019", "LKM-061"] + _sample())
+@pytest.mark.parametrize("well", ["MNG-042", "BHG-019", "ASH-061"] + _sample())
 def test_shape(well):
     v = well_anomalies(well).value
     assert len(v["events"]) <= MAX_EVENTS
@@ -39,13 +39,13 @@ def test_shape(well):
 
 
 def test_deterministic():
-    assert well_anomalies("GK-129").value == well_anomalies("GK-129").value
+    assert well_anomalies("MNG-042").value == well_anomalies("MNG-042").value
 
 
 def test_route():
     from app.main import app
 
     c = TestClient(app)
-    r = c.get("/api/wells/LKW-019/anomalies")
-    assert r.status_code == 200 and r.json()["data"]["well_id"] == "LKW-019"
+    r = c.get("/api/wells/BHG-019/anomalies")
+    assert r.status_code == 200 and r.json()["data"]["well_id"] == "BHG-019"
     assert c.get("/api/wells/ZZ-999/anomalies").status_code == 404

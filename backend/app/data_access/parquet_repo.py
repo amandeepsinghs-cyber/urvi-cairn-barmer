@@ -28,7 +28,7 @@ PER_WELL_TABLES = [
 
 
 class RetiredWellId(LookupError):
-    """GLK- IDs were the v0.3 demo layout; v0.4 uses GK- / LKW- / LKM- (SDD §5.1)."""
+    """GLK- IDs were the v0.3 demo layout; active Barmer Basin fields use MNG- / BHG- / ASH- / RAG- (SDD §5.1)."""
 
 
 class ParquetRepository:

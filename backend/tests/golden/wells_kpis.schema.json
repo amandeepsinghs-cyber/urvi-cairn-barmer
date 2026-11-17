@@ -3,6 +3,11 @@
   "route": "/api/wells/kpis",
   "schema": {
     "properties": {
+      "at_risk_count": {
+        "type": [
+          "number"
+        ]
+      },
       "avg_water_cut_pct": {
         "type": [
           "number"
@@ -13,7 +18,17 @@
           "number"
         ]
       },
+      "field": {
+        "type": [
+          "string"
+        ]
+      },
       "healthy_count": {
+        "type": [
+          "number"
+        ]
+      },
+      "not_producing_count": {
         "type": [
           "number"
         ]
@@ -33,6 +48,11 @@
           "number"
         ]
       },
+      "underperforming_count": {
+        "type": [
+          "number"
+        ]
+      },
       "warning_count": {
         "type": [
           "number"
@@ -40,12 +60,16 @@
       }
     },
     "required": [
+      "at_risk_count",
       "avg_water_cut_pct",
       "failed_count",
+      "field",
       "healthy_count",
+      "not_producing_count",
       "total_gas_mcfd",
       "total_oil_bopd",
       "total_wells",
+      "underperforming_count",
       "warning_count"
     ],
     "type": [

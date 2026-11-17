@@ -33,7 +33,7 @@ def _labels_sql() -> str:
 
 
 def contract_schema(paths: list[Path]) -> list[tuple[str, str]]:
-    """Column list in the first file's order (Geleki first = parquet-repository concat order)."""
+    """Column list in the first file's order (Mangala first = parquet-repository concat order)."""
     first = pq.read_schema(paths[0])
     cols = [(f.name, C.ARROW_TO_BQ[str(f.type)]) for f in first]
     names = {c for c, _ in cols}
@@ -82,7 +82,7 @@ def silver_sql(tables: dict[str, list[Path]]) -> str:
     for t, paths in tables.items():
         cols = contract_schema(paths) + [
             ("_source_row", "INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)')"),
-            ("_landing_folder", "STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani')"),
+            ("_landing_folder", "STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari')"),
             ("_bronze_dt", "DATE OPTIONS(description='Bronze batch partition (dt=)')"),
             ("_silver_loaded_at", "TIMESTAMP OPTIONS(description='Silver load time')"),
         ]
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS {C.fq(C.SILVER_DATASET, 'doc_chunks')} (
   `chunk_seq` INT64 OPTIONS(description='0-based chunk ordinal within the page'),
   `text` STRING OPTIONS(description='Extracted text of the chunk (same text the TF-IDF index was built from)'),
   `well_id` STRING OPTIONS(description='Well the document belongs to (NULL for field-level docs and SOPs)'),
-  `field` STRING OPTIONS(description='Geleki | Lakwa | Lakhmani (NULL for asset-wide SOPs)'),
+  `field` STRING OPTIONS(description='Mangala | Bhagyam | Aishwariya | Raageshwari (NULL for asset-wide SOPs)'),
   `doc_type` STRING OPTIONS(description='D1..D11 or SOP'),
   `doc_date` DATE,
   `gcs_uri` STRING OPTIONS(description='gs://.../documents/... PDF object'),
@@ -150,9 +150,12 @@ OPTIONS (
 
 def main() -> int:
     tables = C.landing_tables()
-    missing = set(tables) ^ set(C.TABLE_KEYS)
-    if missing:
-        raise SystemExit(f"TABLE_KEYS out of sync with landing tables: {sorted(missing)}")
+    unknown = set(tables) - set(C.TABLE_KEYS)
+    missing = set(C.TABLE_KEYS) - set(tables) - C.OPTIONAL_TABLES
+    if unknown or missing:
+        raise SystemExit(
+            f"TABLE_KEYS out of sync with landing tables: unknown={sorted(unknown)} missing={sorted(missing)}"
+        )
     files = {
         "00_datasets.sql": datasets_sql(),
         "10_bronze_external.sql": bronze_sql(tables),

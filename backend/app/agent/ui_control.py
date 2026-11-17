@@ -13,14 +13,14 @@ from typing import Any
 
 # action -> allowed values (None = no value needed; "*" = free text validated elsewhere)
 UI_ACTIONS: dict[str, tuple[str, ...] | None] = {
-    "map_view": ("india", "assam"),
+    "map_view": ("india", "barmer"),
     "fullscreen": ("on", "off"),
     "basemap": ("satellite", "scada"),
     "flowlines": ("on", "off"),
     "legend": ("on", "off"),
     "zoom": ("in", "out"),
-    "focus_field": ("Geleki", "Lakwa", "Lakhmani", "ALL"),
-    "focus_cluster": None,  # GGS / cluster id, resolved in the browser (ED-13)
+    "focus_field": ("Mangala", "Bhagyam", "Aishwariya", "Raageshwari", "ALL"),
+    "focus_cluster": None,  # Well pad / cluster id, resolved in the browser (ED-13)
     "focus_well": None,
     "open_well": None,
     "open_screen": ("field_history", "field_compare", "field_health"),
@@ -40,9 +40,10 @@ NEEDS_WELL = {"focus_well", "open_well"}
 _ALIASES = {
     "fullscreen": {"true": "on", "yes": "on", "enter": "on", "false": "off", "no": "off", "exit": "off"},
     "basemap": {"dark": "scada", "normal": "scada", "street": "scada", "sat": "satellite"},
-    "map_view": {"all_india": "india", "national": "india", "asset": "assam"},
-    "focus_field": {"all": "ALL", "lakmani": "Lakhmani", "lakhmani": "Lakhmani", "geleki": "Geleki",
-                    "lakwa": "Lakwa"},
+    "map_view": {"all_india": "india", "national": "india", "asset": "barmer", "rajasthan": "barmer",
+                 "barmer_basin": "barmer"},
+    "focus_field": {"all": "ALL", "mangala": "Mangala", "bhagyam": "Bhagyam", "aishwariya": "Aishwariya",
+                    "aishwarya": "Aishwariya", "raageshwari": "Raageshwari", "rageshwari": "Raageshwari"},
     "open_screen": {"history": "field_history", "compare": "field_compare", "health": "field_health",
                     "priority": "field_health", "comparison": "field_compare"},
     "health_filter": {"none": "all", "clear": "all", "everything": "all", "reset": "all", "off": "all",
@@ -58,7 +59,7 @@ _ALIASES = {
 }
 _WELL_RE = re.compile(r"^\s*([A-Za-z]{2,3})[\s-]?(\d{1,3})\s*$")
 
-# ED-14: speech-to-text often spells numbers out ("GGS three", "GK one two nine", "जीके एक दो नौ").
+# ED-14: speech-to-text often spells numbers out ("PAD two", "MNG zero four two", "एमएनजी शून्य चार दो").
 _NUM_WORDS = {
     "zero": 0, "oh": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
     "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
@@ -72,7 +73,7 @@ _NUM_WORDS = {
 
 
 def spoken_digits(text: str | None) -> str:
-    """'GK one two nine' -> 'GK 129'; 'GGS three' -> 'GGS 3'; 'one twenty nine' -> '129'. Digits pass through."""
+    """'MNG zero four two' -> 'MNG 042'; 'PAD two' -> 'PAD 2'; 'forty two' -> '42'. Digits pass through."""
     out: list[str] = []
     run: list[str] = []
     pending_tens: int | None = None
@@ -113,7 +114,7 @@ _VIEW_ALIASES = {"completion": "wellbore", "schematic": "wellbore", "diagram": "
                  "wax": "history", "sand": "history"}
 
 _LABELS = {
-    ("map_view", "india"): "India view", ("map_view", "assam"): "Assam Asset view",
+    ("map_view", "india"): "India view", ("map_view", "barmer"): "Barmer Basin view",
     ("fullscreen", "on"): "Full screen on", ("fullscreen", "off"): "Full screen off",
     ("basemap", "satellite"): "Satellite map", ("basemap", "scada"): "SCADA map",
     ("flowlines", "on"): "Flowlines on", ("flowlines", "off"): "Flowlines off",
@@ -137,7 +138,7 @@ def _norm_well(raw: str | None) -> str:
 
 
 def _norm_cluster(raw: str | None) -> str:
-    """'ggs three' -> 'GGS-03'; 'LKW GGS II' -> 'LKW-GGS-II'; 'GK-NE' stays."""
+    """'pad one' -> 'PAD-1'; 'MNG PAD B' -> 'MNG-PAD-B'; 'BHG-PAD-1' stays."""
     v = re.sub(r"\s+", "-", spoken_digits(raw).strip().upper())
     v = re.sub(r"-+", "-", v)
     v = re.sub(r"^(GGS)-?(\d)$", r"\1-0\2", v)
@@ -183,12 +184,12 @@ def validate(action: str, value: str = "", well_id: str = "", view: str = "") ->
     if a == "focus_cluster":
         v = _norm_cluster(value)
         if not re.fullmatch(r"[A-Z0-9-]{2,20}", v):
-            return None, "focus_cluster needs a GGS or cluster id such as GGS-01 or LKW-GGS-II"
+            return None, "focus_cluster needs a pad or cluster id such as MNG-PAD-B or BHG-PAD-1"
         cmd["value"] = v
     if a in NEEDS_WELL:
         wid = _norm_well(well_id or value)
         if not wid and a == "focus_well":
-            return None, "focus_well needs a well_id such as GK-129"
+            return None, "focus_well needs a well_id such as MNG-042"
         if wid:
             cmd["well_id"] = wid
         if a == "open_well":

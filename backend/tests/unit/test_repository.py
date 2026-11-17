@@ -15,26 +15,29 @@ if not (settings.LANDING_DIR / "asset" / "field_targets.parquet").exists():
 def test_list_wells_counts():
     repo = get_repository()
     wells = repo.list_wells()
-    assert len(wells) == 412
-    geleki = [w for w in wells if w["field"] == "Geleki"]
-    lakwa = [w for w in wells if w["field"] == "Lakwa"]
-    lakhmani = [w for w in wells if w["field"] == "Lakhmani"]
-    assert len(geleki) == 142
-    assert len(lakwa) == 160
-    assert len(lakhmani) == 110
-    assert all(w["id"].startswith("GK-") for w in geleki)
-    assert all(w["id"].startswith("LKW-") for w in lakwa)
-    assert all(w["id"].startswith("LKM-") for w in lakhmani)
+    assert len(wells) == 460
+    mangala = [w for w in wells if w["field"] == "Mangala"]
+    bhagyam = [w for w in wells if w["field"] == "Bhagyam"]
+    aishwariya = [w for w in wells if w["field"] == "Aishwariya"]
+    raageshwari = [w for w in wells if w["field"] == "Raageshwari"]
+    assert len(mangala) == 180
+    assert len(bhagyam) == 120
+    assert len(aishwariya) == 100
+    assert len(raageshwari) == 60
+    assert all(w["id"].startswith("MNG-") for w in mangala)
+    assert all(w["id"].startswith("BHG-") for w in bhagyam)
+    assert all(w["id"].startswith("ASH-") for w in aishwariya)
+    assert all(w["id"].startswith("RAG-") for w in raageshwari)
 
 
 def test_glk_retired_404(client):
     r_well = client.get("/api/wells/GLK-101")
     assert r_well.status_code == 404
-    assert r_well.json()["detail"] == "GLK- IDs retired in v0.4; use GK-"
+    assert "GLK-" in r_well.json()["detail"]
 
     r_hist = client.get("/api/wells/GLK-101/history")
     assert r_hist.status_code == 404
-    assert r_hist.json()["detail"] == "GLK- IDs retired in v0.4; use GK-"
+    assert "GLK-" in r_hist.json()["detail"]
 
     repo = get_repository()
     with pytest.raises(RetiredWellId):
@@ -47,7 +50,7 @@ def test_unknown_well_404(client):
 
 
 def test_fixture_wells_resolvable(client):
-    for well_id in ["GK-129", "LKW-047", "LKM-090", "LKM-061", "lkw-047"]:
+    for well_id in ["MNG-042", "BHG-019", "RAG-014", "ASH-061", "bhg-019"]:
         resp = client.get(f"/api/wells/{well_id}")
         assert resp.status_code == 200
         assert resp.json()["id"] == well_id.upper()
@@ -55,7 +58,7 @@ def test_fixture_wells_resolvable(client):
 
 def test_null_not_zero_history():
     repo = get_repository()
-    for wid in ["GK-129", "LKW-047", "LKM-061"]:
+    for wid in ["MNG-042", "BHG-019", "ASH-061"]:
         hist = repo.get_history(wid, "5y")
         assert hist is not None
         assert len(hist) == 1819
@@ -90,13 +93,13 @@ def test_history_ranges(client):
         "5y": 1819,
     }
     for rng, exp_len in expected_lengths.items():
-        resp = client.get(f"/api/wells/GK-129/history?range={rng}")
+        resp = client.get(f"/api/wells/MNG-042/history?range={rng}")
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) == exp_len
         assert data[-1]["date"] == str(settings.AS_OF)
 
-    resp_invalid = client.get("/api/wells/GK-129/history?range=10y")
+    resp_invalid = client.get("/api/wells/MNG-042/history?range=10y")
     assert resp_invalid.status_code == 422
 
 
@@ -104,25 +107,24 @@ def test_no_currency_anywhere(client):
     endpoints = [
         client.get("/api/wells").text,
         client.get("/api/wells/kpis").text,
-        client.get("/api/wells/LKW-047").text,
-        client.get("/api/wells/LKW-047/export").text,
-        client.get("/api/wells/LKW-047/workovers").text,
-        client.get("/api/wells/LKW-047/reports").text,
-        client.post("/api/wells/LKW-047/recommendations").text,
+        client.get("/api/wells/BHG-019").text,
+        client.get("/api/wells/BHG-019/export").text,
+        client.get("/api/wells/BHG-019/workovers").text,
+        client.get("/api/wells/BHG-019/reports").text,
+        client.post("/api/wells/BHG-019/recommendations").text,
         client.post(
-            "/api/wells/GK-129/chat",
+            "/api/wells/MNG-042/chat",
             json={"message": "how much did the workovers cost?", "language": "english"},
         ).text,
-        client.get("/api/field/infrastructure?field=Lakwa").text,
+        client.get("/api/field/infrastructure?field=Bhagyam").text,
     ]
     combined = "\n".join(endpoints).lower()
-    # "lakh" alone would match the field name Lakhmani; match currency usages only.
     for needle in ("_usd", "payback", "currency", "lakh ", "lakhs", "_lakh", '"inr', "_inr", "$", "₹"):
         assert needle not in combined
 
 
 def test_workover_cost_band_shape(client):
-    resp = client.get("/api/wells/LKW-047")
+    resp = client.get("/api/wells/BHG-019")
     assert resp.status_code == 200
     data = resp.json()
     workovers = data["workovers"]
@@ -139,7 +141,7 @@ def test_workover_cost_band_shape(client):
 
 
 def test_recommendation_cost_band(client):
-    resp = client.post("/api/wells/LKM-061/recommendations")
+    resp = client.post("/api/wells/ASH-061/recommendations")
     assert resp.status_code == 200
     rec = resp.json()["recommendation"]
     assert rec["cost_band"] in {"LOW", "MED", "HIGH"}
@@ -175,19 +177,31 @@ def test_interim_health(client):
 def test_field_infrastructure(client):
     resp_default = client.get("/api/field/infrastructure")
     assert resp_default.status_code == 200
-    assert resp_default.json()["field"] == "Geleki"
+    assert resp_default.json()["field"] == "Mangala"
+    mangala_ggs = [s for s in resp_default.json()["gathering_stations"] if s["type"] == "GGS"]
+    assert len(mangala_ggs) == 4
 
-    resp_lakwa = client.get("/api/field/infrastructure?field=Lakwa")
-    assert resp_lakwa.status_code == 200
-    lakwa_ggs = [s for s in resp_lakwa.json()["gathering_stations"] if s["type"] == "GGS"]
-    assert len(lakwa_ggs) == 3
+    resp_bhagyam = client.get("/api/field/infrastructure?field=Bhagyam")
+    assert resp_bhagyam.status_code == 200
+    bhagyam_ggs = [s for s in resp_bhagyam.json()["gathering_stations"] if s["type"] == "GGS"]
+    assert len(bhagyam_ggs) == 3
 
-    resp_lakhmani = client.get("/api/field/infrastructure?field=Lakhmani")
-    assert resp_lakhmani.status_code == 200
-    lakhmani_ggs = [s for s in resp_lakhmani.json()["gathering_stations"] if s["type"] == "GGS"]
-    assert len(lakhmani_ggs) == 2
+    resp_aishwariya = client.get("/api/field/infrastructure?field=Aishwariya")
+    assert resp_aishwariya.status_code == 200
+    aishwariya_ggs = [s for s in resp_aishwariya.json()["gathering_stations"] if s["type"] == "GGS"]
+    assert len(aishwariya_ggs) == 3
 
-    for prefix, resp in [("GK-", resp_default), ("LKW-", resp_lakwa), ("LKM-", resp_lakhmani)]:
+    resp_raageshwari = client.get("/api/field/infrastructure?field=Raageshwari")
+    assert resp_raageshwari.status_code == 200
+    raageshwari_ggs = [s for s in resp_raageshwari.json()["gathering_stations"] if s["type"] == "GGS"]
+    assert len(raageshwari_ggs) == 3
+
+    for prefix, resp in [
+        ("MNG-", resp_default),
+        ("BHG-", resp_bhagyam),
+        ("ASH-", resp_aishwariya),
+        ("RAG-", resp_raageshwari),
+    ]:
         for station in resp.json()["gathering_stations"]:
             for key, val in station.items():
                 assert val is not None, f"Property {key} is None in station {station['id']}"
@@ -202,25 +216,25 @@ def test_field_infrastructure(client):
 
 
 def test_kpis_field_filter(client):
-    resp = client.get("/api/wells/kpis?field=Lakwa")
+    resp = client.get("/api/wells/kpis?field=Bhagyam")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["total_wells"] == 160
-    assert data["healthy_count"] + data["warning_count"] + data["failed_count"] == 160
+    assert data["total_wells"] == 120
+    assert data["healthy_count"] + data["warning_count"] + data["failed_count"] == 120
 
 
 def test_list_filter_field(client):
-    resp_field = client.get("/api/wells?field=Lakhmani")
+    resp_field = client.get("/api/wells?field=Aishwariya")
     assert resp_field.status_code == 200
     data_field = resp_field.json()
-    assert len(data_field) == 110
-    assert all(w["field"] == "Lakhmani" for w in data_field)
+    assert len(data_field) == 100
+    assert all(w["field"] == "Aishwariya" for w in data_field)
 
-    resp_search = client.get("/api/wells?search=GK")
+    resp_search = client.get("/api/wells?search=MNG")
     assert resp_search.status_code == 200
     data_search = resp_search.json()
     assert len(data_search) > 0
-    assert all("GK" in w["id"] for w in data_search)
+    assert all("MNG" in w["id"] for w in data_search)
 
 
 def test_bigquery_backend_selected(monkeypatch):

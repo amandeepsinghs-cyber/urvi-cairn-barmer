@@ -1,0 +1,288 @@
+{
+ "features": [
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.619,
+       25.862
+      ],
+      [
+       71.617126,
+       25.876235
+      ],
+      [
+       71.611631,
+       25.8895
+      ],
+      [
+       71.602891,
+       25.900891
+      ],
+      [
+       71.5915,
+       25.909631
+      ],
+      [
+       71.578235,
+       25.915126
+      ],
+      [
+       71.564,
+       25.917
+      ],
+      [
+       71.549765,
+       25.915126
+      ],
+      [
+       71.5365,
+       25.909631
+      ],
+      [
+       71.525109,
+       25.900891
+      ],
+      [
+       71.516369,
+       25.8895
+      ],
+      [
+       71.510874,
+       25.876235
+      ],
+      [
+       71.509,
+       25.862
+      ],
+      [
+       71.510874,
+       25.847765
+      ],
+      [
+       71.516369,
+       25.8345
+      ],
+      [
+       71.525109,
+       25.823109
+      ],
+      [
+       71.5365,
+       25.814369
+      ],
+      [
+       71.549765,
+       25.808874
+      ],
+      [
+       71.564,
+       25.807
+      ],
+      [
+       71.578235,
+       25.808874
+      ],
+      [
+       71.5915,
+       25.814369
+      ],
+      [
+       71.602891,
+       25.823109
+      ],
+      [
+       71.611631,
+       25.8345
+      ],
+      [
+       71.617126,
+       25.847765
+      ],
+      [
+       71.619,
+       25.862
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "field": "Aishwariya",
+    "is_synthetic_geometry": true,
+    "kind": "FIELD_BOUNDARY",
+    "name": "Aishwariya field boundary",
+    "source": "field_master.boundary_geojson"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.593419,
+       25.872521
+      ],
+      [
+       71.573546,
+       25.882587
+      ],
+      [
+       71.568469,
+       25.874883
+      ],
+      [
+       71.554463,
+       25.84695
+      ],
+      [
+       71.57584,
+       25.840326
+      ],
+      [
+       71.587334,
+       25.850118
+      ],
+      [
+       71.593419,
+       25.872521
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "ASH-ABH-3",
+    "cluster_type": "WELL_PAD",
+    "field": "Aishwariya",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 28,
+    "name": "ASH-ABH-3",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.545816,
+       25.854599
+      ],
+      [
+       71.565522,
+       25.858024
+      ],
+      [
+       71.573406,
+       25.878719
+      ],
+      [
+       71.574218,
+       25.887049
+      ],
+      [
+       71.568971,
+       25.891757
+      ],
+      [
+       71.548273,
+       25.88705
+      ],
+      [
+       71.523618,
+       25.8794
+      ],
+      [
+       71.533061,
+       25.861413
+      ],
+      [
+       71.545816,
+       25.854599
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "ASH-PAD-1",
+    "cluster_type": "WELL_PAD",
+    "field": "Aishwariya",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 47,
+    "name": "ASH-PAD-1",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.55394,
+       25.839288
+      ],
+      [
+       71.574829,
+       25.846044
+      ],
+      [
+       71.582104,
+       25.856957
+      ],
+      [
+       71.58643,
+       25.86598
+      ],
+      [
+       71.581383,
+       25.872017
+      ],
+      [
+       71.55965,
+       25.869928
+      ],
+      [
+       71.549398,
+       25.86641
+      ],
+      [
+       71.546116,
+       25.862182
+      ],
+      [
+       71.547765,
+       25.850167
+      ],
+      [
+       71.55394,
+       25.839288
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "ASH-PAD-2",
+    "cluster_type": "WELL_PAD",
+    "field": "Aishwariya",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 25,
+    "name": "ASH-PAD-2",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  }
+ ],
+ "is_synthetic_geometry": true,
+ "name": "aishwariya_boundary",
+ "type": "FeatureCollection"
+}

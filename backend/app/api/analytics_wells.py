@@ -1,7 +1,7 @@
 """Well-level analytics routes (SDD §13.2): ``GET /api/wells/{id}/attribution`` (TC-019, any persona).
 
 Kept out of ``wells.py`` (Stage N/X) so Stage P owns only its own route. ``GLK-`` IDs are retired
-(404 with a pointer to ``GK-``); unknown wells 404. Envelope ``{status, data, message, missing_fields,
+(404 with a pointer to ``MNG-`` / ``BHG-`` / ``ASH-`` / ``RAG-``); unknown wells 404. Envelope ``{status, data, message, missing_fields,
 provenance}`` (SDD §13.1); an INSUFFICIENT_HISTORY result is a 200 with that status (not an error).
 """
 
@@ -15,7 +15,7 @@ from app.analytics.tools.common import well_master_row
 
 router = APIRouter()
 
-RETIRED_DETAIL = "GLK- IDs retired in v0.4; use GK-"
+RETIRED_DETAIL = "GLK- IDs retired in v0.4; use MNG- / BHG- / ASH- / RAG-"
 
 
 @router.get("/wells/{well_id}/attribution")

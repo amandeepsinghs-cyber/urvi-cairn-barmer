@@ -22,7 +22,7 @@ def test_fabricated_number_is_masked():
 
 
 def test_identifiers_dates_small_ints_and_user_numbers_are_not_flagged():
-    text = "GK-129 in IC-08 at L4: 3 steps since 2025-06-30; you asked about the past 5 years."
+    text = "MNG-042 in IC-08 at L4: 3 steps since 2025-06-30; you asked about the past 5 years."
     masked, bad = check_text(text, [{"as_of": "2025-06-30"}], user_text="past 5 years")
     assert bad == [] and masked == text
 
@@ -59,9 +59,9 @@ async def test_fabricating_model_gets_masked_end_to_end(monkeypatch):
 
     monkeypatch.setattr(runner, "build_model", lambda mode=None: LyingLlm())
     runner.reset_runner()
-    reply = await runner.run_turn_async(session_id="lie", user_id="t", persona="ASSET_MANAGER", field="Geleki",
+    reply = await runner.run_turn_async(session_id="lie", user_id="t", persona="ASSET_MANAGER", field="Mangala",
                                         well_id=None, language="english",
-                                        text="How many wells in Geleki are either sick or have lost production?",
+                                        text="How many wells in Mangala are either sick or have lost production?",
                                         mode="fake")
     assert "987.6" not in reply["response"] and MASK in reply["response"]
     assert reply["number_check"]["ok"] is False and "987.6" in reply["number_check"]["unmatched"]

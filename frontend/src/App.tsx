@@ -37,7 +37,7 @@ export function App() {
   const canAggregate = can('field.aggregate');
   // Stage R: health / priority tab (TC-020 field.health, TC-010 queue.read)
   const canHealth = can('field.health') || can('queue.read');
-  const [healthField, setHealthField] = useState<FieldName>('Lakwa');
+  const [healthField, setHealthField] = useState<FieldName>('Mangala');
   useEffect(() => {
     if (fieldFilter !== 'ALL') setHealthField(fieldFilter);
   }, [fieldFilter]);
@@ -114,22 +114,41 @@ export function App() {
     }
   };
 
-  // Fetch initial fleet data and KPIs
+  // Fetch initial fleet data and KPIs (with automatic retry if backend is still warming up)
   useEffect(() => {
-    Promise.all([
-      fetch('/api/wells').then((res) => res.json()),
-      fetch('/api/wells/kpis').then((res) => res.json()),
-    ])
-      .then(([wellsData, kpisData]) => {
-        setWells(wellsData);
-        setKpis(kpisData);
-        // Step 2: no well is pre-selected — the user lands on the full map of all wells.
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error('Initialization error:', err);
-        setIsLoading(false);
-      });
+    let cancelled = false;
+    const loadInitial = (attempt = 0) => {
+      Promise.all([
+        fetch('/api/wells').then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        }),
+        fetch('/api/wells/kpis').then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        }),
+      ])
+        .then(([wellsData, kpisData]) => {
+          if (cancelled) return;
+          setWells(Array.isArray(wellsData) ? wellsData : []);
+          setKpis(kpisData);
+          // Step 2: no well is pre-selected — the user lands on the full map of all wells.
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          if (attempt < 4) {
+            setTimeout(() => loadInitial(attempt + 1), 1200);
+            return;
+          }
+          console.error('Initialization error:', err);
+          setIsLoading(false);
+        });
+    };
+    loadInitial();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Stage T: asset → field → cluster hierarchy for the field selector
@@ -199,7 +218,7 @@ export function App() {
     field_health: 'Health & priority',
   };
   const agentContextLabel = [
-    fieldFilter === 'ALL' ? 'Assam Asset' : fieldFilter,
+    fieldFilter === 'ALL' ? 'Barmer Basin' : fieldFilter,
     screenTab === 'map' ? selectedWellId : null,
     screenTab === 'map' && drawerWellId
       ? canvasView.charAt(0).toUpperCase() + canvasView.slice(1).replace(/_/g, ' ')
@@ -347,7 +366,7 @@ export function App() {
 
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center font-mono text-xs text-textMuted">
-          <span className="animate-spin mr-2">◌</span> Initializing WellPulse Operations Core...
+          <span className="animate-spin mr-2">◌</span> Initializing Urvi Operations Core...
         </div>
       ) : (
         <div className="flex-1 flex overflow-hidden">
@@ -424,7 +443,7 @@ export function App() {
                 <div className="flex-1 overflow-y-auto p-4 pt-12 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-mono flex-wrap">
                     <span className="text-textMuted">Field:</span>
-                    {(['Geleki', 'Lakwa', 'Lakhmani'] as FieldName[]).map((f) => (
+                    {(['Mangala', 'Bhagyam', 'Aishwariya', 'Raageshwari'] as FieldName[]).map((f) => (
                       <button
                         key={f}
                         onClick={() => setHealthField(f)}

@@ -30,15 +30,18 @@ logger = logging.getLogger(__name__)
 
 
 def infer_field(well_id: Any) -> str | None:
-    """Infer field name from standard well ID prefix."""
+    """Infer field name from standard Barmer well ID prefix."""
     if not isinstance(well_id, str):
         return None
-    if well_id.startswith("GK-"):
-        return "Geleki"
-    if well_id.startswith("LKW-"):
-        return "Lakwa"
-    if well_id.startswith("LKM-"):
-        return "Lakhmani"
+    wid = well_id.upper()
+    if wid.startswith("MNG-"):
+        return "Mangala"
+    if wid.startswith("BHG-"):
+        return "Bhagyam"
+    if wid.startswith("ASH-"):
+        return "Aishwariya"
+    if wid.startswith("RAG-"):
+        return "Raageshwari"
     return None
 
 
@@ -84,7 +87,7 @@ def load_landing_document_index() -> pd.DataFrame:
     if corpus.exists():
         return pq.read_table(corpus).to_pandas().drop_duplicates(subset=["doc_id"])
     dfs: list[pd.DataFrame] = []
-    for folder in ["geleki", "lakwa", "lakhmani", "asset"]:
+    for folder in C.LANDING_FOLDERS:
         p = C.LANDING_DIR / folder / "document_index.parquet"
         if p.exists():
             dfs.append(pq.read_table(p).to_pandas())
@@ -145,7 +148,7 @@ def build_facts_frame(
                 field = infer_field(well_id)
 
         if not well_id:
-            m = re.match(r"^(GK-\d+|LKW-\d+|LKM-\d+)", doc_id)
+            m = re.match(r"^(MNG-\d+|BHG-\d+|ASH-\d+|RAG-\d+)", doc_id)
             if m:
                 well_id = m.group(1)
                 if not field:

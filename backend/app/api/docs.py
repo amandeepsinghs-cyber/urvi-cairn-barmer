@@ -63,7 +63,7 @@ def _check_well(well_id: str) -> None:
     try:
         w = get_repository().get_well(well_id)
     except RetiredWellId:
-        raise HTTPException(status_code=404, detail="GLK- IDs retired in v0.4; use GK-")
+        raise HTTPException(status_code=404, detail="GLK- IDs retired in v0.4; use MNG- / BHG- / ASH- / RAG-")
     if w is None:
         raise HTTPException(status_code=404, detail=f"Well {well_id} not found")
 

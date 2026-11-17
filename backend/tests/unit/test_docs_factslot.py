@@ -46,7 +46,7 @@ def test_digits_inside_slot_names_are_allowed():
 
 # --------------------------------------------------------------------------- DocSpec
 def _spec(**over):
-    kw = dict(doc_id="T-1", doc_type="D02", field="Geleki", well_id="GK-129", doc_date="2019-05-14",
+    kw = dict(doc_id="T-1", doc_type="D02", field="Mangala", well_id="MNG-042", doc_date="2019-05-14",
               title="t", facts={"uplift_bopd": "1.5"}, raw={"uplift_bopd": 1.5}, sources={}, tables={}, meta={})
     kw.update(over)
     return ir.freeze_spec(**kw)

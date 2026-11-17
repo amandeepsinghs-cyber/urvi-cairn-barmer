@@ -40,8 +40,8 @@ FLOW = [
     ),
     (
         "L2",
-        "How many wells in Geleki are either sick or have lost production?",
-        {"field": "Geleki", "well_id": None},
+        "How many wells in Mangala are either sick or have lost production?",
+        {"field": "Mangala", "well_id": None},
         {"classify_well_health", "attribute_decline"},
         {"health_buckets"},
         {"field_health"},
@@ -49,15 +49,15 @@ FLOW = [
     (
         "L3",
         "Can you give me a priority list of all the wells that need intervention?",
-        {"field": "Geleki", "well_id": None},
+        {"field": "Mangala", "well_id": None},
         {"rank_candidates"},
         {"priority_queue"},
         {"priority"},
     ),
     (
         "L4",
-        "Tell me more about GK-129 and show me its production history",
-        {"field": "Geleki", "well_id": None},
+        "Tell me more about MNG-042 and show me its production history",
+        {"field": "Mangala", "well_id": None},
         {"well_profile", "plot_production"},
         {"well_profile", "well_production_chart"},
         {"well"},
@@ -65,7 +65,7 @@ FLOW = [
     (
         "L5_nba",
         "What are the next best recommended interventions?",
-        {"field": "Geleki", "well_id": "GK-129"},
+        {"field": "Mangala", "well_id": "MNG-042"},
         {"recommend_next_best_action"},
         {"nba"},
         {"well"},
@@ -73,7 +73,7 @@ FLOW = [
     (
         "L5_why_not",
         "Why not just wax removal?",
-        {"field": "Geleki", "well_id": "GK-129"},
+        {"field": "Mangala", "well_id": "MNG-042"},
         {"compare_interventions"},
         {"counterfactual"},
         {"well"},
@@ -214,20 +214,20 @@ def when_i_ask(client, ctx: dict[str, Any], prompt: str) -> None:
     when_i_say(client, ctx, prompt)
 
 
-@when("I ask about GK-129 and then ask about Geleki well health in the same session")
-def when_ask_gk129_then_geleki(client, ctx: dict[str, Any]) -> None:
+@when("I ask about MNG-042 and then ask about Mangala well health in the same session")
+def when_ask_mng042_then_mangala(client, ctx: dict[str, Any]) -> None:
     sid = f"leak-test-{uuid.uuid4().hex[:6]}"
     ctx["session_id"] = sid
     r1 = client.post(
         "/api/chat",
         headers={"X-Persona": "ASSET_MANAGER", "X-Debug-Trace": "1"},
-        json={"message": "Tell me more about GK-129 and show me its production history", "session_id": sid, "field": "Geleki"},
+        json={"message": "Tell me more about MNG-042 and show me its production history", "session_id": sid, "field": "Mangala"},
     )
     assert r1.status_code == 200, r1.text
     r2 = client.post(
         "/api/chat",
         headers={"X-Persona": "ASSET_MANAGER", "X-Debug-Trace": "1"},
-        json={"message": "How many wells in Geleki are either sick or have lost production?", "session_id": sid, "field": "Geleki"},
+        json={"message": "How many wells in Mangala are either sick or have lost production?", "session_id": sid, "field": "Mangala"},
     )
     assert r2.status_code == 200, r2.text
     ctx["turn1_reply"] = r1.json()
@@ -237,12 +237,12 @@ def when_ask_gk129_then_geleki(client, ctx: dict[str, Any]) -> None:
 
 @when("any answer from POST /api/chat contains a number")
 def when_chat_reply_contains_number(client, ctx: dict[str, Any]) -> None:
-    prompt = "How many wells in Geleki are either sick or have lost production?"
+    prompt = "How many wells in Mangala are either sick or have lost production?"
     ctx["last_prompt"] = prompt
     r = client.post(
         "/api/chat",
         headers={"X-Persona": "ASSET_MANAGER", "X-Debug-Trace": "1"},
-        json={"message": prompt, "session_id": ctx["session_id"], "language": "english", "field": "Geleki"},
+        json={"message": prompt, "session_id": ctx["session_id"], "language": "english", "field": "Mangala"},
     )
     assert r.status_code == 200, r.text
     ctx["last_reply"] = r.json()
@@ -250,13 +250,13 @@ def when_chat_reply_contains_number(client, ctx: dict[str, Any]) -> None:
 
 @when("any REST response or UI screen is captured")
 def when_rest_captured(client, ctx: dict[str, Any]) -> None:
-    r_nba = client.get("/api/wells/GK-129/nba", headers={"X-Persona": "ASSET_MANAGER"})
+    r_nba = client.get("/api/wells/MNG-042/nba", headers={"X-Persona": "ASSET_MANAGER"})
     assert r_nba.status_code == 200, r_nba.text
     ctx["nba_response"] = r_nba.json()
     r_chat = client.post(
         "/api/chat",
         headers={"X-Persona": "ASSET_MANAGER", "X-Debug-Trace": "1"},
-        json={"message": "What are the next best recommended interventions?", "session_id": ctx["session_id"], "well_id": "GK-129"},
+        json={"message": "What are the next best recommended interventions?", "session_id": ctx["session_id"], "well_id": "MNG-042"},
     )
     assert r_chat.status_code == 200, r_chat.text
     ctx["chat_response"] = r_chat.json()
@@ -344,14 +344,14 @@ def then_total_wall_time(ctx: dict[str, Any]) -> None:
     assert elapsed < 180.0, f"Elapsed time {elapsed:.2f}s exceeded 180s"
 
 
-@then("the field chart opens at L1, the map filters to Geleki at L2, the priority table shows at L3, the GK-129 drawer opens at L4 and the Recommendation Card shows at L5")
+@then("the field chart opens at L1, the map filters to Mangala at L2, the priority table shows at L3, the MNG-042 drawer opens at L4 and the Recommendation Card shows at L5")
 def then_screens_navigation(ctx: dict[str, Any]) -> None:
     reps = ctx["replies"]
     assert any(a["screen"] == "field_history" for a in reps["L1_plot"]["actions"])
     assert any(a["screen"] == "field_health" for a in reps["L2"]["actions"])
     assert any(a["screen"] == "priority" for a in reps["L3"]["actions"])
     l4_actions = reps["L4"]["actions"]
-    assert any(a["screen"] == "well" and a.get("well_id") == "GK-129" for a in l4_actions)
+    assert any(a["screen"] == "well" and a.get("well_id") == "MNG-042" for a in l4_actions)
     assert any(a["screen"] == "well" for a in reps["L5_nba"]["actions"])
     assert reps["L5_nba"]["recommendation"] is not None
 
@@ -469,7 +469,7 @@ def then_each_action_has_required_keys(ctx: dict[str, Any]) -> None:
 
 @then("FIELD_ENGINEER persona sees no cost_band key in nba JSON")
 def then_fe_no_cost_band_key(client, ctx: dict[str, Any]) -> None:
-    well_id = ctx.get("well_id", "GK-129")
+    well_id = ctx.get("well_id", "MNG-042")
     r_fe = client.get(f"/api/wells/{well_id}/nba", headers={"X-Persona": "FIELD_ENGINEER"})
     assert r_fe.status_code == 200, r_fe.text
     assert not has_key(r_fe.json(), "cost_band"), "FIELD_ENGINEER saw cost_band key in nba JSON"
@@ -508,10 +508,10 @@ def then_tool_call_emitted(ctx: dict[str, Any], tool_name: str) -> None:
     assert tool_name in called, f"Expected {tool_name} in {called}"
 
 
-@then("Lakwa is identified as underperforming")
-def then_lakwa_identified(ctx: dict[str, Any]) -> None:
+@then("Bhagyam is identified as underperforming")
+def then_bhagyam_identified(ctx: dict[str, Any]) -> None:
     resp = ctx["last_reply"]["response"].lower()
-    assert "lakwa" in resp
+    assert "bhagyam" in resp
 
 
 @then("each field row has actual_bopd, target_bopd, gap_pct, expected_bopd, uptime_pct, water_cut_pct")

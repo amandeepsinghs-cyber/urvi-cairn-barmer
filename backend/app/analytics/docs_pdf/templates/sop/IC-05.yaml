@@ -3,8 +3,8 @@ intervention_class: IC-05
 title: Standard Operating Procedure for Scale Removal and Scale Inhibition
 purpose: Define mandatory standards and operational execution steps for identifying, removing, and inhibiting mineral scale
   deposits in wellbores and completions.
-scope: Covers scale dissolver treatments, acid bullheading, and squeeze inhibition across Assam field wells ({n_job_codes}
-  catalogue job codes) utilizing {equipment_list}.
+scope: Covers scale dissolver treatments, acid bullheading, and squeeze inhibition across Cairn Oil & Gas Barmer Basin field wells
+  ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
 applicability:
 - Gradual or sudden productivity decline with evidence of carbonate or sulphate scale on retrieved equipment.
 - Scale deposition identified in surface chokes, flowlines, or subsurface safety valves.

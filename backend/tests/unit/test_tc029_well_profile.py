@@ -11,7 +11,7 @@ from app.analytics.tools.common import ToolStatus, currency_keys, load_table, to
 from app.analytics.tools.well_profile import well_production_series, well_profile
 
 
-@pytest.mark.parametrize("well_id", ["GK-129", "LKM-061", "LKW-047"])
+@pytest.mark.parametrize("well_id", ["MNG-042", "ASH-061", "BHG-019"])
 def test_profile_has_construction_lift_and_3plus_same_cluster_neighbours(well_id):
     r = well_profile(well_id)
     assert r.status == ToolStatus.OK, r.message
@@ -40,7 +40,7 @@ def test_profile_unknown_well():
 
 @pytest.mark.parametrize("months", [24, 36, 60])
 def test_all_in_window_job_markers(months):
-    wid = "GK-129"
+    wid = "MNG-042"
     r = well_production_series(wid, months=months)
     v = r.value
     start = v.window_start
@@ -58,24 +58,28 @@ def test_all_in_window_job_markers(months):
 
 
 def test_series_aligned_and_ws6_telemetry_for_gas_lift_well():
-    v = well_production_series("LKM-061", months=36, metrics=["oil", "gor", "wht", "gl_inj_rate", "gl_inj_pressure"]).value
+    wm = load_table("well_master")
+    gl_well = str(wm[wm["lift_type"] == "GAS_LIFT"]["well_id"].iloc[0])
+    v = well_production_series(gl_well, months=36, metrics=["oil", "gor", "wht", "gl_inj_rate", "gl_inj_pressure"]).value
     assert v.gas_lift is True
     for m in ("oil", "gor", "wht", "gl_inj_rate", "gl_inj_pressure"):
         assert len(v.series[m]) == len(v.dates)
         assert any(x is not None for x in v.series[m]), m
     assert v.units["wht"] == "degC" and v.units["gl_inj_pressure"] == "kg/cm2"
-    d = well_rows("daily_production", "LKM-061").set_index("production_date")
-    i = len(v.dates) - 1
-    assert v.series["wht"][i] == pytest.approx(float(d.loc[v.dates[i], "wht_degc"]), abs=0.006)
+    d = well_rows("daily_production", gl_well).set_index("production_date")
+    for idx in range(len(v.dates) - 1, -1, -1):
+        if v.series["wht"][idx] is not None:
+            assert v.series["wht"][idx] == pytest.approx(float(d.loc[v.dates[idx], "wht_degc"]), abs=0.006)
+            break
 
 
-def test_srp_well_has_null_gas_lift_series():
-    v = well_production_series("GK-129", months=36).value
+def test_non_gas_lift_well_has_null_gas_lift_series():
+    v = well_production_series("MNG-042", months=36).value
     assert v.gas_lift is False
     assert all(x is None for x in v.series["gl_inj_rate"]) and all(x is None for x in v.series["gl_inj_pressure"])
     assert any(x is not None for x in v.series["wht"])
 
 
 def test_bad_metric_unavailable():
-    r = well_production_series("GK-129", metrics=["oil", "bogus"])
+    r = well_production_series("MNG-042", metrics=["oil", "bogus"])
     assert r.status == ToolStatus.UNAVAILABLE and "metrics" in r.missing_fields

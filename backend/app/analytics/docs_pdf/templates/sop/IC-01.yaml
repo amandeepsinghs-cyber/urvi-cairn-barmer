@@ -1,14 +1,14 @@
 sop_id: SOP-IC-01
 intervention_class: IC-01
-title: Standard Operating Procedure for Sucker Rod Pump Overhaul and Replacement
+title: Standard Operating Procedure for Artificial Lift Pump Overhaul and Replacement (ESP, PCP, and SRP)
 purpose: Establish mandatory operational requirements and barrier verification standards for pulling, inspecting, overhauling,
-  and reinstalling subsurface sucker rod pump assemblies.
-scope: Applies to sucker rod pump completions across Assam producing assets covering {n_job_codes} catalogue job codes utilizing
-  {equipment_list}.
+  and reinstalling subsurface electrical submersible pumps, progressing cavity pumps, and sucker rod pump assemblies.
+scope: Applies to artificial lift pump completions across Cairn Oil & Gas Barmer Basin fields including Mangala, Bhagyam,
+  Aishwariya, and Raageshwari covering {n_job_codes} catalogue job codes utilizing {equipment_list}.
 applicability:
-- Dynamometer survey indicating traveling or standing valve failure, barrel slippage, or fluid pound.
-- Acoustic fluid level survey showing elevated fluid column above pump intake with nil surface fluid delivery.
-- Loss of liquid displacement to the group gathering station despite continuous mechanical rod reciprocation.
+- Dynamometer, downhole sensor, or drive torque survey indicating valve failure, stator elastomer wear, ESP stage erosion, or fluid pound.
+- Acoustic fluid level or intake pressure survey showing elevated fluid column above pump intake with nil surface fluid delivery.
+- Loss of liquid displacement to the multi-well pad manifold or central processing terminal despite continuous lift operation.
 roles:
 - Wellsite supervisor
 - Workover rig superintendent
@@ -19,9 +19,9 @@ ppe_and_permits:
 - Multi-gas detector with certified calibration for combustible gases and toxic atmospheres.
 - Full personal protective equipment including impact gloves, chemical goggles, and safety boots.
 hazards:
-- hazard: Trapped pressure under the stuffing box or rod blowout preventer.
-  control: Bleed down flowline and annulus to the group gathering station header, and confirm zero pressure on dual calibrated
-    gauges.
+- hazard: Trapped pressure under the stuffing box, drivehead, or rod blowout preventer.
+  control: Bleed down flowline and annulus to the pad header or central processing terminal flare header, and confirm zero pressure
+    on dual calibrated gauges.
 - hazard: Parted sucker rod string dropping downhole during retrieval.
   control: Inspect rod elevators prior to each stand pull, engage safety latches, and maintain rod blowout preventer ready
     for immediate closure.
@@ -40,8 +40,8 @@ pre_job_checks:
 procedure:
 - phase: Preparation and Well Kill
   steps:
-  - Isolate beam pumping unit prime mover, apply mechanical brake, and attach lockout tagout device.
-  - Bleed residual pressure from tubing and casing annulus to the group gathering station header.
+  - Isolate artificial lift prime mover, variable speed drive, or motor controller, apply mechanical brake, and attach lockout tagout device.
+  - Bleed residual pressure from tubing and casing annulus to the multi-well pad manifold header.
   - Connect high pressure pumping line to the casing wing valve and pressure test lines to the approved test pressure in the
     approved programme.
   - Pump approved kill brine down casing annulus until complete well dead condition is confirmed with zero surface pressure.
@@ -69,12 +69,12 @@ procedure:
   - Reinstall polished rod clamp at measured space-out height and reconnect bridle cables.
   - Pressure test tubing string against standing valve to the approved test pressure in the approved programme.
   - Remove lockout tagout from pumping unit controller and start prime mover on hand rotation check.
-  - Monitor surface fluid return to the group gathering station and verify continuous liquid flow.
-  - Record acoustic fluid level, motor current draw, and surface pumping unit stroke rate.
+  - Monitor surface fluid return to the multi-well pad manifold and central processing terminal to verify continuous liquid flow.
+  - Record acoustic fluid level, variable speed drive current draw, intake pressure, and pumping stroke or speed rate.
 job_variants:
   PUMP_OVERHAUL:
-  - Inspect pump barrel for score marks, replace worn valve balls and seats, and replace seating cups.
-  - Perform vacuum test on suction and discharge valves prior to running pump into the well.
+  - Inspect SRP pump barrel and valve seats, PCP rotor chrome plating and elastomer stator, or ESP motor insulation and stage hydraulics.
+  - Perform vacuum or shop bench test on pump assemblies, check cable continuity on ESP strings, and verify rotor-stator interference before running.
 acceptance_criteria:
 - Pressure test of tubing against standing valve holds the approved test pressure with nil drop.
 - Fluid displacement confirmed at surface flowline header with consistent stroke displacement.

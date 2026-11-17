@@ -30,8 +30,8 @@ from app.settings import AS_OF, LANDING_DIR
 
 warnings.filterwarnings("ignore", category=RuntimeWarning, message="Mean of empty slice")
 
-FIELDS = {"Geleki": "geleki", "Lakwa": "lakwa", "Lakhmani": "lakhmani"}
-FIELD_CODES = {"Geleki": "GK", "Lakwa": "LKW", "Lakhmani": "LKM"}
+FIELDS = {"Mangala": "mangala", "Bhagyam": "bhagyam", "Aishwariya": "aishwariya", "Raageshwari": "raageshwari"}
+FIELD_CODES = {"Mangala": "MNG", "Bhagyam": "BHG", "Aishwariya": "ASH", "Raageshwari": "RAG"}
 DOC_TYPES = {
     "D01": "Well completion report",
     "D02": "Workover / intervention report",
@@ -46,7 +46,7 @@ DOC_TYPES = {
     "D11": "Standard operating procedure",
 }
 TYPE_DIRS = {t: t.replace("D0", "D") for t in DOC_TYPES}  # D01 -> D1 (folder / API alias)
-HERO_WELLS = ("GK-129", "LKW-047", "LKW-112", "LKM-090")
+HERO_WELLS = ("MNG-042", "BHG-019", "BHG-088", "ASH-023", "ASH-061", "RAG-014")
 AVG_WINDOW_DAYS = 30  # pre/post production averaging window (methodology parameter, printed as a fact)
 DECLINE_WINDOW_DAYS = 180  # trailing window for decline comparisons in D7 and wait-day counts in D2
 REPORTED_OUTCOMES = ("SUCCESS", "PARTIAL", "FAILED")
@@ -208,7 +208,7 @@ class AssetData:
         return {k: v["label"] for k, v in data["classes"].items()}
 
 
-@lru_cache(maxsize=3)
+@lru_cache(maxsize=8)
 def field_data(field: str) -> "FieldData":
     return FieldData(field)
 
@@ -327,7 +327,7 @@ def _base(f: Facts, doc_id: str, doc_type: str, field: str, well: str | None, do
     f.add("doc_title", title, source="corpus")
     f.add("doc_date", doc_date, f_date, source="corpus")
     f.add("field", field, source="field_master.field")
-    f.add("asset", "Assam", source="field_master.asset")
+    f.add("asset", "Barmer Basin", source="field_master.asset")
     f.add("as_of", AS_OF, f_date, source="settings.AS_OF")
     if well:
         f.add("well_id", well, source="well_master.well_id")
@@ -636,7 +636,7 @@ def build_d05(fd: FieldData) -> Iterator[DocSpec]:
 
     The log is dated at the start of the well's most recent water-control / integrity workover (a
     pre-remedial diagnostic log); hero wells without such jobs use the completion date; a legacy
-    CBL in the landing document_index (GK-129, 1998) replaces the generated one. Only history
+    CBL in the landing document_index (MNG-042, 2014) replaces the generated one. Only history
     before the log date is shown, so no document refers to a later event.
     """
     wo = fd.wo

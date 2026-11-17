@@ -3,8 +3,8 @@ intervention_class: IC-10
 title: Standard Operating Procedure for Re-Perforation and Additional Perforation Work
 purpose: Establish strict safety standards, explosive handling protocols, and operational procedures for wireline casing perforating
   and re-perforating reservoir zones.
-scope: Covers electric wireline perforating and tubing-conveyed perforating operations across Assam asset wells ({n_job_codes}
-  catalogue job codes) utilizing {equipment_list}.
+scope: Covers electric wireline perforating and tubing-conveyed perforating operations across Cairn Oil & Gas Barmer Basin wells
+  ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
 applicability:
 - Severely plugged or collapsed perforations showing zero inflow despite stimulation.
 - Identification of bypassed or unperforated hydrocarbon pay sands on openhole or cased hole logs.

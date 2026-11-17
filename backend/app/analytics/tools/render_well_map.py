@@ -1,7 +1,7 @@
 """TC-016 render_well_map — data-driven well map renderer (SDD §6.1).
 
 Port of ADK v0.3.0 render_well_map with key architectural changes:
-- No hard-coded well sets (urgent_set, flag_set, no_job_set) or default fields/wells ('Geleki', 'GK-129').
+- No hard-coded well sets (urgent_set, flag_set, no_job_set) or default fields/wells ('Mangala', 'MNG-042').
 - Health classifications are data-driven via TC-020 (classify_well_health).
 - No Vega-Lite specs generated on the backend; frontend renders from points, boundaries, facilities.
 - Multi-field and cluster filtering support (field=None renders all fields).

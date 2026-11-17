@@ -1,14 +1,14 @@
 sop_id: SOP-IC-11
 intervention_class: IC-11
-title: Standard Operating Procedure for Water Shut-Off Squeeze and Chemical Gelling
-purpose: Provide standardized engineering procedures and barrier control standards for executing cement squeeze and chemical
-  polymer gel water shut-off treatments.
-scope: Covers cement squeeze and chemical water shut-off operations on watered-out completions across Assam assets ({n_job_codes}
-  catalogue job codes) utilizing {equipment_list}.
+title: Standard Operating Procedure for Water and Polymer Breakthrough Shut-Off Squeeze and Conformance Gel
+purpose: Provide standardized engineering procedures and barrier control standards for executing oilfield cement squeeze and HPAM
+  polymer breakthrough gel conformance treatments.
+scope: Covers cement squeeze and chemical polymer conformance water shut-off operations on watered-out and polymer-flood completions
+  across Cairn Oil & Gas Barmer Basin assets including Mangala and Bhagyam ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
 applicability:
-- Sudden or progressive water breakthrough causing severe water cut elevation and oil decline.
-- Production logging tool survey indicating bottom water coning or channel behind casing.
-- Water-oil ratio diagnostic plots showing positive slope characteristic of water channeling.
+- Sudden water or injected HPAM polymer breakthrough causing severe water cut elevation and viscosity rise in produced fluid.
+- Production logging tool survey indicating bottom water coning, thief-sand channeling, or communication behind casing.
+- Water-oil ratio diagnostic plots showing positive slope characteristic of aquifer or EOR flood channeling.
 roles:
 - Wellsite supervisor
 - Workover rig superintendent
@@ -71,8 +71,8 @@ job_variants:
   - Squeeze class G cement slurry with fluid loss control additives into watered-out perforations.
   - Hesitate pumping until reaching final squeeze pressure, reverse circulate, and drill out hard cement.
   POLYMER_GEL:
-  - Inject crosslinked polymer gel solution deep into high permeability water channeling thief zone.
-  - Allow gelation to mature under shut-in condition to establish durable water permeability barrier.
+  - Inject crosslinked chromium-acetate or HPAM conformance polymer gelant deep into high-permeability thief intervals exhibiting water or EOR polymer breakthrough.
+  - Allow gelation to mature under shut-in condition to establish a durable conformance barrier and restore sweep efficiency.
 acceptance_criteria:
 - Positive pressure test across squeezed perforations confirms hydraulic isolation to approved pressure.
 - Excess slurry completely reversed out without leaving residual cement string in casing.

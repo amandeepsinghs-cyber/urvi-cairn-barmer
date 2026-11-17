@@ -18,7 +18,7 @@ DG_SEED = 20261008
 SOURCE_SYSTEM = "wellpulse_dg_v1"
 BATCH_ID = "dg_v1_20261008"
 AS_OF = date(2026, 9, 23)
-FIELDS = ("geleki", "lakwa", "lakhmani")
+FIELDS = ("mangala", "bhagyam", "aishwariya", "raageshwari")
 LANDING = Path(__file__).resolve().parents[2].parent / "data" / "landing"
 
 # Existing tables a generator may read (read-only).

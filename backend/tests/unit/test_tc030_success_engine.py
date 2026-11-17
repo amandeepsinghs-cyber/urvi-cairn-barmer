@@ -9,7 +9,7 @@ from app.analytics.tools import success_engine as se
 
 pytestmark = pytest.mark.skipif(not se.INDEX_PATH.exists(), reason="analog index not built")
 
-WELLS = ["GK-129", "LKW-019", "LKM-061"]
+WELLS = ["MNG-042", "BHG-019", "ASH-061"]
 
 
 @pytest.mark.parametrize("well", WELLS)
@@ -46,10 +46,10 @@ def test_score_formula():
 
 
 def test_analogs_recompute_from_index():
-    r = se.similar_wells("GK-129", "IC-11")
+    r = se.similar_wells("MNG-042", "IC-11")
     idx = pd.read_parquet(se.INDEX_PATH)
     assert r["n"] == len(r["analogs"]) <= se.K_ANALOGS
-    assert "GK-129" not in {a["well_id"] for a in r["analogs"]}
+    assert "MNG-042" not in {a["well_id"] for a in r["analogs"]}
     for a in r["analogs"]:
         row = idx[idx["workover_id"] == a["workover_id"]].iloc[0]
         assert row["outcome"] == a["outcome"] and row["label"] == "IC-11"
@@ -60,13 +60,13 @@ def test_routes():
     from app.main import app
 
     c = TestClient(app)
-    r = c.get("/api/wells/GK-129/recommendations?k=3")
+    r = c.get("/api/wells/MNG-042/recommendations?k=3")
     assert r.status_code == 200 and len(r.json()["candidates"]) == 3
-    assert c.get("/api/wells/GK-129/similar?class=IC-11").json()["n"] >= 1
+    assert c.get("/api/wells/MNG-042/similar?class=IC-11").json()["n"] >= 1
     assert c.get("/api/wells/ZZ-999/recommendations").status_code == 404
 
 
 def test_compact_summary_for_agent():
-    s = se.compact_summary("LKW-019")
-    assert s["engine"] == "WellPulse multimodal NN" and len(s["candidates"]) == 3
+    s = se.compact_summary("BHG-019")
+    assert "multimodal NN" in s["engine"] and len(s["candidates"]) == 3
     assert all(isinstance(c["p_success_pct"], int) for c in s["candidates"])

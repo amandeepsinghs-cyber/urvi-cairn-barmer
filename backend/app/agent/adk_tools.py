@@ -34,12 +34,12 @@ except ImportError:  # pragma: no cover - ADK missing
 # --------------------------------------------------------------------------------------------------
 # helpers
 # --------------------------------------------------------------------------------------------------
-_WELL_RE = re.compile(r"^\s*(GK|LKW|LKM|GLK)[\s_\-]*0*(\d{1,4})\s*$", re.IGNORECASE)
-FIELDS = ("Geleki", "Lakwa", "Lakhmani")
+_WELL_RE = re.compile(r"^\s*(MNG|BHG|ASH|RAG|GLK)[\s_\-]*0*(\d{1,4})\s*$", re.IGNORECASE)
+FIELDS = ("Mangala", "Bhagyam", "Aishwariya", "Raageshwari")
 
 
 def norm_well_id(raw: str | None) -> str:
-    """'gk 129' / 'GK129' / 'gk-129' → 'GK-129'; LKW/LKM zero-padded to three digits. '' stays ''."""
+    """'mng 42' / 'MNG042' / 'mng-042' → 'MNG-042'; zero-padded to three digits. '' stays ''."""
     s = (raw or "").strip()
     if not s:
         return ""
@@ -166,7 +166,7 @@ def field_production_history(fields: str = "", freq: str = "M", plot: bool = Fal
 
 
 def compare_fields(period: str = "QTD", tool_context: ToolContext = None) -> dict:
-    """TC-024: which field is not performing? Ranks Geleki, Lakwa, Lakhmani by gap to target (QTD|MTD|YTD|L12M)
+    """TC-024: which field is not performing? Ranks Mangala, Bhagyam, Aishwariya, Raageshwari by gap to target (QTD|MTD|YTD|L12M)
     with uptime, water cut, health counts and the worst field's top loss driver."""
     from app.analytics.tools.field_performance import compare_fields as tc024
 
@@ -181,7 +181,7 @@ def classify_well_health(field: str = "", cluster_id: str = "", tool_context: To
 
     f = ctx_field(tool_context, field)
     if not f:
-        return _missing("TC-020", "field", "Which field? Geleki, Lakwa or Lakhmani.")
+        return _missing("TC-020", "field", "Which field? Mangala, Bhagyam, Aishwariya or Raageshwari.")
     cl = (cluster_id or "").strip() or (_state(tool_context).get("ui_cluster_id") or "")
     return invoke(tool_context, tool_id="TC-020", capability="field.health", fn=tc020,
                   kwargs={"field": f, "cluster_id": cl or None, "well_id": ctx_well(tool_context, "")},
@@ -210,7 +210,7 @@ def attribute_decline(well_id: str = "", field: str = "", cluster_id: str = "", 
         wid = ctx_well(tool_context, "")
         f = "" if wid else ctx_field(tool_context, "")
     if not wid and not f:
-        return _missing("TC-019", "well_id", "Give a well (e.g. GK-129) or a field.")
+        return _missing("TC-019", "well_id", "Give a well (e.g. MNG-042) or a field.")
     return invoke(tool_context, tool_id="TC-019", capability=rbac.attribution_capability, fn=tc019,
                   kwargs={"well_id": wid or None, "field": f or None, "cluster_id": (cluster_id or "").strip() or None,
                           "window_days": int(window_days or 180)})
@@ -223,7 +223,7 @@ def rank_candidates(field: str = "", queue: str = "all", limit: int = 15, tool_c
 
     f = ctx_field(tool_context, field)
     if not f:
-        return _missing("TC-010", "field", "Which field? Geleki, Lakwa or Lakhmani.")
+        return _missing("TC-010", "field", "Which field? Mangala, Bhagyam, Aishwariya or Raageshwari.")
     q = (queue or "all").lower()
     n = max(1, min(int(limit or 15), 50))
 
@@ -249,7 +249,7 @@ def well_profile(well_id: str = "", k_neighbours: int = 4, tool_context: ToolCon
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-029", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-029", "well_id", "Which well? e.g. MNG-042.")
     return invoke(tool_context, tool_id="TC-029", capability="well.construction", fn=tc029,
                   kwargs={"well_id": wid, "k_neighbours": int(k_neighbours or 4)})
 
@@ -262,7 +262,7 @@ def plot_production(well_id: str = "", months: int = 36, metrics: str = "oil,wat
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-017", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-017", "well_id", "Which well? e.g. MNG-042.")
     mets = [m.strip() for m in (metrics or "oil,water_cut").split(",") if m.strip()]
     return invoke(tool_context, tool_id="TC-017", capability="asset.overview", fn=tc017,
                   kwargs={"well_id": wid, "months": int(months or 36), "metrics": mets})
@@ -275,7 +275,7 @@ def recommend_next_best_action(well_id: str = "", top_k: int = 3, tool_context: 
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-022", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-022", "well_id", "Which well? e.g. MNG-042.")
 
     def post(env: dict) -> dict:
         d = env.get("data")
@@ -301,7 +301,7 @@ def compare_interventions(alternative: str, well_id: str = "", recommended: str 
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-027", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-027", "well_id", "Which well? e.g. MNG-042.")
     if not (alternative or "").strip():
         return _missing("TC-027", "alternative", "Which alternative job? e.g. WAX_REMOVAL.")
     return invoke(tool_context, tool_id="TC-027", capability="well.nba", fn=tc027,
@@ -314,7 +314,7 @@ def build_well_dossier(well_id: str = "", tool_context: ToolContext = None) -> d
     'dossier'): sections, three highlights, sources and the PDF link."""
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-023", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-023", "well_id", "Which well? e.g. MNG-042.")
     try:
         from app.analytics.tools.dossier import build_well_dossier as tc023
     except ImportError:  # Stage S module not present in this build

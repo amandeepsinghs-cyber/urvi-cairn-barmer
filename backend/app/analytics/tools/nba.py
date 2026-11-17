@@ -89,7 +89,8 @@ FIT_SYMBOL = {FIT: "✔", UNCLEAR: "?", CONTRADICTED: "✘"}
 FIT_ORDER = {FIT: 2, UNCLEAR: 1, CONTRADICTED: 0}
 
 WATER_CLASSES = frozenset({"IC-11", "IC-12", "IC-13"})
-ROD_LIFTS = frozenset({"SRP", "PCP"})
+ROD_LIFTS = frozenset({"SRP", "PCP", "ESP", "JET_PUMP"})
+VALVE_INSERT_LIFTS = frozenset({"GAS_LIFT", "JET_PUMP"})
 MECHANICAL_DAMAGE = frozenset({"PUMP_WEAR", "ROD_PART", "SUDDEN_MECH", "TUBING_LEAK"})
 FINISHED = ("SUCCESS", "PARTIAL", "FAILED")
 
@@ -150,6 +151,7 @@ class WellEvidence:
     failures_24mo: int
     failed_water_jobs: list[dict]
     health: dict | None
+    barrier_failed: bool = False
 
 
 def _d(x: Any) -> date | None:
@@ -368,13 +370,22 @@ def _evidence_cached(well_id: WellId, as_of: date) -> WellEvidence | None:
         health = {"bucket": wh.bucket, "reason": wh.reason, "reason_code": wh.reason_code}
     except Exception:  # health is used only for urgency wording
         health = None
+    barrier_failed = False
+    try:
+        bt = well_rows("barrier_tests", well_id)
+        if not bt.empty:
+            res_col = "result" if "result" in bt.columns else ("test_result" if "test_result" in bt.columns else None)
+            if res_col:
+                barrier_failed = bool((bt[res_col].astype(str).str.upper() == "FAIL").any())
+    except Exception:
+        barrier_failed = False
     return WellEvidence(
         well_id=well_id, field=str(wm.get("field")), lift_type=lift, as_of=as_of,
         casing_vented=bool(wm.get("casing_vented")), open_episode=ep, mech=mech, chan=chan,
         chan_message=c.message, water_active=water_active, fillage=fill, offsets=off,
         pressure=_pressure(well_id, as_of), wht=_wht(well_id, as_of), physics=phys, route=route,
         ml=_ml(well_id, as_of), history=hist, casing_age_years=age, casing_install_date=inst,
-        failures_24mo=fails, failed_water_jobs=failed_water, health=health)
+        failures_24mo=fails, failed_water_jobs=failed_water, health=health, barrier_failed=barrier_failed)
 
 
 # =================================================================================================
@@ -433,12 +444,20 @@ def diagnostic_fit(job_code: str, ev: WellEvidence) -> tuple[str, str]:
         if ev.physics:
             return CONTRADICTED, f"a well-specific mechanism is diagnosed ({ev.physics['mechanism']}: {ev.physics['evidence']})"
         return UNCLEAR, "no well-specific mechanism diagnosed and offsets do not show a shared decline"
+    if ic == "IC-14" and ev.barrier_failed:
+        return FIT, "barrier_tests records a FAIL on annular/casing barrier integrity; casing/barrier repair is required before stimulation"
+    if ic == "IC-09" and ev.barrier_failed:
+        return CONTRADICTED, (
+            "safety veto: barrier_tests records a FAIL on production casing annulus pressure test and insufficient "
+            "wellhead rating margin; repair barrier (IC-14 CASING_REPAIR) first"
+            + (f" | G-2: {off['summary']}{sbhp}" if rd else "")
+        )
     if rd:
         return CONTRADICTED, (f"G-2: {off['summary']}{sbhp}; a wellbore job cannot restore reservoir pressure")
     if ic in ("IC-01", "IC-02") and ev.lift_type not in ROD_LIFTS:
         return CONTRADICTED, f"not applicable: {ev.lift_type} well has no rod pump"
-    if ic == "IC-07" and ev.lift_type != "GAS_LIFT":
-        return CONTRADICTED, f"not applicable: {ev.lift_type} well has no gas-lift valves"
+    if ic == "IC-07" and ev.lift_type not in VALVE_INSERT_LIFTS:
+        return CONTRADICTED, f"not applicable: {ev.lift_type} well has no gas-lift valves or jet-pump insert"
     if ep and ep["status"] != "PRODUCING" and ep["reason_code"]:
         if ep["reason_code"] in ADDRESSES.get(ic, ()):
             return FIT, f"well {ep['status']} since {ep['start_date']} for {ep['reason_code']} ({ep['episode_id']}); this job restores it"
@@ -578,8 +597,10 @@ def _mro(job_code: str, as_of: date) -> dict:
             "note": "mro_inventory is a current snapshot (not time-varying)"}
 
 
-_FOOTER_RE = re.compile(r"WellPulse synthetic document corpus \| \S+ Page \d+ of \d+ SYNTHETIC DATA - generated from "
-                        r"WellPulse landing tables - not for operational use")
+_FOOTER_RE = re.compile(
+    r"(?:Cairn Oil & Gas \(Vedanta Limited\) · Barmer Basin \(SYNTHETIC\)|WellPulse synthetic document corpus)"
+    r" \| \S+ Page \d+ of \d+ SYNTHETIC DATA - [^-]+ - not for operational use"
+)
 
 
 @lru_cache(maxsize=64)

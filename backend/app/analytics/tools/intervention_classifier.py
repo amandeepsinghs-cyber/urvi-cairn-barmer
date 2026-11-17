@@ -53,14 +53,14 @@ LOW_CONFIDENCE_THRESHOLD = 0.40   # fixed a priori (not tuned); holdout coverage
 N_CONTRIBUTIONS = 5
 
 IC_NAMES = {
-    "IC-01": "SRP_PUMP_CHANGE", "IC-02": "ROD_STRING_REPAIR", "IC-03": "TUBING_LEAK_REPAIR",
-    "IC-04": "WAX_REMOVAL", "IC-05": "SCALE_REMOVAL", "IC-06": "SAND_CLEANOUT",
-    "IC-07": "GAS_LIFT_VALVE_CHANGE", "IC-08": "LIFT_OPTIMISATION_CONVERSION", "IC-09": "MATRIX_STIMULATION",
-    "IC-10": "PERFORATION_WORK", "IC-11": "WATER_SHUT_OFF_SQUEEZE", "IC-12": "ZONAL_ISOLATION",
-    "IC-13": "CONING_CONTROL", "IC-14": "SURFACE_INTEGRITY_REPAIR", "IC-15": "NO_JOB_JUSTIFIED",
+    "IC-01": "PUMP_OVERHAUL_ESP_PCP", "IC-02": "ROD_CABLE_REMEDIATION", "IC-03": "TUBING_LEAK_REPAIR",
+    "IC-04": "WAX_THERMAL_REMOVAL", "IC-05": "SCALE_REMOVAL", "IC-06": "SAND_CLEANOUT",
+    "IC-07": "JET_PUMP_GLV_INSERT_CHANGE", "IC-08": "LIFT_OPTIMISATION_CONVERSION", "IC-09": "FRAC_MATRIX_STIMULATION",
+    "IC-10": "PERFORATION_WORK", "IC-11": "POLYMER_WATER_SHUT_OFF_SQUEEZE", "IC-12": "ZONAL_ISOLATION",
+    "IC-13": "CONING_CHOKE_CONTROL", "IC-14": "SURFACE_BARRIER_REPAIR", "IC-15": "NO_JOB_JUSTIFIED",
 }
-ESP_NOTE = ("ESP replacement (V§2 WS-3) maps to IC-08 Lift optimisation / conversion; there are no ESP wells in "
-            "this dataset (lift types SRP, GAS_LIFT, NATURAL, PCP).")
+ESP_NOTE = ("ESP & PCP pump replacement maps to IC-01; ESP <-> Hydraulic Jet-Pump conversion maps to IC-08 "
+            "(Barmer dataset covers ESP, JET_PUMP, PCP, SRP, GAS_LIFT, NATURAL).")
 
 
 @dataclass(frozen=True)
@@ -296,21 +296,12 @@ def _cached(well_id: WellId, as_of: date, top_k: int) -> ToolResult:
     ho, base = metrics.get("holdout", {}), metrics.get("baseline", {})
     top = r["_top"]
     low_prob = top[0].prob < LOW_CONFIDENCE_THRESHOLD
-    # Q-D1: Geleki's 2023-10.. production is the frozen v0.3.0 core (no precursor signatures); the model was
-    # not trained on those rows and scores near chance on them, so every Geleki prediction is LOW_CONFIDENCE.
-    core = metrics.get("holdout_geleki_core_only", {})
-    out_of_scope = str(well_master_row(well_id).get("field")) == "Geleki"
-    low = low_prob or out_of_scope
-    disclosure = (f"Model {metrics.get('model_version')} trained on synthetic WellPulse data as of "
+    low = low_prob
+    disclosure = (f"Model {metrics.get('model_version')} trained on synthetic Cairn Barmer Basin data as of "
                   f"{metrics.get('trained_as_of')}; on the last-12-month holdout it scored macro-F1 "
                   f"{ho.get('macro_f1')}, top-3 accuracy {ho.get('top3_accuracy')} and ECE {ho.get('ece')}, versus "
                   f"{base.get('macro_f1')} macro-F1 for the TC-008 rule baseline.")
     flags = ["SYNTHETIC_TRAINING_DATA"] + (["LOW_CONFIDENCE"] if low else [])
-    if out_of_scope:
-        flags.append("OUTSIDE_TRAINING_SCOPE_GELEKI_CORE")
-        disclosure += (f" Geleki's recent history (frozen v0.3.0 core) carries no precursor signatures and was "
-                       f"excluded from training; on those holdout jobs the model scored macro-F1 "
-                       f"{core.get('macro_f1')}, so treat this as low confidence.")
     val = InterventionPrediction(
         well_id=well_id, as_of=as_of, snapshot_date=r["snapshot"], window_end=r["anchor"], top_k=top,
         contributions=r["_contribs"],
@@ -322,8 +313,7 @@ def _cached(well_id: WellId, as_of: date, top_k: int) -> ToolResult:
         disclosure=disclosure, flags=flags)
     status = ToolStatus.LOW_CONFIDENCE if low else ToolStatus.OK
     msg = (f"{well_id}: top class {top[0].display} (p={top[0].prob:.2f})"
-           + (f" — below the {LOW_CONFIDENCE_THRESHOLD:.2f} confidence threshold" if low_prob else "")
-           + (" — Geleki core history is outside the training scope" if out_of_scope else "") + ".")
+           + (f" — below the {LOW_CONFIDENCE_THRESHOLD:.2f} confidence threshold" if low_prob else "") + ".")
     return ToolResult(status, val, [], msg, build_provenance("TC-021", params, t0, model_version=val.model_version))
 
 

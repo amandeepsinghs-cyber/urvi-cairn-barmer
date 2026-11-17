@@ -15,8 +15,8 @@ from typing import Any
 
 from app.agent.adk_tools import norm_field, norm_well_id
 
-_WELL_RE = re.compile(r"\b(GK|LKW|LKM)[\s\-_]?(\d{1,3})\b", re.IGNORECASE)
-_FIELD_RE = re.compile(r"\b(geleki|lakwa|lakhmani)\b", re.IGNORECASE)
+_WELL_RE = re.compile(r"\b(MNG|BHG|ASH|RAG)[\s\-_]?(\d{1,3})\b", re.IGNORECASE)
+_FIELD_RE = re.compile(r"\b(mangala|bhagyam|aishwariya|raageshwari)\b", re.IGNORECASE)
 
 # job keywords (text order decides the alternative in "why not X")
 _JOBS = [
@@ -73,7 +73,7 @@ def route(text: str, ctx: dict[str, Any] | None = None, history: list[str] | Non
     cf = field or norm_field(ctx.get("field"))
     calls: list[tuple[str, dict]] = []
 
-    if _has(tl, r"real (lakwa |geleki |lakhmani )?data|is this (data )?real|synthetic|asli data"):
+    if _has(tl, r"real (mangala |bhagyam |aishwariya |raageshwari |barmer )?data|is this (data )?real|synthetic|asli data"):
         return []
 
     plot = _has(tl, r"\b(plot|chart|graph|grafh|dikhao)\b")

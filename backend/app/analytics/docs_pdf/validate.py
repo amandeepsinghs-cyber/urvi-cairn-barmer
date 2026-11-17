@@ -33,7 +33,7 @@ import yaml
 
 from app.analytics.docs_pdf import ir
 from app.analytics.docs_pdf.ir import DIGIT_RE
-from app.analytics.docs_pdf.facts import DOC_TYPES, FIELDS, TYPE_DIRS, iter_specs, norm_type, stable_hash
+from app.analytics.docs_pdf.facts import DOC_TYPES, FIELDS, HERO_WELLS, TYPE_DIRS, iter_specs, norm_type, stable_hash
 from app.analytics.docs_pdf.paths import docs_dir
 from app.analytics.docs_pdf.templates import TEMPLATE_MODULES
 
@@ -259,7 +259,7 @@ def sample_specs(doc_type: str, per_group: int = 1, extra: int = 12) -> list:
     for s in sorted(specs, key=lambda x: stable_hash("x" + x.doc_id))[:extra]:
         chosen[s.doc_id] = s
     for s in specs:  # hero documents always included
-        if s.well_id in ("GK-129", "LKW-047", "LKW-112", "LKM-090") and (len(chosen) < 400):
+        if s.well_id in HERO_WELLS and (len(chosen) < 400):
             chosen[s.doc_id] = s
     return list(chosen.values()), specs
 
@@ -279,7 +279,7 @@ def hero_gate(workers: int, t0: float) -> int:
     failed |= bool(probs)
     hero_narratives.cache_clear()
     ids = set(hero_doc_ids())
-    specs = [s for s in iter_specs(wells=["GK-129", "LKW-047", "LKW-112", "LKM-090"]) if s.doc_id in ids]
+    specs = [s for s in iter_specs(wells=list(HERO_WELLS)) if s.doc_id in ids]
     unknown = ids - {s.doc_id for s in specs}
     if unknown:
         print(f"[validate HERO] FAIL: doc_id(s) not in corpus: {sorted(unknown)}")

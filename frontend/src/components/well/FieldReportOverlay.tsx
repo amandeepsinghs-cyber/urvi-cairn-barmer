@@ -15,7 +15,7 @@ interface FieldReportOverlayProps {
 /**
  * Step 5 (v0.5): printable field report (Pre-field Well Pack) in a full-screen overlay.
  * The HTML is fetched with the X-Persona header (an iframe src cannot send it), then shown via srcDoc,
- * which keeps relative asset paths (/brand/ongc_logo.svg) resolving against the app origin.
+ * which keeps relative asset paths (/brand/cairn_vedanta_wordmark.svg) resolving against the app origin.
  * Esc closes it — also when focus is inside the report.
  */
 export const FieldReportOverlay: React.FC<FieldReportOverlayProps> = ({ wellId, intervention, onClose, printOnLoad }) => {

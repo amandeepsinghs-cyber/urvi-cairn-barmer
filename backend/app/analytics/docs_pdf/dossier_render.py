@@ -1,4 +1,4 @@
-"""Dossier PDF renderer and vector wellbore schematic for WellPulse.
+"""Dossier PDF renderer and vector wellbore schematic for Cairn Oil & Gas (Vedanta Limited) · Barmer Basin.
 
 Renders multi-page executive well dossiers using ReportLab flowables.
 Follows the fact-slot rule: zero digits or spelled-out numbers in code strings.

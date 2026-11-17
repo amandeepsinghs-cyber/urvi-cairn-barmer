@@ -76,7 +76,7 @@ class TableData:
 class DocSpec:
     doc_id: str
     doc_type: str  # "D01".."D11"
-    field: str  # Geleki | Lakwa | Lakhmani | ALL
+    field: str  # Mangala | Bhagyam | Aishwariya | Raageshwari | ALL
     well_id: str | None
     doc_date: str
     title: str

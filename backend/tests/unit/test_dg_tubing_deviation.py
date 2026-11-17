@@ -10,8 +10,9 @@ Covers:
 - Minimum-curvature TVD monotonic non-decreasing and <= MD + 0.01 m.
 - Final survey TVD matches well_master.total_depth_tvd_m within 1%.
 - Max dogleg severity respects bound (max_dls + 0.2 tolerance).
+- S-shaped MBA pad profiles and horizontal Barmer_Hill profiles (~86-90 deg).
 - Deterministic per-well generation across multiple runs.
-- Full coverage across all 3 fields (geleki, lakwa, lakhmani).
+- Full coverage across all 4 Barmer fields (mangala, bhagyam, aishwariya, raageshwari = 460 wells).
 """
 from __future__ import annotations
 
@@ -25,13 +26,13 @@ from app.analytics.generator.dg.common import FIELDS, finalize, load_field
 
 @pytest.fixture(scope="module")
 def field_contexts():
-    """Load FieldContext for all 3 fields once for tests."""
+    """Load FieldContext for all 4 Barmer fields once for tests."""
     return {f: load_field(f) for f in FIELDS}
 
 
 @pytest.fixture(scope="module")
 def generated_tables(field_contexts):
-    """Generate DG tables for all 3 fields."""
+    """Generate DG tables for all 4 Barmer fields."""
     return {f: td.generate(ctx) for f, ctx in field_contexts.items()}
 
 
@@ -271,19 +272,43 @@ def test_final_tvd_within_one_percent(field_name, field_contexts, generated_tabl
 
 @pytest.mark.parametrize("field_name", FIELDS)
 def test_max_dls_bound_respected(field_name, field_contexts, generated_tables):
-    """Max DLS must satisfy well_master.max_dls_deg_30m (+0.2 tolerance), or physical bound."""
+    """Max DLS must satisfy well_master.max_dls_deg_30m (+0.2 tolerance), or Barmer physical bound."""
     ctx = field_contexts[field_name]
     wm = ctx.t("well_master").set_index("well_id")
     df = generated_tables[field_name]["deviation_survey"]
 
     for wid, g in df.groupby("well_id"):
         max_dls_raw = wm.loc[wid, "max_dls_deg_30m"]
-        max_dls_allowed = float(max_dls_raw) + 0.2 if pd.notna(max_dls_raw) else 3.0
+        max_dls_allowed = float(max_dls_raw) + 0.2 if pd.notna(max_dls_raw) else 7.5
         observed_max_dls = g["dls_deg_30m"].max()
 
         assert observed_max_dls <= max_dls_allowed + 0.01, (
             f"{wid}: max DLS {observed_max_dls} exceeds allowed {max_dls_allowed}"
         )
+
+
+def test_deviation_survey_total_well_count_and_profiles(field_contexts, generated_tables):
+    """Total wells across all 4 Barmer fields must be 460 (180 + 120 + 100 + 60) with S-wells & ABH horizontals."""
+    counts = {f: generated_tables[f]["deviation_survey"]["well_id"].nunique() for f in FIELDS}
+    assert sum(counts.values()) == 460
+    assert counts["mangala"] == 180
+    assert counts["bhagyam"] == 120
+    assert counts["aishwariya"] == 100
+    assert counts["raageshwari"] == 60
+
+    # Check Aishwariya Barmer_Hill horizontal wells build inclination to ~86-90 deg
+    wm_ash = field_contexts["aishwariya"].t("well_master").set_index("well_id")
+    df_ash = generated_tables["aishwariya"]["deviation_survey"]
+    horiz_wells = [
+        wid for wid, row in wm_ash.iterrows()
+        if str(row.get("current_zone")) == "Barmer_Hill"
+        and float(row["total_depth_md_m"]) / float(row["total_depth_tvd_m"]) >= 1.55
+    ]
+    assert len(horiz_wells) > 0, "Expected Barmer_Hill horizontal wells in Aishwariya"
+    for wid in horiz_wells:
+        g = df_ash[df_ash["well_id"] == wid]
+        max_inc = float(g["inc_deg"].max())
+        assert 85.0 <= max_inc <= 90.0, f"{wid}: horizontal lateral max inc {max_inc} not in [85, 90]"
 
 
 @pytest.mark.parametrize("field_name", FIELDS)

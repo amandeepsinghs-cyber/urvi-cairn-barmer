@@ -91,7 +91,7 @@ def _read_prompt() -> str:
         return PROMPT_PATH.read_text(encoding="utf-8")
     except OSError:
         return (
-            "You are Urvi AI Agent (voice) for ONGC Assam Asset. Every number you speak must come "
+            "You are Urvi AI Agent (voice) for Cairn Oil & Gas, Barmer. Every number you speak must come "
             "from a tool result in the same turn. Never speak rupee or dollar figures. 1-3 short sentences."
         )
 
@@ -119,8 +119,15 @@ def build_system_prompt(ui: dict[str, Any] | None) -> str:
     return "\n\n".join(parts)
 
 
-def build_live_config(types: Any, system_prompt: str, tools: list[Any], handle: str | None, voice: str) -> Any:
-    """LiveConnectConfig with session resumption + sliding-window compression (SDD §11.3)."""
+def speech_language_code(lang: str | None) -> str:
+    """BCP-47 locale for Gemini Live SpeechConfig: Indian English (en-IN) for English/Hinglish, hi-IN for Hindi."""
+    return "hi-IN" if norm_language(lang) == "hindi" else "en-IN"
+
+
+def build_live_config(
+    types: Any, system_prompt: str, tools: list[Any], handle: str | None, voice: str, language: str | None = "english"
+) -> Any:
+    """LiveConnectConfig with Indian English/Hindi speech locale, session resumption + sliding-window compression."""
     return types.LiveConnectConfig(
         response_modalities=[types.Modality.AUDIO],
         output_audio_transcription=types.AudioTranscriptionConfig(),
@@ -128,7 +135,8 @@ def build_live_config(types: Any, system_prompt: str, tools: list[Any], handle: 
         system_instruction=types.Content(parts=[types.Part.from_text(text=system_prompt)]),
         tools=tools,
         speech_config=types.SpeechConfig(
-            voice_config=types.VoiceConfig(prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice))
+            language_code=speech_language_code(language),
+            voice_config=types.VoiceConfig(prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice)),
         ),
         session_resumption=types.SessionResumptionConfig(handle=handle),
         context_window_compression=types.ContextWindowCompressionConfig(sliding_window=types.SlidingWindow()),
@@ -312,7 +320,9 @@ async def run_resilient_live(
         await _send(websocket, {"type": "status", "status": "reconnecting" if resuming else "connecting", "model": model})
         try:
             # Rebuilt each connect so a language/persona change is honoured on resume.
-            config = build_live_config(types, build_system_prompt(state["ui"]), tools, handle, settings["voice"])
+            config = build_live_config(
+                types, build_system_prompt(state["ui"]), tools, handle, settings["voice"], state["ui"].get("language")
+            )
             logger.info("Gemini Live connect model=%s resume=%s", model, bool(handle))
             async with connect_factory(model, config) as session:
                 failures = 0

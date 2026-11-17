@@ -24,13 +24,13 @@ def test_two_runs_byte_identical(tmp_path: Path) -> None:
     out_b = tmp_path / "b"
 
     ret_a = generate.main([
-        "--field", "Lakhmani",
+        "--field", "Raageshwari",
         "--start", "2021-10-01",
         "--end", "2026-09-30",
         "--out", str(out_a),
     ])
     ret_b = generate.main([
-        "--field", "Lakhmani",
+        "--field", "Raageshwari",
         "--start", "2021-10-01",
         "--end", "2026-09-30",
         "--out", str(out_b),
@@ -51,21 +51,21 @@ def test_two_runs_byte_identical(tmp_path: Path) -> None:
         assert bytes_a == bytes_b, f"File {rel_path} differs between run a and run b"
 
 
-def test_geleki_run_matches_committed_landing(tmp_path: Path, landing: Path) -> None:
-    out_g = tmp_path / "g"
+def test_mangala_run_matches_committed_landing(tmp_path: Path, landing: Path) -> None:
+    out_m = tmp_path / "m"
     ret = generate.main([
-        "--field", "Geleki",
+        "--field", "Mangala",
         "--start", "2021-10-01",
         "--end", "2026-09-30",
-        "--out", str(out_g),
+        "--out", str(out_m),
     ])
-    assert ret == 0, f"Geleki generation failed with exit code {ret}"
+    assert ret == 0, f"Mangala generation failed with exit code {ret}"
 
-    generated_files = sorted((out_g / "geleki").glob("*.parquet"))
-    assert len(generated_files) > 0, "No Geleki parquet files generated"
+    generated_files = sorted((out_m / "mangala").glob("*.parquet"))
+    assert len(generated_files) > 0, "No Mangala parquet files generated"
 
     for gen_path in generated_files:
-        committed_path = landing / "geleki" / gen_path.name
+        committed_path = landing / "mangala" / gen_path.name
         assert committed_path.exists(), f"Committed file missing: {committed_path}"
         assert gen_path.read_bytes() == committed_path.read_bytes(), (
             f"Generated file {gen_path.name} does not match committed landing file {committed_path}"

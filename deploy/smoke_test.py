@@ -1,4 +1,4 @@
-"""WellPulse post-deploy smoke test (Stage W.4, SDD §17).
+"""Urvi Cairn Barmer post-deploy smoke test (Stage W.4, SDD §17).
 
     cd backend && uv run --frozen --no-dev python ../deploy/smoke_test.py https://<urvi-cairn-app URL>
     cd backend && uv run --frozen python ../deploy/smoke_test.py http://localhost:8002 --ws-timeout 30
@@ -35,7 +35,11 @@ def record(name: str, ok: bool, detail: str) -> None:
 
 
 def http_get(url: str, headers: dict[str, str] | None = None, timeout: float = 30.0) -> tuple[int, str, str, float]:
-    req = urllib.request.Request(url, headers={"User-Agent": "wellpulse-smoke/0.4", **(headers or {})})
+    import os
+
+    tok = os.environ.get("SMOKE_BEARER_TOKEN", "").strip()
+    auth = {"Authorization": f"Bearer {tok}"} if tok else {}
+    req = urllib.request.Request(url, headers={"User-Agent": "urvi-cairn-smoke/1.0", **auth, **(headers or {})})
     t0 = time.perf_counter()
     try:
         with urllib.request.urlopen(req, timeout=timeout, context=ssl.create_default_context()) as r:
@@ -102,8 +106,14 @@ async def ws_handshake(base: str, timeout: float) -> None:
     ws_url = base.replace("https://", "wss://", 1).replace("http://", "ws://", 1) + "/ws/live?language=english&screen=smoke"
     t0 = time.perf_counter()
     statuses: list[str] = []
+    import os
+
+    tok = os.environ.get("SMOKE_BEARER_TOKEN", "").strip()
+    ws_kw: dict[str, Any] = {"open_timeout": timeout, "max_size": None}
+    if tok:
+        ws_kw["additional_headers"] = {"Authorization": f"Bearer {tok}"}
     try:
-        async with websockets.connect(ws_url, open_timeout=timeout, max_size=None) as ws:
+        async with websockets.connect(ws_url, **ws_kw) as ws:
             deadline = t0 + timeout
             while time.perf_counter() < deadline:
                 raw = await asyncio.wait_for(ws.recv(), timeout=max(0.1, deadline - time.perf_counter()))
@@ -141,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--skip-ws", action="store_true")
     a = ap.parse_args(argv)
     base = a.base_url.rstrip("/")
-    print(f"WellPulse smoke test -> {base}")
+    print(f"Urvi Cairn Barmer smoke test -> {base}")
 
     # 1. health: try /api/healthz first; fall back to /api/health
     try:

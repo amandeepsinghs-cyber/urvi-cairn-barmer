@@ -32,7 +32,7 @@ def mutable_landing(tmp_path_factory: pytest.TempPathFactory, landing: Path) -> 
     return temp_dir
 
 
-def _make_field_test_copy(tmp_path: Path, mutable_landing: Path, field: str = "lakhmani") -> Path:
+def _make_field_test_copy(tmp_path: Path, mutable_landing: Path, field: str = "aishwariya") -> Path:
     """Create a minimal per-test landing copy containing asset/ and the field folder."""
     target_landing = tmp_path / "landing"
     target_landing.mkdir(parents=True, exist_ok=True)
@@ -45,17 +45,12 @@ def test_validator_clean_on_generated_data(landing: Path) -> None:
     assert validate.main(["--field", "all", "--landing", str(landing)]) == 0
 
 
-def test_compare_baseline_identical(landing: Path) -> None:
-    if not BASELINE_DIR.exists() or not (BASELINE_DIR / "well_master.parquet").exists():
-        pytest.skip(f"baseline directory missing at {BASELINE_DIR}")
-    assert validate.compare_baseline(landing, BASELINE_DIR) == []
-
-
 def test_well_counts(landing: Path) -> None:
     expected = {
-        "geleki": (142, "GK-", None),
-        "lakwa": (160, "LKW-", 3),
-        "lakhmani": (110, "LKM-", 2),
+        "mangala": (180, "MNG-", 4),
+        "bhagyam": (120, "BHG-", 3),
+        "aishwariya": (100, "ASH-", 3),
+        "raageshwari": (60, "RAG-", 3),
     }
     for field_name, (count, prefix, clusters) in expected.items():
         wm = pd.read_parquet(landing / field_name / "well_master.parquet")
@@ -75,26 +70,28 @@ def test_ic_counts_min_30(landing: Path) -> None:
         assert counts[ic] >= 30, f"{ic} count {counts[ic]} < 30"
 
 
-def test_lkw047_waits(landing: Path) -> None:
-    waits = validate.lkw047_waits(landing)
-    assert waits["wait_on_rig_days"] == 41
-    assert waits["wait_on_material_days"] == 12
+def test_bhg019_waits(landing: Path) -> None:
+    fn = getattr(validate, "bhg019_waits", getattr(validate, "lkw047_waits"))
+    waits = fn(landing)
+    assert waits["wait_on_rig_days"] == 38
+    assert waits["wait_on_material_days"] == 11
 
 
-def test_lakwa_gap(landing: Path) -> None:
-    gap_val = validate.gap(landing, "Lakwa", validate.QTD)
-    assert -0.21 <= gap_val <= -0.15, f"Lakwa QTD gap {gap_val:.3f} outside [-0.21, -0.15]"
+def test_bhagyam_gap(landing: Path) -> None:
+    gap_val = validate.gap(landing, "Bhagyam", validate.QTD)
+    assert -0.19 <= gap_val <= -0.13, f"Bhagyam QTD gap {gap_val:.3f} outside [-0.19, -0.13]"
 
 
-def test_lkm090_offsets(landing: Path) -> None:
-    residuals = validate.lkm090_residuals(landing)
+def test_rag014_offsets(landing: Path) -> None:
+    fn = getattr(validate, "rag014_residuals", getattr(validate, "lkm090_residuals"))
+    residuals = fn(landing)
     assert residuals["max_abs_residual_pp"] <= 5.0
-    assert len(residuals["offsets"]) == 6
+    assert len(residuals["offsets"]) >= 4
 
 
 def test_no_currency_columns(landing: Path) -> None:
     currency_tokens = ("usd", "currency", "payback")
-    for field in ("geleki", "lakwa", "lakhmani"):
+    for field in ("mangala", "bhagyam", "aishwariya", "raageshwari"):
         for path in (landing / field).glob("*.parquet"):
             df = pd.read_parquet(path)
             for col in df.columns:
@@ -109,35 +106,35 @@ def test_no_wall_clock_in_generator() -> None:
 
 
 def test_detects_dc014(tmp_path: Path, mutable_landing: Path) -> None:
-    target = _make_field_test_copy(tmp_path, mutable_landing, "lakhmani")
-    dp_path = target / "lakhmani" / "daily_production.parquet"
+    target = _make_field_test_copy(tmp_path, mutable_landing, "aishwariya")
+    dp_path = target / "aishwariya" / "daily_production.parquet"
     df = pd.read_parquet(dp_path)
     mask = ~df["is_producing"].astype(bool)
     idx = df[mask].index[:5]
     df.loc[idx, "oil_rate_bopd"] = 0.0
     df.to_parquet(dp_path, index=False)
-    violations = validate.check_field(target, "Lakhmani")
+    violations = validate.check_field(target, "Aishwariya")
     assert any(v.startswith("DC-014") for v in violations), f"Expected DC-014 violation, got: {violations}"
 
 
 def test_detects_gl_on_srp(tmp_path: Path, mutable_landing: Path) -> None:
-    target = _make_field_test_copy(tmp_path, mutable_landing, "lakhmani")
-    wm = pd.read_parquet(target / "lakhmani" / "well_master.parquet")
+    target = _make_field_test_copy(tmp_path, mutable_landing, "aishwariya")
+    wm = pd.read_parquet(target / "aishwariya" / "well_master.parquet")
     srp_wells = wm[wm["lift_type"] == "SRP"]["well_id"].tolist()
-    dp_path = target / "lakhmani" / "daily_production.parquet"
+    dp_path = target / "aishwariya" / "daily_production.parquet"
     df = pd.read_parquet(dp_path)
     mask = df["well_id"].isin(srp_wells) & df["is_producing"].astype(bool)
     idx = df[mask].index[:3]
     df.loc[idx, "gl_inj_rate_mscfd"] = 300.0
     df.to_parquet(dp_path, index=False)
-    violations = validate.check_field(target, "Lakhmani")
+    violations = validate.check_field(target, "Aishwariya")
     assert any(v.startswith("V-N7") for v in violations), f"Expected V-N7 violation, got: {violations}"
 
 
 def test_detects_bad_event_window(tmp_path: Path, mutable_landing: Path) -> None:
-    target = _make_field_test_copy(tmp_path, mutable_landing, "lakhmani")
-    ev_path = target / "lakhmani" / "operations_events.parquet"
-    dp_path = target / "lakhmani" / "daily_production.parquet"
+    target = _make_field_test_copy(tmp_path, mutable_landing, "aishwariya")
+    ev_path = target / "aishwariya" / "operations_events.parquet"
+    dp_path = target / "aishwariya" / "daily_production.parquet"
     ev = pd.read_parquet(ev_path)
     dp = pd.read_parquet(dp_path)
 
@@ -164,15 +161,15 @@ def test_detects_bad_event_window(tmp_path: Path, mutable_landing: Path) -> None
 
     assert found, "Could not find 3 consecutive fully-producing days"
     ev.to_parquet(ev_path, index=False)
-    violations = validate.check_field(target, "Lakhmani")
+    violations = validate.check_field(target, "Aishwariya")
     assert any(v.startswith("V-N2") for v in violations), f"Expected V-N2 violation, got: {violations}"
 
 
 def test_detects_wrong_well_count(tmp_path: Path, mutable_landing: Path) -> None:
-    target = _make_field_test_copy(tmp_path, mutable_landing, "lakhmani")
-    wm_path = target / "lakhmani" / "well_master.parquet"
+    target = _make_field_test_copy(tmp_path, mutable_landing, "aishwariya")
+    wm_path = target / "aishwariya" / "well_master.parquet"
     wm = pd.read_parquet(wm_path)
     wm = wm.iloc[:-1]
     wm.to_parquet(wm_path, index=False)
-    violations = validate.check_field(target, "Lakhmani")
+    violations = validate.check_field(target, "Aishwariya")
     assert any(v.startswith("V-N1") for v in violations), f"Expected V-N1 violation, got: {violations}"

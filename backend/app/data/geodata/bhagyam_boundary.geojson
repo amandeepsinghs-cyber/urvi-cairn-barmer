@@ -1,0 +1,280 @@
+{
+ "features": [
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.483,
+       26.068
+      ],
+      [
+       71.481126,
+       26.082235
+      ],
+      [
+       71.475631,
+       26.0955
+      ],
+      [
+       71.466891,
+       26.106891
+      ],
+      [
+       71.4555,
+       26.115631
+      ],
+      [
+       71.442235,
+       26.121126
+      ],
+      [
+       71.428,
+       26.123
+      ],
+      [
+       71.413765,
+       26.121126
+      ],
+      [
+       71.4005,
+       26.115631
+      ],
+      [
+       71.389109,
+       26.106891
+      ],
+      [
+       71.380369,
+       26.0955
+      ],
+      [
+       71.374874,
+       26.082235
+      ],
+      [
+       71.373,
+       26.068
+      ],
+      [
+       71.374874,
+       26.053765
+      ],
+      [
+       71.380369,
+       26.0405
+      ],
+      [
+       71.389109,
+       26.029109
+      ],
+      [
+       71.4005,
+       26.020369
+      ],
+      [
+       71.413765,
+       26.014874
+      ],
+      [
+       71.428,
+       26.013
+      ],
+      [
+       71.442235,
+       26.014874
+      ],
+      [
+       71.4555,
+       26.020369
+      ],
+      [
+       71.466891,
+       26.029109
+      ],
+      [
+       71.475631,
+       26.0405
+      ],
+      [
+       71.481126,
+       26.053765
+      ],
+      [
+       71.483,
+       26.068
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "field": "Bhagyam",
+    "is_synthetic_geometry": true,
+    "kind": "FIELD_BOUNDARY",
+    "name": "Bhagyam field boundary",
+    "source": "field_master.boundary_geojson"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.415398,
+       26.056622
+      ],
+      [
+       71.433236,
+       26.073835
+      ],
+      [
+       71.423039,
+       26.096174
+      ],
+      [
+       71.420029,
+       26.097101
+      ],
+      [
+       71.40978,
+       26.093853
+      ],
+      [
+       71.395311,
+       26.087528
+      ],
+      [
+       71.397144,
+       26.072545
+      ],
+      [
+       71.415398,
+       26.056622
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "BHG-PAD-1",
+    "cluster_type": "WELL_PAD",
+    "field": "Bhagyam",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 44,
+    "name": "BHG-PAD-1",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.436326,
+       26.084067
+      ],
+      [
+       71.410026,
+       26.081143
+      ],
+      [
+       71.411269,
+       26.076775
+      ],
+      [
+       71.417177,
+       26.060674
+      ],
+      [
+       71.420661,
+       26.053715
+      ],
+      [
+       71.425504,
+       26.05251
+      ],
+      [
+       71.452621,
+       26.061677
+      ],
+      [
+       71.457675,
+       26.072918
+      ],
+      [
+       71.436326,
+       26.084067
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "BHG-PAD-2",
+    "cluster_type": "WELL_PAD",
+    "field": "Bhagyam",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 40,
+    "name": "BHG-PAD-2",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.434852,
+       26.066679
+      ],
+      [
+       71.429184,
+       26.055477
+      ],
+      [
+       71.433247,
+       26.046359
+      ],
+      [
+       71.450263,
+       26.038164
+      ],
+      [
+       71.456833,
+       26.05168
+      ],
+      [
+       71.459596,
+       26.07793
+      ],
+      [
+       71.434852,
+       26.066679
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "BHG-PAD-3",
+    "cluster_type": "WELL_PAD",
+    "field": "Bhagyam",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 36,
+    "name": "BHG-PAD-3",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  }
+ ],
+ "is_synthetic_geometry": true,
+ "name": "bhagyam_boundary",
+ "type": "FeatureCollection"
+}

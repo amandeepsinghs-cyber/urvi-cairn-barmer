@@ -19,5 +19,5 @@ def build(spec):
             continue
         blocks.append(H(_label(name), level=2))
         blocks.append(Table(name, [(c, _label(c)) for c in data.columns]))
-    blocks.append(P("Generated from the WellPulse landing tables.", style="note"))
+    blocks.append(P("Generated from Cairn Oil & Gas Barmer Basin landing tables.", style="note"))
     return blocks

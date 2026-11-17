@@ -12,7 +12,7 @@ from typing import Protocol
 
 from .parquet_repo import ParquetRepository, RetiredWellId
 
-__all__ = ["RetiredWellId", "WellRepository", "get_repository", "reset_repository"]
+__all__ = ["RetiredWellId", "WellRepository", "get_repo", "get_repository", "reset_repository"]
 
 
 class WellRepository(Protocol):
@@ -50,3 +50,6 @@ def reset_repository() -> None:
     global _repo
     with _lock:
         _repo = None
+
+
+get_repo = get_repository

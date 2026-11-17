@@ -74,7 +74,8 @@ RUN_FLAGS=(
     --execution-environment gen2
     --port 8080
     --env-vars-file deploy/env.cloudrun.yaml
-    --labels app=wellpulse,stage=v04
+    --labels app=urvi-cairn,stage=v10
+    --allow-unauthenticated
     --quiet
 )
 # --env-vars-file REPLACES all env vars on the service => the legacy GEMINI_API_KEY is removed.
@@ -116,11 +117,25 @@ step_iam() {
     # Optional: read PDFs from the datalake bucket instead of the image.
     x gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" --project "${PROJECT}" \
         --member "${member}" --role roles/storage.objectViewer --format none
+    # Ensure Cloud Build default worker SA in new GCP projects can read _cloudbuild source tarballs & push images.
+    if [ "${DRY_RUN:-0}" != "1" ]; then
+        local proj_num
+        proj_num="$(gcloud projects describe "${PROJECT}" --format='value(projectNumber)')"
+        for cb_sa in "${proj_num}-compute@developer.gserviceaccount.com" "${proj_num}@cloudbuild.gserviceaccount.com"; do
+            x_soft gcloud projects add-iam-policy-binding "${PROJECT}" \
+                --member "serviceAccount:${cb_sa}" --role roles/cloudbuild.builds.builder \
+                --condition None --quiet --format none
+        done
+    fi
 }
 
 step_build() {
     echo "== build: ${IMAGE}"
-    # e2-highcpu-8: the corpus build (≈21k PDFs render -> scanify -> validate -> index) is CPU bound.
+    if [ "${DRY_RUN:-0}" = "1" ] || ! gcloud artifacts repositories describe "${AR_REPO}" --project "${PROJECT}" --location "${REGION}" >/dev/null 2>&1; then
+        x gcloud artifacts repositories create "${AR_REPO}" --project "${PROJECT}" --location "${REGION}" \
+            --repository-format=docker --description="Cloud Run container images for ${SERVICE}"
+    fi
+    # e2-highcpu-8: the corpus build (≈20.3k PDFs render -> scanify -> validate -> index) is CPU bound.
     x gcloud builds submit . --project "${PROJECT}" --region "${REGION}" \
         --tag "${IMAGE}" --machine-type e2-highcpu-8 --timeout 3600s
 }
@@ -150,6 +165,10 @@ step_smoke() {
         if [ "${DRY_RUN:-0}" = "1" ]; then url="https://<urvi-cairn-app URL>"; else url="$(service_url)"; fi
     fi
     echo "== smoke: ${url}"
+    if [ "${DRY_RUN:-0}" != "1" ]; then
+        SMOKE_BEARER_TOKEN="$(gcloud auth print-identity-token 2>/dev/null || true)"
+        export SMOKE_BEARER_TOKEN
+    fi
     # websockets ships with uvicorn[standard] in the backend lock, so reuse that environment.
     x bash -c "cd backend && uv run --frozen --no-dev python ../deploy/smoke_test.py '${url}'"
 }

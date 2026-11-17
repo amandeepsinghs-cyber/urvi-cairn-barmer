@@ -1,4 +1,4 @@
-"""Synthetic field geometry helpers (D-3: synthetic coordinates near Sivasagar)."""
+"""Synthetic field geometry helpers for Cairn Oil & Gas — Barmer Basin (RJ-ON-90/1)."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ def boundary_polygon(cfg: FieldConfig, wells_latlon: np.ndarray | None = None) -
     """Closed boundary polygon [(lat, lon), ...].
 
     Native fields: a circle of ``boundary_radius_deg`` around the centroid (wells are rejection-sampled
-    inside it). Geleki (frozen well positions): the smallest centroid-centred circle that contains every
-    well, plus a 15 % margin — the polygon is derived from the data, not the other way round.
+    inside it). When explicit well positions are passed: the smallest centroid-centred circle that
+    contains every well, plus a 15 % margin.
     """
     lat0, lon0 = cfg.centroid
     r = cfg.boundary_radius_deg

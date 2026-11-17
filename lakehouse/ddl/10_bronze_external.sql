@@ -55,6 +55,8 @@ OPTIONS (
 
 CREATE EXTERNAL TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_bronze.daily_production` (
   `well_id` STRING,
+  `field` STRING,
+  `cluster_id` STRING,
   `production_date` DATE,
   `oil_rate_bopd` FLOAT64,
   `water_rate_bwpd` FLOAT64,
@@ -71,16 +73,14 @@ CREATE EXTERNAL TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_bronz
   `is_producing` BOOL,
   `downtime_reason` STRING,
   `data_source` STRING,
+  `wht_degc` FLOAT64,
+  `gl_inj_rate_mscfd` FLOAT64,
+  `gl_inj_pressure_kgcm2` FLOAT64,
+  `is_prepend` BOOL,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
-  `field` STRING,
-  `cluster_id` STRING,
-  `is_prepend` BOOL,
-  `wht_degc` FLOAT64,
-  `gl_inj_rate_mscfd` FLOAT64,
-  `gl_inj_pressure_kgcm2` FLOAT64,
   `_source_row` INT64
 )
 WITH PARTITION COLUMNS (dt DATE, landing_folder STRING)
@@ -430,11 +430,11 @@ CREATE EXTERNAL TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_bronz
   `tubing_size_in` FLOAT64,
   `casing_size_in` FLOAT64,
   `status` STRING,
+  `cluster_id` STRING,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
-  `cluster_id` STRING,
   `_source_row` INT64
 )
 WITH PARTITION COLUMNS (dt DATE, landing_folder STRING)
@@ -528,6 +528,8 @@ OPTIONS (
 
 CREATE EXTERNAL TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_bronze.well_status_history` (
   `episode_id` STRING,
+  `field` STRING,
+  `cluster_id` STRING,
   `well_id` STRING,
   `status` STRING,
   `start_date` DATE,
@@ -536,13 +538,11 @@ CREATE EXTERNAL TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_bronz
   `is_rigless` BOOL,
   `workover_id` STRING,
   `deferred_bbl` FLOAT64,
+  `is_prepend` BOOL,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
-  `field` STRING,
-  `cluster_id` STRING,
-  `is_prepend` BOOL,
   `_source_row` INT64
 )
 WITH PARTITION COLUMNS (dt DATE, landing_folder STRING)
@@ -556,6 +556,8 @@ OPTIONS (
 
 CREATE EXTERNAL TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_bronze.well_tests` (
   `test_id` STRING,
+  `field` STRING,
+  `cluster_id` STRING,
   `well_id` STRING,
   `test_date` DATE,
   `test_duration_hr` FLOAT64,
@@ -567,13 +569,11 @@ CREATE EXTERNAL TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_bronz
   `fluid_level_m` FLOAT64,
   `pump_intake_p_kgcm2` FLOAT64,
   `test_quality` STRING,
+  `is_prepend` BOOL,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
-  `field` STRING,
-  `cluster_id` STRING,
-  `is_prepend` BOOL,
   `_source_row` INT64
 )
 WITH PARTITION COLUMNS (dt DATE, landing_folder STRING)
@@ -610,6 +610,8 @@ OPTIONS (
 
 CREATE EXTERNAL TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_bronze.workover_history` (
   `workover_id` STRING,
+  `field` STRING,
+  `cluster_id` STRING,
   `well_id` STRING,
   `start_date` DATE,
   `end_date` DATE,
@@ -628,13 +630,11 @@ CREATE EXTERNAL TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_bronz
   `report_doc_id` STRING,
   `catalogue_job_code` STRING,
   `intervention_class` STRING,
+  `is_prepend` BOOL,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
-  `field` STRING,
-  `cluster_id` STRING,
-  `is_prepend` BOOL,
   `_source_row` INT64
 )
 WITH PARTITION COLUMNS (dt DATE, landing_folder STRING)
@@ -679,7 +679,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_bronz
   `capacity_bopd` INT64,
   `serviced_cluster_ids` STRING,
   `compressor_capacity_mmscfd` FLOAT64,
-  `water_handling_bwpd` FLOAT64,
+  `water_handling_bwpd` INT64,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,

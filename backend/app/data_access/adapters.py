@@ -27,11 +27,18 @@ from app.analytics.generator.fields.base import FieldConfig
 
 PSI = 14.2233
 HEALTH_RULE = "INTERIM_N1"
-LIFT_LABEL = {"SRP": "Sucker Rod Pump (SRP)", "GAS_LIFT": "Continuous Gas Lift", "NATURAL": "Natural Flow"}
+LIFT_LABEL = {
+    "ESP": "Electrical Submersible Pump (ESP)",
+    "JET_PUMP": "Hydraulic Jet Pump",
+    "PCP": "Progressive Cavity Pump (PCP)",
+    "SRP": "Sucker Rod Pump (SRP)",
+    "GAS_LIFT": "Continuous Gas Lift",
+    "NATURAL": "Natural Flow",
+}
 REST_STATUS = {"NOT_PRODUCING": "failed", "UNDERPERFORMING": "warning", "AT_RISK": "warning", "PRODUCING_OK": "healthy"}
 OUTCOME = {"SUCCESS": "Success", "PARTIAL": "Partial", "FAILED": "Failed", "NO_ACTION": "No action",
            "IN_PROGRESS": "In progress"}
-BASIN = "Assam-Arakan Basin"
+BASIN = "Barmer Basin (RJ-ON-90/1)"
 HISTORY_DAYS = {"30d": 30, "6m": 180, "1y": 365, "2y": 730, "3y": 1095, "5y": None}
 
 

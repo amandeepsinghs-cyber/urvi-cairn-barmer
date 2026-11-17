@@ -3,7 +3,7 @@ intervention_class: IC-03
 title: Standard Operating Procedure for Tubing Leak Repair and Replacement
 purpose: Establish mandatory procedures and barrier isolation standards for detecting, retrieving, pressure testing, and replacing
   defective production tubing strings.
-scope: Applies to all workover rig operations across Assam asset wells involving tubing leak investigation, pull, inspection,
+scope: Applies to all workover rig operations across Barmer Basin asset wells involving tubing leak investigation, pull, inspection,
   and replacement covering {n_job_codes} catalogue job codes utilizing {equipment_list}.
 applicability:
 - Communication between tubing and casing annulus observed during pressure monitoring.

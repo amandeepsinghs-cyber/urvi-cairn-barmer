@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.barrier
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.casing_
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -55,6 +55,8 @@ OPTIONS (
 
 CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.daily_production` (
   `well_id` STRING NOT NULL,
+  `field` STRING,
+  `cluster_id` STRING,
   `production_date` DATE NOT NULL,
   `oil_rate_bopd` FLOAT64,
   `water_rate_bwpd` FLOAT64,
@@ -71,18 +73,16 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.daily_p
   `is_producing` BOOL,
   `downtime_reason` STRING,
   `data_source` STRING,
+  `wht_degc` FLOAT64,
+  `gl_inj_rate_mscfd` FLOAT64,
+  `gl_inj_pressure_kgcm2` FLOAT64,
+  `is_prepend` BOOL,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
-  `field` STRING,
-  `cluster_id` STRING,
-  `is_prepend` BOOL,
-  `wht_degc` FLOAT64,
-  `gl_inj_rate_mscfd` FLOAT64,
-  `gl_inj_pressure_kgcm2` FLOAT64,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.decisio
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.deviati
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.documen
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -187,7 +187,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.draft_p
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.fishing
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -239,7 +239,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.fluid_h
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -262,7 +262,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.formati
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -290,7 +290,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.operati
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -315,7 +315,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.perfora
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -341,7 +341,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.pressur
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -367,7 +367,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.tubing_
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -397,7 +397,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.tubing_
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -431,13 +431,13 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.well_ma
   `tubing_size_in` FLOAT64,
   `casing_size_in` FLOAT64,
   `status` STRING,
+  `cluster_id` STRING,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
-  `cluster_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -458,7 +458,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.well_of
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -517,7 +517,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.well_ru
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -529,6 +529,8 @@ OPTIONS (
 
 CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.well_status_history` (
   `episode_id` STRING NOT NULL,
+  `field` STRING,
+  `cluster_id` STRING,
   `well_id` STRING,
   `status` STRING,
   `start_date` DATE,
@@ -537,15 +539,13 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.well_st
   `is_rigless` BOOL,
   `workover_id` STRING,
   `deferred_bbl` FLOAT64,
+  `is_prepend` BOOL,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
-  `field` STRING,
-  `cluster_id` STRING,
-  `is_prepend` BOOL,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -557,6 +557,8 @@ OPTIONS (
 
 CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.well_tests` (
   `test_id` STRING NOT NULL,
+  `field` STRING,
+  `cluster_id` STRING,
   `well_id` STRING,
   `test_date` DATE,
   `test_duration_hr` FLOAT64,
@@ -568,15 +570,13 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.well_te
   `fluid_level_m` FLOAT64,
   `pump_intake_p_kgcm2` FLOAT64,
   `test_quality` STRING,
+  `is_prepend` BOOL,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
-  `field` STRING,
-  `cluster_id` STRING,
-  `is_prepend` BOOL,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -599,7 +599,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.wellhea
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -611,6 +611,8 @@ OPTIONS (
 
 CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.workover_history` (
   `workover_id` STRING NOT NULL,
+  `field` STRING,
+  `cluster_id` STRING,
   `well_id` STRING,
   `start_date` DATE,
   `end_date` DATE,
@@ -629,15 +631,13 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.workove
   `report_doc_id` STRING,
   `catalogue_job_code` STRING,
   `intervention_class` STRING,
+  `is_prepend` BOOL,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
-  `field` STRING,
-  `cluster_id` STRING,
-  `is_prepend` BOOL,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -660,7 +660,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.cluster
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -680,13 +680,13 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.facilit
   `capacity_bopd` INT64,
   `serviced_cluster_ids` STRING,
   `compressor_capacity_mmscfd` FLOAT64,
-  `water_handling_bwpd` FLOAT64,
+  `water_handling_bwpd` INT64,
   `_ingested_at` STRING,
   `_source_system` STRING,
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -713,7 +713,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.field_m
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -735,7 +735,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.field_t
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -763,7 +763,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.job_cat
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -784,7 +784,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.mro_inv
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )
@@ -805,7 +805,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.rig_cal
   `_source_file` STRING,
   `_batch_id` STRING,
   `_source_row` INT64 OPTIONS(description='0-based row ordinal in the landing file (preserves file order)'),
-  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | geleki | lakwa | lakhmani'),
+  `_landing_folder` STRING OPTIONS(description='Landing folder: asset | mangala | bhagyam | aishwariya | raageshwari'),
   `_bronze_dt` DATE OPTIONS(description='Bronze batch partition (dt=)'),
   `_silver_loaded_at` TIMESTAMP OPTIONS(description='Silver load time')
 )

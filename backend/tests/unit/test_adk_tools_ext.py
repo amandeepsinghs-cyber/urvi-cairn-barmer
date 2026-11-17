@@ -40,8 +40,8 @@ def fake_context() -> types.SimpleNamespace:
     return types.SimpleNamespace(
         state={
             "persona": "ASSET_MANAGER",
-            "ui_field": "Geleki",
-            "ui_well_id": "GK-129",
+            "ui_field": "Mangala",
+            "ui_well_id": "MNG-042",
         }
     )
 
@@ -82,7 +82,7 @@ def test_all_ext_tools_call(wrapper: Any, fake_context: types.SimpleNamespace) -
 
 def test_field_engineer_own_cluster_query_wells() -> None:
     """FIELD_ENGINEER with no ui_well_id and no cluster gets status UNAVAILABLE for query_wells."""
-    fe_ctx = types.SimpleNamespace(state={"persona": "FIELD_ENGINEER", "ui_field": "Geleki"})
+    fe_ctx = types.SimpleNamespace(state={"persona": "FIELD_ENGINEER", "ui_field": "Mangala"})
     result = query_wells(tool_context=fe_ctx)
 
     assert isinstance(result, dict)
@@ -95,8 +95,8 @@ def test_ed_classify_intervention() -> None:
     ed_ctx = types.SimpleNamespace(
         state={
             "persona": "ED",
-            "ui_field": "Geleki",
-            "ui_well_id": "GK-129",
+            "ui_field": "Mangala",
+            "ui_well_id": "MNG-042",
         }
     )
     result = classify_intervention(tool_context=ed_ctx)

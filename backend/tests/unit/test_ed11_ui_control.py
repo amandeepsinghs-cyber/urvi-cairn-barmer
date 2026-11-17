@@ -18,7 +18,7 @@ FRONT = Path(__file__).resolve().parents[3] / "frontend" / "src" / "agent" / "ui
         (("FULLSCREEN", "exit"), {"action": "fullscreen", "value": "off"}),
         (("basemap", "dark"), {"action": "basemap", "value": "scada"}),
         (("map_view", "India"), {"action": "map_view", "value": "india"}),
-        (("focus_field", "lakmani"), {"action": "focus_field", "value": "Lakhmani"}),
+        (("focus_field", "aishwariya"), {"action": "focus_field", "value": "Aishwariya"}),
         (("open_screen", "compare"), {"action": "open_screen", "value": "field_compare"}),
         (("panel", "close"), {"action": "panel", "value": "close"}),
         (("language", "Hindi"), {"action": "language", "value": "hindi"}),
@@ -33,15 +33,15 @@ def test_validate_allowed(args, expect):
 
 
 def test_well_commands_normalise_id_and_view():
-    cmd, _ = ui.validate("open_well", well_id="gk 129", view="completion")
-    assert cmd == {"action": "open_well", "well_id": "GK-129", "view": "wellbore", "label": "GK-129 · wellbore"}
-    cmd, _ = ui.validate("focus_well", "lkw-019")
-    assert cmd["well_id"] == "LKW-019" and cmd["label"] == "LKW-019 on map"
+    cmd, _ = ui.validate("open_well", well_id="mng 042", view="completion")
+    assert cmd == {"action": "open_well", "well_id": "MNG-042", "view": "wellbore", "label": "MNG-042 · wellbore"}
+    cmd, _ = ui.validate("focus_well", "bhg-019")
+    assert cmd["well_id"] == "BHG-019" and cmd["label"] == "BHG-019 on map"
 
 
 @pytest.mark.parametrize(
     "args",
-    [("delete_everything", ""), ("fullscreen", "maybe"), ("focus_well", ""), ("open_well", "", "GK-129", "secret"),
+    [("delete_everything", ""), ("fullscreen", "maybe"), ("focus_well", ""), ("open_well", "", "MNG-042", "secret"),
      ("focus_field", "Mumbai High")],
 )
 def test_validate_rejects_outside_allow_list(args):
@@ -54,8 +54,8 @@ def test_validate_rejects_outside_allow_list(args):
 def test_ed13_focus_cluster_and_report_print():
     cmd, err = ui.validate("focus_cluster", "ggs 03")
     assert err == "" and cmd == {"action": "focus_cluster", "value": "GGS-03", "label": "GGS-03 wells"}
-    cmd, _ = ui.validate("focus_cluster", "LKW-GGS-II")
-    assert cmd["value"] == "LKW-GGS-II"
+    cmd, _ = ui.validate("focus_cluster", "BHG-PAD-1")
+    assert cmd["value"] == "BHG-PAD-1"
     for bad in ("", "x", "GGS-01; drop table", "A" * 25):
         cmd, err = ui.validate("focus_cluster", bad)
         assert cmd is None and err
@@ -76,7 +76,7 @@ def test_ed14_health_filter(raw, expect):
 
 @pytest.mark.parametrize(
     ("text", "expect"),
-    [("GK one two nine", "GK 129"), ("GGS three", "GGS 3"), ("one twenty nine", "129"), ("gk 129", "gk 129"),
+    [("MNG zero four two", "MNG 042"), ("GGS three", "GGS 3"), ("one twenty nine", "129"), ("mng 042", "mng 042"),
      ("एक दो नौ", "129"), ("GGS 03", "GGS 03")],
 )
 def test_ed14_spoken_digits(text, expect):
@@ -85,23 +85,23 @@ def test_ed14_spoken_digits(text, expect):
 
 def test_ed14_spoken_ids_normalise():
     assert ui.validate("focus_cluster", "ggs three")[0]["value"] == "GGS-03"
-    assert ui.validate("open_well", well_id="GK one two nine", view="wellbore")[0]["well_id"] == "GK-129"
-    assert ui.validate("focus_well", "lkw nineteen")[0]["well_id"] == "LKW-019"
+    assert ui.validate("open_well", well_id="MNG zero four two", view="wellbore")[0]["well_id"] == "MNG-042"
+    assert ui.validate("focus_well", "bhg nineteen")[0]["well_id"] == "BHG-019"
 
 
 def test_ed14_runner_drops_health_screen_when_ui_ran():
     from app.agent.runner import build_artifacts
 
-    ok = {"status": "OK", "data": {"field": "Lakwa"}, "tool_id": "TC-020"}
+    ok = {"status": "OK", "data": {"field": "Bhagyam"}, "tool_id": "TC-020"}
     calls = [
-        {"name": "classify_well_health", "args": {"field": "Lakwa"}, "response": ok},
+        {"name": "classify_well_health", "args": {"field": "Bhagyam"}, "response": ok},
         {"name": "ui_control", "args": {}, "response": ui.run("health_filter", "not_producing")},
     ]
     _arts, actions = build_artifacts(calls, "only show non producing wells")
     assert [a["kind"] for a in actions] == ["ui"]
     assert actions[0]["command"]["action"] == "health_filter"
     # Without a ui command the health question still opens the Health & priority screen.
-    _arts, actions = build_artifacts(calls[:1], "which wells need attention in Lakwa?")
+    _arts, actions = build_artifacts(calls[:1], "which wells need attention in Bhagyam?")
     assert any(a.get("screen") == "field_health" for a in actions)
 
 

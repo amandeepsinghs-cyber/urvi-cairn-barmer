@@ -8,7 +8,7 @@
 
 import { getPersona } from '../state/persona';
 
-export type FieldName = 'Geleki' | 'Lakwa' | 'Lakhmani';
+export type FieldName = 'Mangala' | 'Bhagyam' | 'Aishwariya' | 'Raageshwari';
 export type FieldFilter = FieldName | 'ALL';
 export type ToolStatus =
   | 'OK'
@@ -48,7 +48,7 @@ export type HealthCounts = Record<HealthBucket, number>;
 /* ------------------------------------------------------------------ TC-025 + /api/fields */
 export interface ClusterNode {
   cluster_id: string;
-  cluster_type: string; // GGS | FAULT_BLOCK
+  cluster_type: string; // PAD | FAULT_BLOCK
   n_wells: number;
   n_active: number;
   center_lat: number | null;
@@ -63,7 +63,7 @@ export interface FieldNode {
   /* added by GET /api/fields (not by the bare TC-025 tool) */
   health_counts?: HealthCounts | null;
   centroid?: { lat: number; lon: number } | null;
-  boundary_geojson?: GeoJSON | null; // FeatureCollection: field boundary + cluster (GGS) polygons
+  boundary_geojson?: GeoJSON | null; // FeatureCollection: field boundary + pad/cluster polygons
   is_synthetic_geometry?: boolean;
 }
 
@@ -415,7 +415,8 @@ export function groupCounts(counts: Partial<Record<string, number>> | null | und
 }
 
 export const FIELD_COLORS: Record<FieldName, string> = {
-  Geleki: '#38bdf8',
-  Lakwa: '#f85149',
-  Lakhmani: '#a855f7',
+  Mangala: '#38bdf8',
+  Bhagyam: '#f85149',
+  Aishwariya: '#a855f7',
+  Raageshwari: '#10b981',
 };

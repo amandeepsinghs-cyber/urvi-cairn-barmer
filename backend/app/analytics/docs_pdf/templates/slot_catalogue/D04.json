@@ -7,9 +7,9 @@
   "doc_id": {
    "source": "corpus",
    "examples": [
-    "SCH-GK-214",
-    "SCH-GK-094",
-    "SCH-LKM-047"
+    "SCH-MNG-114",
+    "SCH-MNG-094",
+    "SCH-ASH-047"
    ],
    "missing_share": 0.0
   },
@@ -33,9 +33,9 @@
   "doc_title": {
    "source": "corpus",
    "examples": [
-    "Wellbore Schematic & Casing/Tubing Tally GK-214",
-    "Wellbore Schematic & Casing/Tubing Tally GK-094",
-    "Wellbore Schematic & Casing/Tubing Tally LKM-047"
+    "Wellbore Schematic & Casing/Tubing Tally MNG-114",
+    "Wellbore Schematic & Casing/Tubing Tally MNG-094",
+    "Wellbore Schematic & Casing/Tubing Tally ASH-047"
    ],
    "missing_share": 0.0
   },
@@ -51,25 +51,26 @@
   "field": {
    "source": "field_master.field",
    "examples": [
-    "Geleki",
-    "Lakhmani",
-    "Lakwa"
+    "Mangala",
+    "Aishwariya",
+    "Bhagyam"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Geleki",
-    "Lakhmani",
-    "Lakwa"
+    "Aishwariya",
+    "Bhagyam",
+    "Mangala",
+    "Raageshwari"
    ]
   },
   "asset": {
    "source": "field_master.asset",
    "examples": [
-    "Assam"
+    "Barmer Basin"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Assam"
+    "Barmer Basin"
    ]
   },
   "as_of": {
@@ -82,29 +83,34 @@
   "well_id": {
    "source": "well_master.well_id",
    "examples": [
-    "GK-214",
-    "GK-094",
-    "LKM-047"
+    "MNG-114",
+    "MNG-094",
+    "ASH-047"
    ],
    "missing_share": 0.0
   },
   "cluster_id": {
    "source": "well_master.cluster_id",
    "examples": [
-    "GK-SW",
-    "GK-NE",
-    "LKM-GGS-I"
+    "MNG-PAD-C",
+    "MNG-PAD-B",
+    "ASH-PAD-1"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "GK-CENTRAL",
-    "GK-NE",
-    "GK-SW",
-    "LKM-GGS-I",
-    "LKM-GGS-II",
-    "LKW-GGS-I",
-    "LKW-GGS-II",
-    "LKW-GGS-III"
+    "ASH-ABH-3",
+    "ASH-PAD-1",
+    "ASH-PAD-2",
+    "BHG-PAD-1",
+    "BHG-PAD-2",
+    "BHG-PAD-3",
+    "MNG-PAD-A",
+    "MNG-PAD-B",
+    "MNG-PAD-C",
+    "MNG-PAD-D",
+    "RAG-OIL-1",
+    "RAG-RDG-N",
+    "RAG-RDG-S"
    ]
   },
   "spud_date": {
@@ -128,15 +134,16 @@
   "current_zone": {
    "source": "well_master.current_zone",
    "examples": [
-    "Tipam",
-    "Barail",
-    "Lakadong"
+    "Fatehgarh_Lower",
+    "Fatehgarh_Upper",
+    "Barmer_Hill"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Barail",
-    "Lakadong",
-    "Tipam"
+    "Barmer_Hill",
+    "Fatehgarh_Lower",
+    "Fatehgarh_Upper",
+    "Raageshwari_Volcanics"
    ]
   },
   "perf_top_m": {
@@ -184,8 +191,11 @@
    ],
    "missing_share": 0.0,
    "categorical_values": [
+    "ESP",
     "GAS_LIFT",
+    "JET_PUMP",
     "NATURAL",
+    "PCP",
     "SRP"
    ]
   },
@@ -313,33 +323,31 @@
   "facility_id": {
    "source": "facility_master.facility_id",
    "examples": [
-    "GGS-01",
-    "GGS-03",
-    "LKM-GGS-I"
+    "MPT-NAGANA",
+    "MPT-NAGANA",
+    "ASH-PAD-1"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "LKM-GGS-I",
-    "LKM-GGS-II",
-    "LKW-GGS-I",
-    "LKW-GGS-II",
-    "LKW-GGS-III"
+    "ASH-CPF",
+    "BHG-CPF",
+    "MPT-NAGANA",
+    "RGT-TERMINAL"
    ]
   },
   "facility_name": {
    "source": "facility_master.name",
    "examples": [
-    "Gas Gathering Station 1 (Geleki South)",
-    "Gas Gathering Station 3 (Geleki North/Barail)",
-    "Lakhmani Group Gathering Station I"
+    "Mangala Processing Terminal (MPT-NAGANA)",
+    "Mangala Processing Terminal (MPT-NAGANA)",
+    "Aishwariya Central Processing Facility (ASH-CPF)"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Lakhmani Group Gathering Station I",
-    "Lakhmani Group Gathering Station II",
-    "Lakwa Group Gathering Station I",
-    "Lakwa Group Gathering Station II",
-    "Lakwa Group Gathering Station III"
+    "Aishwariya Central Processing Facility (ASH-CPF)",
+    "Bhagyam Central Processing Facility (BHG-CPF)",
+    "Mangala Processing Terminal (MPT-NAGANA)",
+    "Raageshwari Gas Terminal (RGT-TERMINAL)"
    ]
   },
   "prod_casing_od_in": {
@@ -441,9 +449,9 @@
   "tubing_workover_id": {
    "source": "tubing_string.workover_id",
    "examples": [
-    "WO-GK-214-006",
-    "WO-GK-094-009",
-    "WO-LKM-047-010"
+    "WO-MNG-114-006",
+    "WO-MNG-094-009",
+    "WO-ASH-047-010"
    ],
    "missing_share": 0.15
   },
@@ -581,7 +589,7 @@
      "length_m": "2,534.6",
      "top_m": "0.0",
      "install_date": "2025-03-22",
-     "workover_id": "WO-GK-214-006"
+     "workover_id": "WO-MNG-114-006"
     },
     {
      "seq": "1",
@@ -590,7 +598,7 @@
      "length_m": "2,539.0",
      "top_m": "0.0",
      "install_date": "2026-07-14",
-     "workover_id": "WO-GK-094-009"
+     "workover_id": "WO-MNG-094-009"
     }
    ],
    "max_rows_seen": 12
@@ -607,7 +615,7 @@
    "source": "perforation_intervals",
    "example_rows": [
     {
-     "zone": "Tipam",
+     "zone": "Fatehgarh_Lower",
      "top_m": "2,646.1",
      "bottom_m": "2,694.8",
      "spf": "4",
@@ -615,7 +623,7 @@
      "status": "OPEN"
     },
     {
-     "zone": "Tipam",
+     "zone": "Fatehgarh_Lower",
      "top_m": "2,635.7",
      "bottom_m": "2,694.0",
      "spf": "6",
@@ -652,10 +660,10 @@
  },
  "meta_keys": [],
  "sample_doc_ids": [
-  "SCH-GK-214",
-  "SCH-GK-094",
-  "SCH-LKM-047",
-  "SCH-LKW-001",
-  "SCH-LKW-016"
+  "SCH-MNG-114",
+  "SCH-MNG-094",
+  "SCH-ASH-047",
+  "SCH-BHG-001",
+  "SCH-BHG-016"
  ]
 }

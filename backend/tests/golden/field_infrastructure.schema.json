@@ -3,6 +3,11 @@
   "route": "/api/field/infrastructure",
   "schema": {
     "properties": {
+      "boundary_geojson": {
+        "type": [
+          "string"
+        ]
+      },
       "center_coordinates": {
         "properties": {
           "lat": {
@@ -22,6 +27,11 @@
         ],
         "type": [
           "object"
+        ]
+      },
+      "field": {
+        "type": [
+          "string"
         ]
       },
       "field_name": {
@@ -73,6 +83,16 @@
                 "string"
               ]
             },
+            "serviced_cluster_ids": {
+              "items": {
+                "type": [
+                  "string"
+                ]
+              },
+              "type": [
+                "array"
+              ]
+            },
             "serviced_wells": {
               "items": {
                 "type": [
@@ -83,6 +103,11 @@
                 "array"
               ]
             },
+            "type": {
+              "type": [
+                "string"
+              ]
+            },
             "water_handling_bwpd": {
               "type": [
                 "number"
@@ -91,9 +116,13 @@
           },
           "required": [
             "capacity_bopd",
+            "compressor_capacity_mmscfd",
             "coordinates",
             "id",
-            "name"
+            "name",
+            "serviced_cluster_ids",
+            "type",
+            "water_handling_bwpd"
           ],
           "type": [
             "object"
@@ -105,7 +134,9 @@
       }
     },
     "required": [
+      "boundary_geojson",
       "center_coordinates",
+      "field",
       "field_name",
       "gathering_stations"
     ],

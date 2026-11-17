@@ -38,5 +38,5 @@ def test_report_route_shows_cost_band_to_fe_in_showcase(showcase):
 
     from app.main import app
 
-    r = TestClient(app).get("/api/wells/GK-129/report", headers={"X-Persona": "FIELD_ENGINEER"})
+    r = TestClient(app).get("/api/wells/MNG-042/report", headers={"X-Persona": "FIELD_ENGINEER"})
     assert r.status_code == 200 and "cost band" in r.text.lower()

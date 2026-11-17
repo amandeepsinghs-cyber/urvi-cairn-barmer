@@ -11,8 +11,7 @@ from fastapi.testclient import TestClient
 from app.analytics.tools.common import load_table
 from app.analytics.tools.field_report import render_field_report
 
-CORE_WELLS = ["GK-129", "LKW-019", "LKM-061"]
-# Whole words only: the Lakhmani field name must not count as "lakh".
+CORE_WELLS = ["MNG-042", "BHG-019", "ASH-061"]
 CURRENCY = re.compile(r"₹|\busd\b|rupee|\blakhs?\b|\bcrores?\b|\bnpv\b", re.IGNORECASE)
 
 
@@ -48,7 +47,7 @@ def test_route_html_and_404():
     from app.main import app
 
     c = TestClient(app)
-    r = c.get("/api/wells/GK-129/report", headers={"X-Persona": "FIELD_ENGINEER"})
+    r = c.get("/api/wells/MNG-042/report", headers={"X-Persona": "FIELD_ENGINEER"})
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("text/html")
     assert "cost band" not in r.text.lower()
@@ -56,7 +55,7 @@ def test_route_html_and_404():
 
 
 def test_render_latency_after_warmup():
-    render_field_report("GK-129")
+    render_field_report("MNG-042")
     t0 = time.perf_counter()
-    render_field_report("GK-129")
+    render_field_report("MNG-042")
     assert time.perf_counter() - t0 < 3.0

@@ -15,9 +15,145 @@
               "array"
             ]
           },
+          "as_of": {
+            "type": [
+              "string"
+            ]
+          },
+          "catalogue_job_codes": {
+            "items": {
+              "type": [
+                "string"
+              ]
+            },
+            "type": [
+              "array"
+            ]
+          },
+          "cost_band": {
+            "type": [
+              "string"
+            ]
+          },
+          "deferred_bbl_12mo": {
+            "type": [
+              "number"
+            ]
+          },
+          "duration_days_max": {
+            "type": [
+              "number"
+            ]
+          },
+          "duration_days_min": {
+            "type": [
+              "number"
+            ]
+          },
+          "flags": {
+            "items": {
+              "type": [
+                "string"
+              ]
+            },
+            "type": [
+              "array"
+            ]
+          },
+          "intervention_class": {
+            "type": [
+              "string"
+            ]
+          },
+          "job_code": {
+            "type": [
+              "string"
+            ]
+          },
+          "p_success": {
+            "type": [
+              "number"
+            ]
+          },
+          "p_success_n": {
+            "type": [
+              "number"
+            ]
+          },
           "projected_flow_uplift_bopd": {
             "type": [
               "number"
+            ]
+          },
+          "provenance": {
+            "properties": {
+              "as_of": {
+                "type": [
+                  "string"
+                ]
+              },
+              "config_version": {
+                "type": [
+                  "string"
+                ]
+              },
+              "data_backend": {
+                "type": [
+                  "string"
+                ]
+              },
+              "duration_ms": {
+                "type": [
+                  "number"
+                ]
+              },
+              "input_hash": {
+                "type": [
+                  "string"
+                ]
+              },
+              "ml_model": {
+                "type": [
+                  "string"
+                ]
+              },
+              "tool_id": {
+                "type": [
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "as_of",
+              "config_version",
+              "data_backend",
+              "duration_ms",
+              "input_hash",
+              "ml_model",
+              "tool_id"
+            ],
+            "type": [
+              "object"
+            ]
+          },
+          "requires_rig": {
+            "type": [
+              "boolean"
+            ]
+          },
+          "rig_days": {
+            "type": [
+              "number"
+            ]
+          },
+          "risk_flags": {
+            "items": {
+              "type": [
+                "string"
+              ]
+            },
+            "type": [
+              "array"
             ]
           },
           "risk_mitigation": {
@@ -25,7 +161,22 @@
               "string"
             ]
           },
+          "sop_doc_id": {
+            "type": [
+              "string"
+            ]
+          },
+          "sop_url": {
+            "type": [
+              "string"
+            ]
+          },
           "title": {
+            "type": [
+              "string"
+            ]
+          },
+          "unit_type": {
             "type": [
               "string"
             ]
@@ -39,15 +190,39 @@
             "type": [
               "string"
             ]
+          },
+          "why": {
+            "type": [
+              "string"
+            ]
           }
         },
         "required": [
           "action_items",
+          "as_of",
+          "catalogue_job_codes",
+          "cost_band",
+          "deferred_bbl_12mo",
+          "duration_days_max",
+          "duration_days_min",
+          "flags",
+          "intervention_class",
+          "job_code",
+          "p_success",
+          "p_success_n",
           "projected_flow_uplift_bopd",
+          "provenance",
+          "requires_rig",
+          "rig_days",
+          "risk_flags",
           "risk_mitigation",
+          "sop_doc_id",
+          "sop_url",
           "title",
+          "unit_type",
           "urgency",
-          "urgency_badge"
+          "urgency_badge",
+          "why"
         ],
         "type": [
           "object"
@@ -81,8 +256,8 @@
   },
   "status": 200,
   "wells": [
-    "GK-129",
-    "LKW-047",
-    "LKM-061"
+    "MNG-042",
+    "BHG-019",
+    "ASH-023"
   ]
 }

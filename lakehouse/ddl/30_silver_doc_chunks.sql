@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `urvi-cairn-barmer-ai-agent.urvi_cairn_silver.doc_chu
   `chunk_seq` INT64 OPTIONS(description='0-based chunk ordinal within the page'),
   `text` STRING OPTIONS(description='Extracted text of the chunk (same text the TF-IDF index was built from)'),
   `well_id` STRING OPTIONS(description='Well the document belongs to (NULL for field-level docs and SOPs)'),
-  `field` STRING OPTIONS(description='Geleki | Lakwa | Lakhmani (NULL for asset-wide SOPs)'),
+  `field` STRING OPTIONS(description='Mangala | Bhagyam | Aishwariya | Raageshwari (NULL for asset-wide SOPs)'),
   `doc_type` STRING OPTIONS(description='D1..D11 or SOP'),
   `doc_date` DATE,
   `gcs_uri` STRING OPTIONS(description='gs://.../documents/... PDF object'),

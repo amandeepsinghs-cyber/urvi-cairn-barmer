@@ -3,8 +3,8 @@ intervention_class: IC-13
 title: Standard Operating Procedure for Coning Control and Wellhead Choke Optimization
 purpose: Define systematic operating instructions for evaluating, throttling, and optimizing surface choke sizes to control
   bottom water or gas coning.
-scope: Covers surface choke throttling and drawdown management across all producing wells in Assam assets ({n_job_codes} catalogue
-  job codes) utilizing {equipment_list}.
+scope: Covers surface choke throttling and drawdown management across all producing wells in Cairn Oil & Gas Barmer Basin assets
+  ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
 applicability:
 - Rapid rise in water cut or gas-oil ratio following high drawdown production.
 - Bottom water coning or gas cap cresting diagnosed from production trends.
@@ -24,7 +24,7 @@ hazards:
 - hazard: Erosion or washout of choke body during fluid throttling.
   control: Inspect choke bean trim, monitor ultrasonic wall thickness, and use tungsten carbide beans.
 - hazard: Liquid slugging or flowline surge when adjusting choke sizes.
-  control: Adjust choke gradually in increments, notify gathering station, and monitor separator pressure.
+  control: Adjust choke gradually in increments, notify the central processing terminal control room, and monitor separator pressure.
 - hazard: Freezing or hydrate formation across high pressure choke restriction.
   control: Monitor surface flowline temperature, inject hydrate inhibitor where necessary, and insulate choke body.
 pre_job_checks:
@@ -32,12 +32,12 @@ pre_job_checks:
 - Inspect wellhead christmas tree, choke manifold, test separator, and flare line.
 - Check inventory of calibrated ceramic and tungsten carbide choke beans.
 - Verify calibration of flowing tubing pressure and casing pressure gauges.
-- Notify gathering station operator prior to initiating choke adjustment sequence.
+- Notify the central processing terminal control room prior to initiating choke adjustment sequence.
 procedure:
 - phase: Baseline Assessment and Manifold Preparation
   steps:
   - Record baseline flowing tubing pressure, casing pressure, water cut, and gross liquid rate.
-  - Route well stream through test separator at the group gathering station for baseline test.
+  - Route well stream through test separator at the multi-well pad manifold or central processing terminal for baseline test.
   - Inspect surface choke manifold body, bonnet bolts, and pressure bleed valves.
   - Confirm dual flow paths through choke manifold are operable for smooth flow switching.
   - Check gas detection readings around wellhead cellar and manifold valves.
@@ -54,7 +54,7 @@ procedure:
 - phase: Stabilization and Performance Monitoring
   steps:
   - Monitor flowing tubing pressure and casing pressure continuously during stabilization.
-  - Observe fluid behavior at the group gathering station separator for slugging.
+  - Observe fluid behavior at the central processing terminal inlet separator for slugging.
   - Allow well to stabilize for the programme hold duration before taking performance samples.
   - Sample produced liquid at flowline sampling port and measure water cut by centrifuge.
   - Record gas-oil ratio and verify suppression of coning gas or water breakthrough.

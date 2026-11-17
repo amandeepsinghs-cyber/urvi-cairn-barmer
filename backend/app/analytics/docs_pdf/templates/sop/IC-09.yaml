@@ -1,14 +1,14 @@
 sop_id: SOP-IC-09
 intervention_class: IC-09
-title: Standard Operating Procedure for Matrix Stimulation Acidizing and Fracturing
-purpose: Define mandatory technical specifications, environmental protections, and execution steps for matrix acidizing and
-  hydraulic fracturing interventions.
-scope: Covers near-wellbore matrix damage removal and sandstone hydraulic fracturing across Assam field assets ({n_job_codes}
-  catalogue job codes) utilizing {equipment_list}.
+title: Standard Operating Procedure for Matrix Stimulation Acidizing and Multi-Stage Hydraulic Fracturing
+purpose: Define mandatory technical specifications, environmental protections, and execution steps for Fatehgarh matrix acidizing
+  and multi-stage hydraulic fracturing in Barmer Hill tight-oil and Raageshwari Volcanics gas reservoirs.
+scope: Covers near-wellbore matrix damage removal and multi-stage sandstone or volcanic hydraulic fracturing across Cairn Oil & Gas
+  Barmer Basin assets ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
 applicability:
-- High skin factor and near-wellbore formation damage identified from pressure transient analysis.
+- High skin factor and near-wellbore formation damage identified from pressure transient analysis in Fatehgarh producers.
 - Severe productivity impairment caused by drilling mud filtrate, fines migration, or clay swelling.
-- Low permeability reservoir sandstones requiring hydraulic fracture conductivity for economic flow.
+- Low permeability Barmer Hill tight oil and Raageshwari Volcanics formations requiring multi-stage hydraulic fracture conductivity for economic flow.
 roles:
 - Wellsite supervisor
 - Stimulation technical supervisor
@@ -71,12 +71,13 @@ job_variants:
   - Inject sequestered acid system at matrix rates below fracture pressure to dissolve near-wellbore skin.
   - Displace live acid with mutual solvent overflush and flow back spent acid immediately to prevent sludge.
   HYDRAULIC_FRAC:
-  - Pump pad fluid, proppant stages, and displacement fluid to create high-conductivity fracture conduit.
-  - Monitor surface treating pressure, slurry density, and fracture closure to achieve design proppant placement.
+  - Isolate and stimulate targeted Barmer Hill or Raageshwari Volcanics fracture stages using plug-and-perf or sliding-sleeve staging.
+  - Pump crosslinked pad fluid, proppant slurry ramps, and clean displacement fluid to create high-conductivity fracture conduits.
+  - Monitor surface treating pressure, slurry density, and fracture closure to achieve design proppant placement without screen-out.
 acceptance_criteria:
 - Total design chemical and proppant volumes placed into target reservoir formation.
 - Post-treatment pressure transient analysis confirms marked reduction in near-wellbore skin.
-- Sustained oil production uplift achieved with clear, sand-free effluent at gathering station.
+- Sustained hydrocarbon production uplift achieved with clear, sand-free effluent at the central processing terminal.
 post_job:
 - Archive digital pressure, rate, and proppant concentration logs in engineering database.
 - Complete environmental waste neutralization and disposal documentation.

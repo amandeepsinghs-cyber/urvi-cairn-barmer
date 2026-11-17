@@ -89,7 +89,7 @@ export const FieldHistoryChart: React.FC<FieldHistoryChartProps> = ({ initialFie
   }, [availableFields, selectedFields]);
 
   // Pivot data.series into Recharts rows keyed by period:
-  // { period, Geleki_oil, Lakwa_oil, ..., Geleki_gas, ..., Geleki_wc, ... }
+  // { period, Mangala_oil, Bhagyam_oil, ..., Mangala_gas, ..., Mangala_wc, ... }
   const chartData = useMemo(() => {
     if (!envelope?.data?.series) return [];
     const map = new Map<string, ChartRow>();

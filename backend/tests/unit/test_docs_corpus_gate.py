@@ -12,7 +12,7 @@ import pytest
 from app.analytics.docs_pdf.facts import DOC_TYPES
 from app.analytics.docs_pdf.paths import docs_dir, index_dir
 
-FIELDS = ("Geleki", "Lakwa", "Lakhmani")
+FIELDS = ("Mangala", "Bhagyam", "Aishwariya", "Raageshwari")
 IDX = index_dir()
 ROOT = docs_dir()
 
@@ -51,15 +51,15 @@ def test_scanned_subset_is_about_ten_percent(docs):
     sub = docs[docs["doc_type"].isin(["D01", "D05"])]
     share = (~sub["has_text_layer"].astype(bool)).mean()
     assert 0.07 <= share <= 0.13, share
-    assert not bool(docs.set_index("doc_id").loc["DOC-CBL-GK129-1998", "has_text_layer"])
+    assert not bool(docs.set_index("doc_id").loc["DOC-CBL-MNG042-2014", "has_text_layer"])
 
 
-def test_gk129_hero_documents(docs):
+def test_mng042_hero_documents(docs):
     d = docs.set_index("doc_id")
-    assert d.loc["DOC-CBL-GK129-1998", "doc_type"] == "D05"
-    assert str(d.loc["DOC-CBL-GK129-1998", "doc_date"]).startswith("1998")
-    assert d.loc["DOC-SCAN-GK-129-2019", "doc_type"] == "D02"
-    assert str(d.loc["DOC-SCAN-GK-129-2019", "doc_date"]).startswith("2019")
+    assert d.loc["DOC-CBL-MNG042-2014", "doc_type"] == "D05"
+    assert str(d.loc["DOC-CBL-MNG042-2014", "doc_date"]).startswith("2014")
+    assert d.loc["DOC-SCAN-MNG-042-2019", "doc_type"] == "D02"
+    assert str(d.loc["DOC-SCAN-MNG-042-2019", "doc_date"]).startswith("2019")
 
 
 def test_corpus_size_within_budget(manifest):

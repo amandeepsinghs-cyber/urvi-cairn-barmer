@@ -31,7 +31,7 @@ from app.analytics.model.features import (
 )
 from app.analytics.tools.common import load_table
 
-FIXED = ["LKW-047", "LKM-023", "LKM-061", "GK-129", "LKW-112", "LKM-090"]
+FIXED = ["BHG-019", "ASH-023", "ASH-061", "MNG-042", "BHG-088", "RAG-014"]
 
 
 def _snapshots(n_random: int = 24) -> list[tuple[str, object]]:

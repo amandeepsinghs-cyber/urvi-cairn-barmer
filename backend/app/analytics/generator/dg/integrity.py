@@ -21,6 +21,20 @@ from .common import AS_OF, FieldContext, well_rng
 # Standard API 6A pressure rating classes in psi
 API_PRESSURE_CLASSES: tuple[int, ...] = (2000, 3000, 5000, 10000)
 
+# Field-authentic minimum API 6A wellhead rating classes (psi):
+# - MBA waxy oil / polymer / ABH tight-oil pads: 3,000 / 5,000 psi
+# - Raageshwari Deep Gas (RDG) volcanic high-pressure gas-condensate: 10,000 psi
+FIELD_MIN_WELLHEAD_PSI: dict[str, int] = {
+    "mangala": 3000,
+    "bhagyam": 3000,
+    "aishwariya": 5000,
+    "raageshwari": 10000,
+}
+
+# Pinned safety-veto fixture well (RAG-014: failed ANNULUS barrier test + 5,000 psi wellhead
+# insufficient for 1.5x deep volcanic hydraulic frac treating pressure)
+PINNED_BARRIER_FAIL_WELLS: frozenset[str] = frozenset({"RAG-014"})
+
 # Standard barriers evaluated during routine integrity testing
 STANDARD_BARRIERS: tuple[str, ...] = ("MASTER_VALVE", "WING_VALVE", "ANNULUS")
 
@@ -52,6 +66,7 @@ def generate_wellhead_rating(ctx: FieldContext) -> pd.DataFrame:
     Rule:
     - field max THP across well_tests (kg/cm2 -> psi x 14.2233)
     - class = smallest API class in [2000, 3000, 5000, 10000] that is >= 1.5 x field max THP psi
+      and >= FIELD_MIN_WELLHEAD_PSI[field] (3000/5000 psi on MBA, 10000 psi on RDG; 5000 psi on RAG-014)
     - xmas_tree_rating_psi = same class
     - last_service_date = last workover end_date for the well or completion_date, <= AS_OF
     """
@@ -68,13 +83,22 @@ def generate_wellhead_rating(ctx: FieldContext) -> pd.DataFrame:
         field_max_thp_kgcm2 = 40.0
 
     field_max_thp_psi = field_max_thp_kgcm2 * 14.2233
-    required_rating_psi = 1.5 * field_max_thp_psi
+    min_thp_rating_psi = 1.5 * field_max_thp_psi
+    field_floor_psi = float(FIELD_MIN_WELLHEAD_PSI.get(str(field).lower(), 3000))
+    required_rating_psi = max(min_thp_rating_psi, field_floor_psi)
 
-    # Smallest API class >= 1.5 x field max THP psi
+    # Smallest API class >= required_rating_psi
     chosen_class = API_PRESSURE_CLASSES[-1]
     for c in API_PRESSURE_CLASSES:
         if c >= required_rating_psi:
             chosen_class = c
+            break
+
+    # For RAG-014, use 5000 psi (still >= 1.5 x flowing THP, but < 1.5 x 5500 psi frac pressure)
+    rag014_class = API_PRESSURE_CLASSES[-1]
+    for c in API_PRESSURE_CLASSES:
+        if c >= max(min_thp_rating_psi, 5000.0):
+            rag014_class = c
             break
 
     # 2. Map each well to its last workover end_date <= AS_OF
@@ -111,12 +135,13 @@ def generate_wellhead_rating(ctx: FieldContext) -> pd.DataFrame:
         if svc_date > AS_OF:
             svc_date = AS_OF
 
+        wh_psi = int(rag014_class if well_id == "RAG-014" else chosen_class)
         rows.append({
             "well_id": well_id,
             "field": str(well_field),
             "cluster_id": str(cluster_id),
-            "wellhead_class_psi": int(chosen_class),
-            "xmas_tree_rating_psi": int(chosen_class),
+            "wellhead_class_psi": wh_psi,
+            "xmas_tree_rating_psi": wh_psi,
             "last_service_date": svc_date,
         })
 
@@ -148,7 +173,8 @@ def generate_barrier_tests(ctx: FieldContext) -> pd.DataFrame:
                             or max chp_kgcm2 (ANNULUS/PACKER) from well_tests,
                             rounded to 1 decimal; if no tests use field median.
     - FAIL rate <= 5% overall and FAIL allowed only on wells that have a
-      CASING_LEAK or TUBING_LEAK failure_code in workover_history; otherwise PASS.
+      CASING_LEAK or TUBING_LEAK failure_code in workover_history (plus pinned
+      safety-veto fixture RAG-014 on ANNULUS); otherwise PASS.
     """
     wm = ctx.t("well_master")
     wo = ctx.t("workover_history") if "workover_history" in ctx.tables else pd.DataFrame()
@@ -174,13 +200,13 @@ def generate_barrier_tests(ctx: FieldContext) -> pd.DataFrame:
         packer_rows = ts[ts["component"].astype(str).str.strip().str.upper() == "PACKER"]
         wells_with_packer = set(packer_rows["well_id"].dropna().astype(str))
 
-    # 2. Identify wells permitted to have FAIL results (leak history)
-    wells_with_leak: set[str] = set()
+    # 2. Identify wells permitted to have FAIL results (leak history + pinned RAG-014)
+    wells_with_leak: set[str] = set(PINNED_BARRIER_FAIL_WELLS)
     if not wo.empty and "well_id" in wo.columns and "failure_code" in wo.columns:
         leak_rows = wo[
             wo["failure_code"].astype(str).str.strip().str.upper().isin(LEAK_FAILURE_CODES)
         ]
-        wells_with_leak = set(leak_rows["well_id"].dropna().astype(str))
+        wells_with_leak |= set(leak_rows["well_id"].dropna().astype(str))
 
     # 3. Compute field median pressures as fallback
     field_median_thp = 15.0
@@ -272,6 +298,10 @@ def generate_barrier_tests(ctx: FieldContext) -> pd.DataFrame:
             test_dates.append(cur_date)
             cur_date += timedelta(days=180)
 
+        # Ensure pinned RAG-014 always has at least one barrier test strictly in (base_date, AS_OF]
+        if not test_dates and well_id in PINNED_BARRIER_FAIL_WELLS and base_date < AS_OF:
+            test_dates.append(AS_OF)
+
         # If base_date was so recent that base_date + 180 > AS_OF,
         # no routine test has occurred yet up to AS_OF.
         if not test_dates:
@@ -279,6 +309,7 @@ def generate_barrier_tests(ctx: FieldContext) -> pd.DataFrame:
 
         rng = well_rng(well_id, "barrier_result")
         can_fail = well_id in wells_with_leak
+        last_t_date = test_dates[-1]
 
         for test_date in test_dates:
             next_due = test_date + timedelta(days=180)
@@ -291,8 +322,10 @@ def generate_barrier_tests(ctx: FieldContext) -> pd.DataFrame:
                 else:  # ANNULUS, PACKER
                     test_press = chp_test_pressure
 
-                # FAIL allowed only on wells with leak history, keeping overall rate <= 5%
-                if can_fail and rng.random() < 0.08:
+                # Deterministic RAG-014 safety veto fixture: latest ANNULUS test FAIL
+                if well_id == "RAG-014" and barrier == "ANNULUS" and test_date == last_t_date:
+                    result = "FAIL"
+                elif can_fail and rng.random() < 0.08:
                     result = "FAIL"
                 else:
                     result = "PASS"

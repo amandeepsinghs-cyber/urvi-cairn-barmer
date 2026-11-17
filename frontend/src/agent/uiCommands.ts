@@ -10,13 +10,13 @@
 import { useEffect, useRef } from 'react';
 
 export const UI_ACTIONS = {
-  map_view: ['india', 'assam'],
+  map_view: ['india', 'barmer'],
   fullscreen: ['on', 'off'],
   basemap: ['satellite', 'scada'],
   flowlines: ['on', 'off'],
   legend: ['on', 'off'],
   zoom: ['in', 'out'],
-  focus_field: ['Geleki', 'Lakwa', 'Lakhmani', 'ALL'],
+  focus_field: ['Mangala', 'Bhagyam', 'Aishwariya', 'Raageshwari', 'ALL'],
   focus_cluster: null,
   focus_well: null,
   open_well: null,
@@ -65,7 +65,7 @@ export function useUiCommands(handler: (cmd: UiCommand) => void): void {
 // ------------------------------------------------------------------------------------------------
 const LABELS: Record<string, string> = {
   'map_view:india': 'India view',
-  'map_view:assam': 'Assam Asset view',
+  'map_view:barmer': 'Barmer Basin view',
   'fullscreen:on': 'Full screen on',
   'fullscreen:off': 'Full screen off',
   'basemap:satellite': 'Satellite map',
@@ -111,14 +111,14 @@ export function labelOf(c: UiCommand): string {
 // ------------------------------------------------------------------------------------------------
 // Browser parser (plain commands only)
 // ------------------------------------------------------------------------------------------------
-const WELL_RE = /\b(gk|lkw|lkm)[\s-]?(\d{3})\b/i;
+const WELL_RE = /\b(mng|bhg|ash|rag)[\s-]?(\d{3})\b/i;
 
 /** Words that carry no meaning in a UI command (EN / Hinglish / Hindi). */
 const FILLERS = new Set(
   (
     'please pls plz kindly can could you would will now just the a an to on of in into at for me my us it this that ' +
     'show display open go switch turn set change make put take bring back again let lets let\'s view mode screen ' +
-    'map page tab ok okay baat bolo speak talk language bhasha reply answer karein kariye  hey wellpulse agent ji karo kar kardo kar do do dikhao dikha dikhaiye dikhana kholo ' +
+    'map page tab ok okay baat bolo speak talk language bhasha reply answer karein kariye  hey urvi agent ji karo kar kardo kar do do dikhao dikha dikhaiye dikhana kholo ' +
     'chalo jao le lo par pe mein me ka ki ke ko bhi toh hai sir also then and aur phir fir with up over ' +
     'only sirf just keval filter दिखाओ करो कर दो खोलो पर में का की के को भी केवल सिर्फ'
   ).split(/\s+/),
@@ -167,7 +167,7 @@ const RULES: Rule[] = [
   },
   { re: /\b(exit|normal view)\b/, build: () => ({ action: 'fullscreen', value: 'off' }) },
   { re: /\b(all\s*)?india\b|भारत|इंडिया/, build: () => ({ action: 'map_view', value: 'india' }) },
-  { re: /\bassam( asset)?\b|असम/, build: () => ({ action: 'map_view', value: 'assam' }) },
+  { re: /\bbarmer( basin)?\b|बाड़मेर/, build: () => ({ action: 'map_view', value: 'barmer' }) },
   { re: /\bsatellite\b|सैटेलाइट/, build: () => ({ action: 'basemap', value: 'satellite' }) },
   { re: /\b(scada|dark map|dark mode)\b/, build: () => ({ action: 'basemap', value: 'scada' }) },
   {
@@ -207,10 +207,10 @@ const RULES: Rule[] = [
   { re: /\b(close|band karo)\s*(the\s*)?(field\s*)?report\b/, build: () => ({ action: 'report', value: 'close' }) },
   { re: /\bprint\s*(the\s*)?(field\s*)?(report|well pack)?\b/, build: () => ({ action: 'report', value: 'print' }) },
   {
-    // ED-13: "show GGS-01", "LKW-GGS-II ke wells", "cluster GK-NE"
-    re: /\b((?:gk|lkw|lkm)-)?ggs[\s-]?(\d{1,2}|i{1,3}|iv|v)\b|\bcluster\s+([a-z]{2,3}-[a-z]{1,3})\b/,
+    // ED-13: "show MNG-PAD-B", "BHG-PAD-1 ke wells", "cluster ASH-ABH-3", "RAG-RDG-S"
+    re: /\b((?:mng|bhg|ash)-pad-(?:[a-d1-3])|ash-abh-3|rag-rdg-[ns]|rag-oil-1|mpt-nagana|(?:bhg|ash)-cpf|rgt-terminal)\b|\bcluster\s+([a-z]{2,3}-[a-z0-9-]{1,8})\b/,
     build: (m) => {
-      const v = m[3] ? m[3] : `${m[1] ?? ''}GGS-${m[2]}`;
+      const v = m[2] ? m[2] : m[1];
       return { action: 'focus_cluster', value: v.toUpperCase() };
     },
   },
@@ -238,10 +238,18 @@ const RULES: Rule[] = [
     },
   },
   {
-    re: /\b(geleki|lakwa|lakhmani|lakmani|all fields)\b|गेलेकी|लकवा|लखमनी/,
+    re: /\b(mangala|bhagyam|aishwariya|raageshwari|all fields)\b|मंगला|भाग्यम|ऐश्वर्या|रागेश्वरी/,
     build: (m) => {
       const t = m[0];
-      const v = /gel|गेले/.test(t) ? 'Geleki' : /lakw|लकवा/.test(t) ? 'Lakwa' : /all/.test(t) ? 'ALL' : 'Lakhmani';
+      const v = /mang|मंगला/.test(t)
+        ? 'Mangala'
+        : /bhag|भाग्यम/.test(t)
+          ? 'Bhagyam'
+          : /aish|ऐश्वर्या/.test(t)
+            ? 'Aishwariya'
+            : /raag|रागेश्वरी/.test(t)
+              ? 'Raageshwari'
+              : 'ALL';
       return { action: 'focus_field', value: v };
     },
   },
@@ -250,7 +258,7 @@ const RULES: Rule[] = [
 /** Words consumed by a well-view clause besides the view keyword itself. */
 const WELL_VIEW_EXTRA = /\b(well|tab|section|view|curve|chart|plot|ka|ki|ke)\b/g;
 
-/** ED-14: speech often spells ids out ("GK one two nine", "GGS teen") → digits after an id prefix. */
+/** ED-14: speech often spells ids out ("MNG zero four two", "BHG zero one nine") → digits after an id prefix. */
 const DIGIT_WORDS: Record<string, string> = {
   zero: '0', oh: '0', one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8',
   nine: '9', ek: '1', do: '2', teen: '3', char: '4', chaar: '4', paanch: '5', panch: '5', chhe: '6', saat: '7',
@@ -258,10 +266,10 @@ const DIGIT_WORDS: Record<string, string> = {
 };
 export function spokenIds(text: string): string {
   const words = Object.keys(DIGIT_WORDS).join('|');
-  const re = new RegExp(`\\b(gk|lkw|lkm|ggs)((?:[\\s-]+(?:${words}))+)\\b`, 'gi');
+  const re = new RegExp(`\\b(mng|bhg|ash|rag)((?:[\\s-]+(?:${words}))+)\\b`, 'gi');
   return text.replace(re, (_m, p: string, ds: string) => {
     const d = ds.trim().split(/[\s-]+/).map((w) => DIGIT_WORDS[w.toLowerCase()]).join('');
-    const pad = /ggs/i.test(p) ? d.padStart(2, '0') : d.padStart(3, '0');
+    const pad = d.padStart(3, '0');
     return `${p}-${pad}`;
   });
 }
@@ -309,15 +317,15 @@ function parseClause(clause: string, currentWellId?: string | null): UiCommand[]
     if (!m) continue;
     const cmd = r.build(m, clause);
     if (!cmd) continue;
-    // "zoom to Lakwa" / "go to Geleki on the map" → focus_field only (drop map_view duplicates)
+    // "zoom to Bhagyam" / "go to Mangala on the map" → focus_field only (drop map_view duplicates)
     out.push(cmd);
     rest = rest.replace(r.re, ' ');
   }
   if (out.length === 0) return null;
   const SWITCH_WORDS = /^(zoom|field|well|asset|map|off|hide|band|hatao|remove|disable|enable|exit|leave|close|nahi|बंद|हटाओ)$/;
   if (leftover(rest, /$^/).filter((w) => !SWITCH_WORDS.test(w)).length > 0) return null;
-  // focus_field implies the Assam drill-down; drop an explicit assam map_view next to it
-  if (out.some((c) => c.action === 'focus_field')) return out.filter((c) => !(c.action === 'map_view' && c.value === 'assam'));
+  // focus_field implies the Barmer Basin drill-down; drop an explicit barmer map_view next to it
+  if (out.some((c) => c.action === 'focus_field')) return out.filter((c) => !(c.action === 'map_view' && c.value === 'barmer'));
   return out;
 }
 

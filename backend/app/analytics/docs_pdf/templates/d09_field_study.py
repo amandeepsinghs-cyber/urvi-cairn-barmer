@@ -1,10 +1,10 @@
 """Field study and annual review template (type D09).
 
 Handles two variants:
-- Annual review documents (per field-year, e.g. FS-GK-2024): comprehensive review
+- Annual review documents (per field-year, e.g. FS-MNG-2024): comprehensive review
   covering executive summary, production indicators, cluster performance, workover
   campaign, downtime analysis, operational disruptions, field facilities, and outlook.
-- Legacy field studies (spec.meta['variant'] == 'legacy_study', e.g. DOC-FIELD-TIPAM-GEOL-2012):
+- Legacy field studies (spec.meta['variant'] == 'legacy_study', e.g. DOC-FIELD-FATEHGARH-GEOL-2012):
   concise technical evaluation note built from static field facts and inventory tables.
 """
 from __future__ import annotations

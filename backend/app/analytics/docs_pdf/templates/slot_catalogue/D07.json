@@ -7,9 +7,9 @@
   "doc_id": {
    "source": "corpus",
    "examples": [
-    "WT-LKW-033-20241020",
-    "WT-LKW-120-20220420",
-    "WT-LKW-054-20240410"
+    "WT-BHG-033-20241020",
+    "WT-BHG-020-20220420",
+    "WT-BHG-054-20240410"
    ],
    "missing_share": 0.0
   },
@@ -33,9 +33,9 @@
   "doc_title": {
    "source": "corpus",
    "examples": [
-    "LKW-033 Well Test & Pressure Survey Report (2024-10-20)",
-    "LKW-120 Well Test & Pressure Survey Report (2022-04-20)",
-    "LKW-054 Well Test & Pressure Survey Report (2024-04-10)"
+    "BHG-033 Well Test & Pressure Survey Report (2024-10-20)",
+    "BHG-020 Well Test & Pressure Survey Report (2022-04-20)",
+    "BHG-054 Well Test & Pressure Survey Report (2024-04-10)"
    ],
    "missing_share": 0.0
   },
@@ -51,25 +51,26 @@
   "field": {
    "source": "field_master.field",
    "examples": [
-    "Lakwa",
-    "Geleki",
-    "Lakhmani"
+    "Bhagyam",
+    "Mangala",
+    "Aishwariya"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Geleki",
-    "Lakhmani",
-    "Lakwa"
+    "Aishwariya",
+    "Bhagyam",
+    "Mangala",
+    "Raageshwari"
    ]
   },
   "asset": {
    "source": "field_master.asset",
    "examples": [
-    "Assam"
+    "Barmer Basin"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Assam"
+    "Barmer Basin"
    ]
   },
   "as_of": {
@@ -82,29 +83,34 @@
   "well_id": {
    "source": "well_master.well_id",
    "examples": [
-    "LKW-033",
-    "LKW-120",
-    "LKW-054"
+    "BHG-033",
+    "BHG-020",
+    "BHG-054"
    ],
    "missing_share": 0.0
   },
   "cluster_id": {
    "source": "well_master.cluster_id",
    "examples": [
-    "LKW-GGS-III",
-    "LKW-GGS-II",
-    "LKW-GGS-I"
+    "BHG-PAD-3",
+    "BHG-PAD-2",
+    "BHG-PAD-1"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "GK-CENTRAL",
-    "GK-NE",
-    "GK-SW",
-    "LKM-GGS-I",
-    "LKM-GGS-II",
-    "LKW-GGS-I",
-    "LKW-GGS-II",
-    "LKW-GGS-III"
+    "ASH-ABH-3",
+    "ASH-PAD-1",
+    "ASH-PAD-2",
+    "BHG-PAD-1",
+    "BHG-PAD-2",
+    "BHG-PAD-3",
+    "MNG-PAD-A",
+    "MNG-PAD-B",
+    "MNG-PAD-C",
+    "MNG-PAD-D",
+    "RAG-OIL-1",
+    "RAG-RDG-N",
+    "RAG-RDG-S"
    ]
   },
   "spud_date": {
@@ -128,15 +134,16 @@
   "current_zone": {
    "source": "well_master.current_zone",
    "examples": [
-    "Tipam",
-    "Barail",
-    "Lakadong"
+    "Fatehgarh_Lower",
+    "Fatehgarh_Upper",
+    "Barmer_Hill"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Barail",
-    "Lakadong",
-    "Tipam"
+    "Barmer_Hill",
+    "Fatehgarh_Lower",
+    "Fatehgarh_Upper",
+    "Raageshwari_Volcanics"
    ]
   },
   "perf_top_m": {
@@ -184,8 +191,11 @@
    ],
    "missing_share": 0.0,
    "categorical_values": [
+    "ESP",
     "GAS_LIFT",
+    "JET_PUMP",
     "NATURAL",
+    "PCP",
     "SRP"
    ]
   },
@@ -313,41 +323,39 @@
   "facility_id": {
    "source": "facility_master.facility_id",
    "examples": [
-    "LKW-GGS-III",
-    "LKW-GGS-II",
-    "LKW-GGS-I"
+    "BHG-PAD-3",
+    "BHG-PAD-2",
+    "BHG-PAD-1"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "LKM-GGS-I",
-    "LKM-GGS-II",
-    "LKW-GGS-I",
-    "LKW-GGS-II",
-    "LKW-GGS-III"
+    "ASH-CPF",
+    "BHG-CPF",
+    "MPT-NAGANA",
+    "RGT-TERMINAL"
    ]
   },
   "facility_name": {
    "source": "facility_master.name",
    "examples": [
-    "Lakwa Group Gathering Station III",
-    "Lakwa Group Gathering Station II",
-    "Lakwa Group Gathering Station I"
+    "Bhagyam Central Processing Facility (BHG-CPF)",
+    "Bhagyam Central Processing Facility (BHG-CPF)",
+    "Bhagyam Central Processing Facility (BHG-CPF)"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Lakhmani Group Gathering Station I",
-    "Lakhmani Group Gathering Station II",
-    "Lakwa Group Gathering Station I",
-    "Lakwa Group Gathering Station II",
-    "Lakwa Group Gathering Station III"
+    "Aishwariya Central Processing Facility (ASH-CPF)",
+    "Bhagyam Central Processing Facility (BHG-CPF)",
+    "Mangala Processing Terminal (MPT-NAGANA)",
+    "Raageshwari Gas Terminal (RGT-TERMINAL)"
    ]
   },
   "survey_id": {
    "source": "pressure_surveys.survey_id",
    "examples": [
-    "PS-LKW-033-20241020",
-    "PS-LKW-120-20220420",
-    "PS-LKW-054-20240410"
+    "PS-BHG-033-20241020",
+    "PS-BHG-020-20220420",
+    "PS-BHG-054-20240410"
    ],
    "missing_share": 0.0
   },
@@ -444,9 +452,9 @@
   "test_id": {
    "source": "well_tests.test_id",
    "examples": [
-    "TST-LKW-033-20241021",
-    "TST-LKW-120-20220415",
-    "TST-LKW-054-20240408"
+    "TST-BHG-033-20241021",
+    "TST-BHG-020-20220415",
+    "TST-BHG-054-20240408"
    ],
    "missing_share": 0.046
   },
@@ -644,13 +652,13 @@
    "source": "well_offsets + daily_production",
    "example_rows": [
     {
-     "offset_well_id": "LKW-121",
+     "offset_well_id": "BHG-021",
      "distance_m": "341.6",
      "same_zone": "No",
      "decline_pct": "+36.0%"
     },
     {
-     "offset_well_id": "LKW-070",
+     "offset_well_id": "BHG-070",
      "distance_m": "187.8",
      "same_zone": "Yes",
      "decline_pct": "-2.1%"
@@ -663,10 +671,10 @@
   "survey_id"
  ],
  "sample_doc_ids": [
-  "WT-LKW-033-20241020",
-  "WT-LKW-120-20220420",
-  "WT-LKW-054-20240410",
-  "WT-LKW-103-20230827",
-  "WT-LKW-061-20251107"
+  "WT-BHG-033-20241020",
+  "WT-BHG-020-20220420",
+  "WT-BHG-054-20240410",
+  "WT-BHG-103-20230827",
+  "WT-BHG-061-20251107"
  ]
 }

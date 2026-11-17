@@ -3,9 +3,9 @@ config {
   description: "SQL screening pre-filter for TC-020; the authoritative F-02 bucket is computed by TC-020 in the app (thresholds from trigger config), this view is NOT TC-020.",
   columns: {
     well_id: "Unique well identifier from well_master",
-    field: "Field name (e.g., Geleki, Lakwa, Lakhmani)",
+    field: "Field name (e.g., Mangala, Bhagyam, Aishwariya, Raageshwari)",
     cluster_id: "Cluster identifier",
-    lift_type: "Artificial lift type (SRP, GAS_LIFT, NATURAL)",
+    lift_type: "Artificial lift type (ESP, JET_PUMP, PCP, SRP, GAS_LIFT, NATURAL)",
     open_status: "Status of the active well episode as of as_of date",
     open_status_since: "Start date of the active well status episode",
     oil_30d_bopd: "Average oil production rate (BOPD) on producing days in trailing 30 days (as_of-29 .. as_of)",

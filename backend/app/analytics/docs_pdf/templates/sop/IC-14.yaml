@@ -3,8 +3,8 @@ intervention_class: IC-14
 title: Standard Operating Procedure for Surface Wellhead and Casing Integrity Repair
 purpose: Provide mandatory technical protocols and barrier verification standards for repairing surface wellhead valves, repacking
   seals, and remedying casing leaks.
-scope: Covers surface wellhead valve replacement, casing leak repairs, and integrity remediation across Assam assets ({n_job_codes}
-  catalogue job codes) utilizing {equipment_list}.
+scope: Covers surface wellhead valve replacement, casing leak repairs, and integrity remediation across Cairn Oil & Gas Barmer Basin
+  assets ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
 applicability:
 - Leaking wellhead gate valve, master valve, or wing valve failing to isolate well pressure.
 - Sustained casing pressure observed in outer casing annulus indicating seal or casing failure.

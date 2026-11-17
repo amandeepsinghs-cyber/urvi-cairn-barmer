@@ -1,102 +1,116 @@
 {
   "model_version": "ic-hgb-v1",
   "trained_as_of": "2026-09-23",
-  "data_disclosure": "Trained and evaluated on synthetic WellPulse data (Geleki, Lakwa, Lakhmani generator); not validated on field records.",
+  "data_disclosure": "Trained and evaluated on synthetic Cairn Oil & Gas Barmer Basin data (Mangala, Bhagyam, Aishwariya, Raageshwari generator); not validated on field records.",
   "split": {
     "type": "temporal",
     "holdout": "in-scope jobs starting 2025-09-24..2026-09-23",
-    "train_rows": 2180,
-    "holdout_rows": 544,
+    "train_rows": 2990,
+    "holdout_rows": 831,
     "selection": "GroupKFold(5) by well_id on the training period"
   },
   "dataset": {
-    "labelled_jobs": 3700,
+    "labelled_jobs": 4073,
     "skipped": {
-      "INSUFFICIENT_HISTORY": 206
+      "INSUFFICIENT_HISTORY": 252
     }
   },
   "holdout": {
-    "macro_f1": 0.7437,
-    "top3_accuracy": 0.9393,
-    "ece": 0.0243,
-    "accuracy": 0.7812,
-    "uncalibrated_booster_macro_f1": 0.7437,
+    "macro_f1": 0.7683,
+    "top3_accuracy": 0.9483,
+    "ece": 0.0238,
+    "accuracy": 0.7798,
+    "uncalibrated_booster_macro_f1": 0.7683,
     "per_class": {
       "IC-01": {
-        "f1": 0.8762,
-        "support": 52
+        "f1": 0.8548,
+        "support": 61
       },
       "IC-02": {
-        "f1": 0.76,
-        "support": 22
+        "f1": 0.8364,
+        "support": 52
       },
       "IC-03": {
-        "f1": 0.8276,
-        "support": 46
-      },
-      "IC-04": {
-        "f1": 0.8824,
+        "f1": 0.819,
         "support": 55
       },
+      "IC-04": {
+        "f1": 0.908,
+        "support": 85
+      },
       "IC-05": {
-        "f1": 0.6286,
-        "support": 15
+        "f1": 0.6606,
+        "support": 52
       },
       "IC-06": {
-        "f1": 0.8889,
-        "support": 40
+        "f1": 0.8142,
+        "support": 56
       },
       "IC-07": {
-        "f1": 0.8315,
-        "support": 43
+        "f1": 0.8283,
+        "support": 54
       },
       "IC-08": {
-        "f1": 0.8455,
-        "support": 60
+        "f1": 0.8553,
+        "support": 78
       },
       "IC-09": {
-        "f1": 0.6182,
-        "support": 27
+        "f1": 0.6857,
+        "support": 51
       },
       "IC-10": {
-        "f1": 0.6275,
-        "support": 28
+        "f1": 0.5773,
+        "support": 46
       },
       "IC-11": {
-        "f1": 0.7253,
-        "support": 44
+        "f1": 0.7879,
+        "support": 71
       },
       "IC-12": {
-        "f1": 0.6531,
-        "support": 29
+        "f1": 0.7523,
+        "support": 53
       },
       "IC-13": {
-        "f1": 0.5714,
-        "support": 14
+        "f1": 0.8193,
+        "support": 40
       },
       "IC-14": {
-        "f1": 0.8736,
-        "support": 45
+        "f1": 0.7576,
+        "support": 33
       },
       "IC-15": {
-        "f1": 0.5455,
-        "support": 24
+        "f1": 0.5682,
+        "support": 44
       }
     },
     "per_field": {
-      "Lakhmani": {
-        "n": 157,
-        "macro_f1_present_classes": 0.7482,
-        "accuracy": 0.8217,
-        "top3": 0.9427,
-        "baseline_macro_f1_present_classes": 0.2009
+      "Aishwariya": {
+        "n": 170,
+        "macro_f1_present_classes": 0.7357,
+        "accuracy": 0.7706,
+        "top3": 0.9647,
+        "baseline_macro_f1_present_classes": 0.1617
       },
-      "Lakwa": {
-        "n": 387,
-        "macro_f1_present_classes": 0.7318,
-        "accuracy": 0.7649,
-        "top3": 0.938,
-        "baseline_macro_f1_present_classes": 0.1776
+      "Bhagyam": {
+        "n": 258,
+        "macro_f1_present_classes": 0.7546,
+        "accuracy": 0.7752,
+        "top3": 0.9341,
+        "baseline_macro_f1_present_classes": 0.1059
+      },
+      "Mangala": {
+        "n": 316,
+        "macro_f1_present_classes": 0.7916,
+        "accuracy": 0.7943,
+        "top3": 0.9494,
+        "baseline_macro_f1_present_classes": 0.1345
+      },
+      "Raageshwari": {
+        "n": 87,
+        "macro_f1_present_classes": 0.7541,
+        "accuracy": 0.7586,
+        "top3": 0.954,
+        "baseline_macro_f1_present_classes": 0.2159
       }
     },
     "confusion_matrix": {
@@ -119,48 +133,99 @@
       ],
       "rows_true_cols_pred": [
         [
+          53,
+          1,
+          1,
+          0,
+          0,
+          5,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          46,
+          3,
+          0,
+          0,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          7,
+          43,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          74,
+          3,
+          2,
+          0,
+          1,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          4,
+          36,
+          0,
+          2,
+          1,
+          0,
+          4,
+          0,
+          1,
+          0,
+          4,
+          0
+        ],
+        [
+          6,
+          2,
+          1,
+          0,
+          0,
           46,
           0,
-          0,
-          0,
-          0,
-          3,
-          0,
-          2,
-          0,
-          0,
-          0,
-          0,
-          0,
           1,
-          0
-        ],
-        [
-          0,
-          19,
-          3,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          3,
-          5,
-          36,
-          0,
-          0,
-          1,
-          1,
-          0,
           0,
           0,
           0,
@@ -171,334 +236,274 @@
         ],
         [
           0,
-          1,
-          0,
-          45,
-          2,
-          0,
-          2,
-          1,
-          1,
-          0,
           0,
           0,
           0,
           2,
-          1
+          0,
+          41,
+          8,
+          0,
+          1,
+          0,
+          0,
+          0,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          1,
+          0,
+          2,
+          68,
+          2,
+          2,
+          0,
+          0,
+          1,
+          0,
+          0
         ],
         [
           0,
           0,
           0,
-          1,
-          11,
-          0,
-          0,
-          0,
           0,
           1,
-          0,
-          0,
-          0,
-          0,
-          2
-        ],
-        [
-          2,
-          2,
           0,
           0,
           0,
           36,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          1,
-          0,
-          0,
-          37,
-          4,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          0
-        ],
-        [
-          2,
-          0,
-          0,
-          0,
-          0,
-          1,
-          5,
-          52,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          17,
-          2,
-          0,
-          0,
-          0,
-          0,
-          7
-        ],
-        [
-          0,
-          0,
-          1,
-          0,
-          2,
-          0,
-          0,
-          0,
           6,
-          16,
           0,
           0,
           0,
           0,
-          3
+          8
         ],
         [
           0,
           0,
           0,
           0,
+          2,
+          0,
+          0,
+          0,
+          4,
+          28,
+          0,
+          0,
+          0,
           1,
+          11
+        ],
+        [
           0,
           0,
           0,
           0,
-          1,
-          33,
           3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          52,
+          10,
+          5,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          7,
+          41,
+          3,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          4,
+          34,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          2,
+          0,
           4,
           0,
-          2
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          25,
+          0
         ],
         [
           0,
           0,
-          1,
-          0,
-          1,
           0,
           0,
+          2,
           0,
           0,
           0,
           9,
-          16,
-          2,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          5,
-          0,
           8,
           0,
-          0
-        ],
-        [
-          0,
-          1,
-          0,
-          0,
-          2,
-          0,
-          1,
-          1,
           0,
           0,
           0,
-          1,
-          0,
-          38,
-          1
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          2,
-          4,
-          3,
-          0,
-          0,
-          0,
-          0,
-          15
+          25
         ]
       ]
     }
   },
   "baseline": {
     "name": "TC-008 rule route (TC-005/TC-002 trigger C + TC-004 offsets), unrouted -> IC-15",
-    "macro_f1": 0.1887,
-    "accuracy": 0.2445,
+    "macro_f1": 0.1493,
+    "accuracy": 0.2046,
     "route_reasons": {
-      "NO_MECHANISM": 341,
-      "ROUTED": 190,
+      "NO_MECHANISM": 550,
+      "ROUTED": 268,
       "RESERVOIR_DECLINE": 13
     },
     "per_class": {
       "IC-01": {
-        "f1": 0.4118,
-        "support": 52
+        "f1": 0.2,
+        "support": 61
       },
       "IC-02": {
         "f1": 0.0,
-        "support": 22
+        "support": 52
       },
       "IC-03": {
         "f1": 0.0,
-        "support": 46
-      },
-      "IC-04": {
-        "f1": 0.764,
         "support": 55
       },
+      "IC-04": {
+        "f1": 0.6797,
+        "support": 85
+      },
       "IC-05": {
-        "f1": 0.08,
-        "support": 15
+        "f1": 0.1017,
+        "support": 52
       },
       "IC-06": {
-        "f1": 0.093,
-        "support": 40
+        "f1": 0.1168,
+        "support": 56
       },
       "IC-07": {
-        "f1": 0.8052,
-        "support": 43
+        "f1": 0.2295,
+        "support": 54
       },
       "IC-08": {
         "f1": 0.0,
-        "support": 60
+        "support": 78
       },
       "IC-09": {
         "f1": 0.0,
-        "support": 27
+        "support": 51
       },
       "IC-10": {
         "f1": 0.0,
-        "support": 28
+        "support": 46
       },
       "IC-11": {
-        "f1": 0.5495,
-        "support": 44
+        "f1": 0.55,
+        "support": 71
       },
       "IC-12": {
         "f1": 0.0,
-        "support": 29
+        "support": 53
       },
       "IC-13": {
-        "f1": 0.0,
-        "support": 14
+        "f1": 0.2174,
+        "support": 40
       },
       "IC-14": {
         "f1": 0.0,
-        "support": 45
+        "support": 33
       },
       "IC-15": {
-        "f1": 0.127,
-        "support": 24
+        "f1": 0.145,
+        "support": 44
       }
     }
   },
-  "delta_macro_f1_vs_baseline": 0.555,
+  "delta_macro_f1_vs_baseline": 0.619,
   "scope": {
-    "decision": "Q-D1",
-    "rule": "exclude rows with field == Geleki and is_prepend == False (frozen v0.3.0 core: no precursor signatures, label drawn at random from the failure code)",
-    "train_rows_excluded": 522,
-    "holdout_rows_excluded": 248
+    "decision": "C5-Barmer",
+    "rule": "all 4 Barmer fields carry 60-month native precursor signatures",
+    "train_rows_excluded": 0,
+    "holdout_rows_excluded": 0
   },
-  "holdout_full_including_geleki_core": {
-    "n": 792,
-    "macro_f1": 0.5985,
-    "top3_accuracy": 0.7803,
-    "ece": 0.1363,
-    "accuracy": 0.5972,
-    "baseline_macro_f1": 0.1485
+  "holdout_full_including_all_fields": {
+    "n": 831,
+    "macro_f1": 0.7683,
+    "top3_accuracy": 0.9483,
+    "ece": 0.0238,
+    "accuracy": 0.7798
   },
-  "holdout_geleki_core_only": {
-    "n": 248,
-    "macro_f1": 0.0734,
-    "top3_accuracy": 0.4315,
-    "ece": 0.4347,
-    "accuracy": 0.1935,
-    "baseline_macro_f1": 0.0
-  },
-  "leave_lakhmani_out": {
-    "train_rows": 1522,
-    "test_rows_lakhmani_holdout": 157,
-    "macro_f1_present_classes": 0.7318,
-    "accuracy": 0.8089
+  "leave_aishwariya_out": {
+    "train_rows": 2355,
+    "test_rows_aishwariya_holdout": 170,
+    "macro_f1_present_classes": 0.6804,
+    "accuracy": 0.7176
   },
   "low_confidence": {
     "threshold": 0.4,
-    "share_below": 0.079,
-    "accuracy_at_or_above": 0.8283,
-    "accuracy_below": 0.2326
+    "share_below": 0.0626,
+    "accuracy_at_or_above": 0.8164,
+    "accuracy_below": 0.2308
   },
   "train_class_support": {
-    "IC-01": 189,
-    "IC-02": 167,
-    "IC-03": 231,
-    "IC-04": 238,
-    "IC-05": 80,
-    "IC-06": 163,
-    "IC-07": 190,
-    "IC-08": 194,
-    "IC-09": 93,
-    "IC-10": 86,
-    "IC-11": 125,
-    "IC-12": 88,
-    "IC-13": 63,
-    "IC-14": 166,
-    "IC-15": 107
+    "IC-01": 220,
+    "IC-02": 175,
+    "IC-03": 190,
+    "IC-04": 283,
+    "IC-05": 196,
+    "IC-06": 217,
+    "IC-07": 210,
+    "IC-08": 231,
+    "IC-09": 207,
+    "IC-10": 191,
+    "IC-11": 227,
+    "IC-12": 196,
+    "IC-13": 142,
+    "IC-14": 161,
+    "IC-15": 144
   },
   "model": {
     "estimator": "HistGradientBoostingClassifier(class_weight='balanced') + CalibratedClassifierCV(temperature, GroupKFold(5), ensemble=True)",
@@ -514,26 +519,26 @@
           "max_leaf_nodes": 15,
           "l2_regularization": 0.0
         },
-        "cv_macro_f1_mean": 0.726,
-        "cv_macro_f1_std": 0.0085
-      },
-      {
-        "params": {
-          "learning_rate": 0.05,
-          "max_leaf_nodes": 15,
-          "l2_regularization": 1.0
-        },
-        "cv_macro_f1_mean": 0.7329,
+        "cv_macro_f1_mean": 0.7809,
         "cv_macro_f1_std": 0.0166
       },
       {
         "params": {
           "learning_rate": 0.05,
+          "max_leaf_nodes": 15,
+          "l2_regularization": 1.0
+        },
+        "cv_macro_f1_mean": 0.7848,
+        "cv_macro_f1_std": 0.0159
+      },
+      {
+        "params": {
+          "learning_rate": 0.05,
           "max_leaf_nodes": 31,
           "l2_regularization": 0.0
         },
-        "cv_macro_f1_mean": 0.7291,
-        "cv_macro_f1_std": 0.0125
+        "cv_macro_f1_mean": 0.7813,
+        "cv_macro_f1_std": 0.0161
       },
       {
         "params": {
@@ -541,8 +546,8 @@
           "max_leaf_nodes": 31,
           "l2_regularization": 1.0
         },
-        "cv_macro_f1_mean": 0.7319,
-        "cv_macro_f1_std": 0.0086
+        "cv_macro_f1_mean": 0.7814,
+        "cv_macro_f1_std": 0.0123
       },
       {
         "params": {
@@ -550,8 +555,8 @@
           "max_leaf_nodes": 15,
           "l2_regularization": 0.0
         },
-        "cv_macro_f1_mean": 0.7253,
-        "cv_macro_f1_std": 0.0081
+        "cv_macro_f1_mean": 0.7846,
+        "cv_macro_f1_std": 0.0115
       },
       {
         "params": {
@@ -559,8 +564,8 @@
           "max_leaf_nodes": 15,
           "l2_regularization": 1.0
         },
-        "cv_macro_f1_mean": 0.7375,
-        "cv_macro_f1_std": 0.0178
+        "cv_macro_f1_mean": 0.7851,
+        "cv_macro_f1_std": 0.0136
       },
       {
         "params": {
@@ -568,8 +573,8 @@
           "max_leaf_nodes": 31,
           "l2_regularization": 0.0
         },
-        "cv_macro_f1_mean": 0.7277,
-        "cv_macro_f1_std": 0.0203
+        "cv_macro_f1_mean": 0.7792,
+        "cv_macro_f1_std": 0.0159
       },
       {
         "params": {
@@ -577,8 +582,8 @@
           "max_leaf_nodes": 31,
           "l2_regularization": 1.0
         },
-        "cv_macro_f1_mean": 0.7365,
-        "cv_macro_f1_std": 0.0188
+        "cv_macro_f1_mean": 0.7846,
+        "cv_macro_f1_std": 0.0134
       }
     ],
     "calibration": {
@@ -591,97 +596,72 @@
         {
           "method": "isotonic",
           "ensemble": false,
-          "inner_val_rows": 519,
-          "inner_val_ece": 0.108,
-          "inner_val_macro_f1": 0.7521
+          "inner_val_rows": 807,
+          "inner_val_ece": 0.0648,
+          "inner_val_macro_f1": 0.7617
         },
         {
           "method": "isotonic",
           "ensemble": true,
-          "inner_val_rows": 519,
-          "inner_val_ece": 0.1088,
-          "inner_val_macro_f1": 0.7485
+          "inner_val_rows": 807,
+          "inner_val_ece": 0.0954,
+          "inner_val_macro_f1": 0.7818
         },
         {
           "method": "sigmoid",
           "ensemble": true,
-          "inner_val_rows": 519,
-          "inner_val_ece": 0.1621,
-          "inner_val_macro_f1": 0.7499
+          "inner_val_rows": 807,
+          "inner_val_ece": 0.1395,
+          "inner_val_macro_f1": 0.7849
         },
         {
           "method": "temperature",
           "ensemble": true,
-          "inner_val_rows": 519,
-          "inner_val_ece": 0.0464,
-          "inner_val_macro_f1": 0.7573
+          "inner_val_rows": 807,
+          "inner_val_ece": 0.0347,
+          "inner_val_macro_f1": 0.7889
         }
       ],
       "attempt_1": "isotonic ensemble=False: holdout ECE 0.0993 (failed 0.08)",
       "attempt_2": "select among isotonic/sigmoid CalibratedClassifierCV by inner ECE -> isotonic ensemble=False again (inner ECE 0.108); holdout ECE 0.0993 (failed 0.08)"
     },
-    "temperature": 1.186549362507744,
-    "n_features": 136,
+    "temperature": 1.2245915068491253,
+    "n_features": 141,
     "explanations": "exact path-dependent TreeSHAP of the mean raw margin of the served boosters (in-house, additive)"
   },
   "fixtures": {
-    "LKM-023": {
+    "ASH-023": {
+      "criterion": {
+        "kind": "top1",
+        "classes": "IC-06"
+      },
       "top1": "IC-06",
       "top_k": [
         {
           "ic": "IC-06",
           "name": "SAND_CLEANOUT",
-          "label": "Sand cleanout / control",
+          "label": "Unconsolidated sand & proppant cleanout / control",
           "display": "IC-06 SAND_CLEANOUT",
-          "prob": 0.809
+          "prob": 0.8284
         },
         {
-          "ic": "IC-01",
-          "name": "SRP_PUMP_CHANGE",
-          "label": "SRP pump change",
-          "display": "IC-01 SRP_PUMP_CHANGE",
-          "prob": 0.0685
-        },
-        {
-          "ic": "IC-03",
-          "name": "TUBING_LEAK_REPAIR",
-          "label": "Tubing leak repair",
-          "display": "IC-03 TUBING_LEAK_REPAIR",
-          "prob": 0.0357
-        }
-      ],
-      "pass": true,
-      "criterion": {
-        "kind": "top1",
-        "classes": "IC-06"
-      }
-    },
-    "LKM-061": {
-      "top1": "IC-04",
-      "top_k": [
-        {
-          "ic": "IC-04",
-          "name": "WAX_REMOVAL",
-          "label": "Wax removal / control",
-          "display": "IC-04 WAX_REMOVAL",
-          "prob": 0.5264
+          "ic": "IC-05",
+          "name": "SCALE_REMOVAL",
+          "label": "Inorganic & polymer scale treatment",
+          "display": "IC-05 SCALE_REMOVAL",
+          "prob": 0.0546
         },
         {
           "ic": "IC-07",
-          "name": "GAS_LIFT_VALVE_CHANGE",
-          "label": "Gas-lift valve change",
-          "display": "IC-07 GAS_LIFT_VALVE_CHANGE",
-          "prob": 0.4635
-        },
-        {
-          "ic": "IC-08",
-          "name": "LIFT_OPTIMISATION_CONVERSION",
-          "label": "Lift optimisation / conversion",
-          "display": "IC-08 LIFT_OPTIMISATION_CONVERSION",
-          "prob": 0.0032
+          "name": "JET_PUMP_GLV_INSERT_CHANGE",
+          "label": "Hydraulic jet-pump insert & lift-valve changeout",
+          "display": "IC-07 JET_PUMP_GLV_INSERT_CHANGE",
+          "prob": 0.0194
         }
       ],
-      "pass": true,
+      "pass": true
+    },
+    "ASH-061": {
       "criterion": {
         "kind": "top2_set",
         "classes": [
@@ -689,7 +669,32 @@
           "IC-04"
         ]
       },
-      "ruling": "Orchestrator ruling 2026-10-07: LKM-061 is designed as a dual-signature fixture (GLV 1.0 + wax 0.8), so its Gate Q criterion is top-2 = {IC-07, IC-04} (not a tuning; the model was not retrained)."
+      "top1": "IC-07",
+      "top_k": [
+        {
+          "ic": "IC-07",
+          "name": "JET_PUMP_GLV_INSERT_CHANGE",
+          "label": "Hydraulic jet-pump insert & lift-valve changeout",
+          "display": "IC-07 JET_PUMP_GLV_INSERT_CHANGE",
+          "prob": 0.9492
+        },
+        {
+          "ic": "IC-04",
+          "name": "WAX_THERMAL_REMOVAL",
+          "label": "Waxy crude thermal & solvent flow assurance",
+          "display": "IC-04 WAX_THERMAL_REMOVAL",
+          "prob": 0.0256
+        },
+        {
+          "ic": "IC-08",
+          "name": "LIFT_OPTIMISATION_CONVERSION",
+          "label": "Lift optimisation & ESP / jet-pump conversion",
+          "display": "IC-08 LIFT_OPTIMISATION_CONVERSION",
+          "prob": 0.0043
+        }
+      ],
+      "pass": true,
+      "ruling": "Orchestrator ruling 2026-11-15: ASH-061 is designed as a dual-signature Barmer fixture (Jet-Pump nozzle/valve erosion 1.0 + paraffin wax 0.8), so its Gate Q criterion is top-2 = {IC-07, IC-04} (same non-tuned multi-hypothesis contract as Stage Q)."
     }
   },
   "gate_q": {
@@ -709,11 +714,5 @@
     "fixtures_ok": true,
     "passed": true
   },
-  "train_seconds": 677.0,
-  "orchestrator_rulings": {
-    "Q-D1": "ACCEPTED 2026-10-07: frozen Geleki v0.3.0 core rows excluded from training/holdout (labels random by construction, N-D7); full-holdout numbers reported in holdout_full_including_geleki_core.",
-    "LKM-061": "Orchestrator ruling 2026-10-07: LKM-061 is designed as a dual-signature fixture (GLV 1.0 + wax 0.8), so its Gate Q criterion is top-2 = {IC-07, IC-04} (not a tuning; the model was not retrained).",
-    "calibration": "ACCEPTED 2026-10-07: temperature scaling instead of SDD \u00a78.2 isotonic (isotonic OvR was under-confident; holdout ECE 0.0993).",
-    "applied_without_retraining": true
-  }
+  "train_seconds": 694.5
 }

@@ -86,6 +86,11 @@
               "number"
             ]
           },
+          "first_test_in_record": {
+            "type": [
+              "string"
+            ]
+          },
           "flowing_tubing_pressure_psi": {
             "type": [
               "number"
@@ -109,6 +114,7 @@
         },
         "required": [
           "choke_mm",
+          "first_test_in_record",
           "flowing_tubing_pressure_psi",
           "gas_rate_mcfd",
           "oil_rate_bopd",
@@ -179,8 +185,8 @@
   },
   "status": 200,
   "wells": [
-    "GK-129",
-    "LKW-047",
-    "LKM-061"
+    "MNG-042",
+    "BHG-019",
+    "ASH-023"
   ]
 }

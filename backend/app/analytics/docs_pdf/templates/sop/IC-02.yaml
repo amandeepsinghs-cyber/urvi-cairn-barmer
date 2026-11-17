@@ -3,8 +3,8 @@ intervention_class: IC-02
 title: Standard Operating Procedure for Sucker Rod String Repair and Replacement
 purpose: Provide standardized instructions for retrieving, fishing, inspecting, and replacing failed or parted sucker rod
   strings safely.
-scope: Covers sucker rod repairs and replacements on artificial lift wells across Assam fields ({n_job_codes} catalogue job
-  codes) using {equipment_list}.
+scope: Covers sucker rod and PCP drive-rod repairs and replacements on artificial lift wells across Cairn Oil & Gas Barmer Basin
+  fields ({n_job_codes} catalogue job codes) using {equipment_list}.
 applicability:
 - Polished rod dropping freely or loss of rod string weight on surface beam hanger.
 - Dynamometer card showing parted rod signature with zero pump stroke response.
@@ -35,7 +35,7 @@ procedure:
 - phase: Well Preparation and Surface Disconnection
   steps:
   - De-energize pumping unit motor, set mechanical parking brake, and install lockout tagout device.
-  - Bleed tubing and casing pressure to zero through the flowline to the group gathering station.
+  - Bleed tubing and casing pressure to zero through the flowline to the multi-well pad manifold header.
   - Pump kill brine down tubing or casing annulus until fluid column achieves hydrostatically dead condition.
   - Disconnect horse head bridle from polished rod clamp and swing head clear of well center.
   - Remove polished rod stuffing box and install rod blowout preventer with blind and rod rams.

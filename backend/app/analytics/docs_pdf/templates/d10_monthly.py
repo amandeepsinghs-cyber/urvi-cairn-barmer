@@ -122,7 +122,7 @@ def build(spec):
     blocks.append(H("Production by Gathering Station Cluster"))
     blocks.append(
         P(
-            "Total field production is gathered across group gathering stations (GGS) within {field} field. "
+            "Total field production is gathered across multi-well pad manifolds and central processing terminals within {field} field. "
             "Production distribution and average flow rates per cluster during the period are detailed below:"
         )
     )
@@ -130,7 +130,7 @@ def build(spec):
         Table(
             "clusters",
             [
-                ("cluster_id", "Cluster / GGS"),
+                ("cluster_id", "Pad / Cluster"),
                 ("wells", "Active Wells"),
                 ("oil", "Gross Oil (bbl)"),
                 ("avg_oil_bopd", "Average Rate (BOPD)"),
@@ -270,18 +270,20 @@ def build(spec):
     # 8. Actions for next month
     blocks.append(H("Planned Operational Focus for Next Month"))
     actions = [
-        "Prioritize workover candidate selection for wells experiencing severe artificial lift decline or sand ingress in Tipam and Barail reservoirs.",
-        "Execute routine gas-lift valve optimization and mandrel inspection across active continuous injection strings.",
-        "Coordinate with electrical maintenance teams to mitigate power grid supply interruptions affecting sucker-rod pumping installations.",
-        "Continue surface pipeline integrity surveys and header pressure monitoring across gathering station flowlines.",
+        "Prioritize workover candidate selection for wells experiencing severe artificial lift decline or sand ingress in Fatehgarh and Barmer Hill reservoirs.",
+        "Execute routine hydraulic jet-pump insert inspections and gas-lift valve optimization across active lift strings.",
+        "Coordinate with electrical maintenance teams to mitigate power grid supply interruptions affecting artificial lift and trace-heating installations.",
+        "Continue surface pipeline integrity surveys, skin-effect trace-heating verification, and header pressure monitoring across pad flowlines.",
         "Follow up on non-controllable deferment causes with regional maintenance teams and expedite pulling unit mobilization for pending jobs.",
     ]
-    if spec.is_("field", "Geleki"):
-        actions.append("Ensure steady gas-lift injection pressure from Geleki compressor station to maintain high-lift wells.")
-    elif spec.is_("field", "Lakwa"):
-        actions.append("Maintain active monitoring of Lakwa thermal and SRP wells to counter wax deposition.")
-    elif spec.is_("field", "Lakhmani"):
-        actions.append("Optimize Lakhmani gathering station inlet separators and monitor effluent water disposal handling capacity.")
+    if spec.is_("field", "Mangala"):
+        actions.append("Track HPAM and ASP polymer breakthrough trends across Mangala patterns routed to MPT-NAGANA and expedite conformance treatments.")
+    elif spec.is_("field", "Bhagyam"):
+        actions.append("Maintain active monitoring of Bhagyam waxy crude trace heaters, HOCU flush schedules, and PCP or SRP run life.")
+    elif spec.is_("field", "Aishwariya"):
+        actions.append("Optimize Aishwariya hydraulic jet-pump power-fluid manifolds and monitor Barmer Hill infill producer drawdown.")
+    elif spec.is_("field", "Raageshwari"):
+        actions.append("Maintain Raageshwari Volcanics gas-condensate separator throughput at RGT-TERMINAL and monitor post-frac clean-up stability.")
     blocks.append(Bullets(actions))
 
     blocks.append(
@@ -289,7 +291,7 @@ def build(spec):
             roles=[
                 "Prepared by (Production Engineer)",
                 "Reviewed by (Asset Manager)",
-                "Approved by (Chief General Manager)",
+                "Approved by (Asset Head — Barmer Basin)",
             ]
         )
     )

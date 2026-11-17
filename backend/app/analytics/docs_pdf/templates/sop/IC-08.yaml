@@ -3,8 +3,8 @@ intervention_class: IC-08
 title: Standard Operating Procedure for Lift Optimisation and Artificial Lift Conversion
 purpose: Provide operating standards and workover procedures for optimizing existing artificial lift systems, installing downhole
   gas separators, and converting well completion from one lift method to another.
-scope: Covers artificial lift redesign, downhole gas separator installations, and lift conversions across Assam asset wells
-  ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
+scope: Covers artificial lift redesign, downhole gas separator installations, and lift conversions across Cairn Oil & Gas Barmer Basin
+  wells (hydraulic jet pump, ESP, PCP, SRP, and gas lift; {n_job_codes} catalogue job codes) utilizing {equipment_list}.
 applicability:
 - Severe gas locking in sucker rod pump barrels requiring downhole gas separation.
 - Reservoir pressure depletion rendering flowing or gas-lift completions incapable of continuous production.

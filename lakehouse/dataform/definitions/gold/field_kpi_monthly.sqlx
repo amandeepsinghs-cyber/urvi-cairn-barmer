@@ -8,7 +8,7 @@ config {
     labels: { app: "wellpulse", stage: "x", datacloud: "jetski" }
   },
   columns: {
-    field: "Geleki | Lakwa | Lakhmani",
+    field: "Mangala | Bhagyam | Aishwariya | Raageshwari",
     month: "First day of the calendar month",
     days_in_period: "Distinct production dates in the month (<= AS_OF)",
     wells_reporting: "Distinct wells with a daily_production row in the month",

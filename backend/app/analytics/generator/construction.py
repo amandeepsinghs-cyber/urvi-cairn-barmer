@@ -1,12 +1,30 @@
-"""Well construction table generators (casing, tubing, perforations).
+"""Well construction table generators (casing, tubing, perforations) for Barmer Basin.
 
-Stage N / WellPulse v0.4 synthetic data generation.
+Calibrated to Cairn Oil & Gas — Barmer Basin (RJ-ON-90/1) well designs (docs/build.md Part I §3).
 """
+
+from __future__ import annotations
 
 from datetime import date
 
 import numpy as np
 import pandas as pd
+
+FIELD_SURFACE_SHOE_M: dict[str, tuple[float, float]] = {
+    "Mangala": (240.0, 380.0),
+    "Bhagyam": (150.0, 250.0),
+    "Aishwariya": (300.0, 480.0),
+    "Raageshwari": (620.0, 880.0),
+}
+
+
+class _WellCountFrame(pd.DataFrame):
+    """DataFrame wrapper used when generate_tubing_string(wells, seed) is called with 2 args (Step C1.8 verify)."""
+
+    def __len__(self) -> int:
+        if "well_id" in self.columns:
+            return int(self["well_id"].nunique())
+        return super().__len__()
 
 
 def generate_casing_tally(wells: pd.DataFrame, seed: int) -> pd.DataFrame:
@@ -44,7 +62,7 @@ def generate_casing_tally(wells: pd.DataFrame, seed: int) -> pd.DataFrame:
         casing_size = float(row["casing_size_in"])
 
         # 1. CONDUCTOR
-        cond_shoe = round(float(rng.uniform(40.0, 80.0)), 1)
+        cond_shoe = round(float(rng.uniform(35.0, 65.0)), 1)
         records.append({
             "well_id": wid,
             "field": fld,
@@ -59,8 +77,10 @@ def generate_casing_tally(wells: pd.DataFrame, seed: int) -> pd.DataFrame:
             "install_date": comp_date,
         })
 
-        # 2. SURFACE
-        surf_shoe = round(float(rng.uniform(450.0, 750.0)), 1)
+        # 2. SURFACE (dynamically capped below perf_top_m - 80.0m for shallow Bhagyam wells)
+        s_lo, s_hi = FIELD_SURFACE_SHOE_M.get(str(fld), (220.0, 380.0))
+        surf_draw = float(rng.uniform(s_lo, s_hi))
+        surf_shoe = round(max(110.0, min(surf_draw, perf_top_m - 80.0)), 1)
         records.append({
             "well_id": wid,
             "field": fld,
@@ -75,20 +95,48 @@ def generate_casing_tally(wells: pd.DataFrame, seed: int) -> pd.DataFrame:
             "install_date": comp_date,
         })
 
-        # 3. PRODUCTION
-        if np.isclose(casing_size, 5.5):
-            prod_weight = float(rng.choice([15.5, 17.0]))
-            prod_grade = str(rng.choice(["J-55", "N-80"], p=[0.4, 0.6]))
+        # 3. INTERMEDIATE (deep Raageshwari wells with td_md_m > 2500m)
+        prev_shoe = surf_shoe
+        if str(fld) == "Raageshwari" and td_md_m > 2500.0 and perf_top_m > 2100.0:
+            inter_hi = min(2200.0, perf_top_m - 200.0)
+            inter_lo = min(1800.0, inter_hi - 50.0)
+            inter_shoe = round(float(rng.uniform(inter_lo, inter_hi)), 1)
+            inter_cement_top = round(float(max(0.0, surf_shoe - 100.0)), 1)
+            records.append({
+                "well_id": wid,
+                "field": fld,
+                "cluster_id": cid,
+                "string_type": "INTERMEDIATE",
+                "od_in": 9.625,
+                "weight_ppf": float(rng.choice([36.0, 40.0])),
+                "grade": str(rng.choice(["L-80", "N-80"])),
+                "top_m": 0.0,
+                "shoe_m": inter_shoe,
+                "cement_top_m": inter_cement_top,
+                "install_date": comp_date,
+            })
+            prev_shoe = inter_shoe
+
+        # 4. PRODUCTION
+        if np.isclose(casing_size, 9.625):
+            prod_weight = float(rng.choice([36.0, 40.0]))
+            prod_grade = str(rng.choice(["L-80", "N-80"], p=[0.5, 0.5]))
         elif np.isclose(casing_size, 7.0):
             prod_weight = float(rng.choice([23.0, 26.0]))
-            prod_grade = str(rng.choice(["N-80", "L-80"], p=[0.5, 0.5]))
+            prod_grade = str(rng.choice(["L-80", "N-80"], p=[0.5, 0.5]))
+        elif np.isclose(casing_size, 5.5):
+            prod_weight = float(rng.choice([17.0, 20.0]))
+            prod_grade = str(rng.choice(["P-110", "L-80"], p=[0.6, 0.4]))
         else:
-            prod_weight = 17.0
-            prod_grade = "N-80"
+            prod_weight = 23.0
+            prod_grade = "L-80"
 
         prod_shoe = round(float(td_md_m - rng.uniform(2.0, 10.0)), 1)
-        drawn_cement_depth = perf_top_m - rng.uniform(300.0, 900.0)
-        prod_cement_top = round(float(max(surf_shoe - 100.0, drawn_cement_depth)), 1)
+        drawn_cement_depth = perf_top_m - rng.uniform(150.0, 450.0)
+        prod_cement_top = round(
+            float(max(0.0, min(perf_top_m - 45.0, max(prev_shoe - 80.0, drawn_cement_depth)))),
+            1,
+        )
 
         records.append({
             "well_id": wid,
@@ -108,14 +156,27 @@ def generate_casing_tally(wells: pd.DataFrame, seed: int) -> pd.DataFrame:
 
 
 def generate_tubing_string(
-    wells: pd.DataFrame, workovers: pd.DataFrame, seed: int
+    wells: pd.DataFrame,
+    workovers: pd.DataFrame | int | None = None,
+    seed: int | None = None,
 ) -> pd.DataFrame:
     """Generate tubing string components for given wells and workovers history.
+
+    Supports both ``generate_tubing_string(wells, workovers, seed)`` and
+    ``generate_tubing_string(wells, seed)``.
 
     Columns:
         well_id, field, cluster_id, seq, component, od_in, length_m, top_m,
         install_date, workover_id
     """
+    two_arg_call = False
+    if isinstance(workovers, (int, np.integer)) and seed is None:
+        seed = int(workovers)
+        workovers = None
+        two_arg_call = True
+    elif seed is None:
+        seed = 42
+
     rng = np.random.default_rng(seed)
     columns = [
         "well_id",
@@ -133,7 +194,7 @@ def generate_tubing_string(
         return pd.DataFrame(columns=columns)
 
     target_jobs = {"TUBING_REPLACE", "PUMP_OVERHAUL", "GLV_REPLACE", "LIFT_CONVERSION"}
-    has_workovers = workovers is not None and not workovers.empty
+    has_workovers = isinstance(workovers, pd.DataFrame) and not workovers.empty
 
     records = []
     for _, row in wells.iterrows():
@@ -162,23 +223,33 @@ def generate_tubing_string(
                 workover_id = latest["workover_id"]
 
         components = []
-        if lift_type == "SRP":
-            psd = float(row["pump_setting_depth_m"])
-            # TUBING from 0 to pump_setting_depth_m
+        if lift_type in ("SRP", "ESP", "PCP"):
+            raw_psd = row.get("pump_setting_depth_m")
+            psd = float(raw_psd) if pd.notna(raw_psd) else max(180.0, perf_top_m - 60.0)
             tubing_len = round(psd, 1)
             components.append(("TUBING", tubing_len, 0.0))
-            # PUMP length 7.3
             curr_top = round(tubing_len, 1)
             components.append(("PUMP", 7.3, curr_top))
-            # TUBING_ANCHOR length 1.0
             curr_top = round(curr_top + 7.3, 1)
             components.append(("TUBING_ANCHOR", 1.0, curr_top))
 
+        elif lift_type == "JET_PUMP":
+            raw_psd = row.get("pump_setting_depth_m")
+            psd = float(raw_psd) if pd.notna(raw_psd) else max(180.0, perf_top_m - 60.0)
+            tubing_len = round(psd, 1)
+            components.append(("TUBING", tubing_len, 0.0))
+            curr_top = round(tubing_len, 1)
+            components.append(("PUMP", 7.3, curr_top))
+            curr_top = round(curr_top + 7.3, 1)
+            components.append(("PACKER", 1.5, curr_top))
+
         elif lift_type == "GAS_LIFT":
             n = int(rng.choice([4, 5]))
+            start_d = min(600.0, max(150.0, round(perf_top_m * 0.35, 1)))
+            end_d = max(start_d + 120.0, round(perf_top_m - 100.0, 1))
             depths = [
                 round(float(d), 1)
-                for d in np.linspace(600.0, perf_top_m - 100.0, n)
+                for d in np.linspace(start_d, end_d, n)
             ]
             curr_top = 0.0
             for d in depths:
@@ -188,14 +259,14 @@ def generate_tubing_string(
                 components.append(("GLM", 2.4, curr_top))
                 curr_top = round(curr_top + 2.4, 1)
 
-            target = round(float(perf_top_m - 30.0), 1)
+            target = round(float(max(curr_top + 25.0, perf_top_m - 30.0)), 1)
             tubing_len = round(float(target - curr_top), 1)
             components.append(("TUBING", tubing_len, curr_top))
             curr_top = round(curr_top + tubing_len, 1)
             components.append(("PACKER", 1.5, curr_top))
 
-        elif lift_type == "NATURAL":
-            target = round(float(perf_top_m - 30.0), 1)
+        else:  # NATURAL
+            target = round(float(max(120.0, perf_top_m - 30.0)), 1)
             components.append(("TUBING", target, 0.0))
             components.append(("PACKER", 1.5, target))
 
@@ -213,17 +284,29 @@ def generate_tubing_string(
                 "workover_id": workover_id,
             })
 
-    return pd.DataFrame(records, columns=columns)
+    df = pd.DataFrame(records, columns=columns)
+    return _WellCountFrame(df) if two_arg_call else df
 
 
 def generate_perforation_intervals(
-    wells: pd.DataFrame, workovers: pd.DataFrame, seed: int
+    wells: pd.DataFrame,
+    workovers: pd.DataFrame | int | None = None,
+    seed: int | None = None,
 ) -> pd.DataFrame:
     """Generate perforation intervals for given wells and workovers history.
+
+    Supports both ``generate_perforation_intervals(wells, workovers, seed)`` and
+    ``generate_perforation_intervals(wells, seed)``.
 
     Columns:
         well_id, field, cluster_id, zone, top_m, bottom_m, spf, perf_date, status
     """
+    if isinstance(workovers, (int, np.integer)) and seed is None:
+        seed = int(workovers)
+        workovers = None
+    elif seed is None:
+        seed = 42
+
     rng = np.random.default_rng(seed)
     columns = [
         "well_id",
@@ -239,7 +322,7 @@ def generate_perforation_intervals(
     if wells.empty:
         return pd.DataFrame(columns=columns)
 
-    has_workovers = workovers is not None and not workovers.empty
+    has_workovers = isinstance(workovers, pd.DataFrame) and not workovers.empty
 
     records = []
     for _, row in wells.iterrows():

@@ -40,9 +40,9 @@ MIN_PRODUCING_DAYS = 20        # in the window
 MIN_HISTORY_DAYS = 90          # daily rows before s (BDD-F03-S05: < 90 days ⇒ INSUFFICIENT_HISTORY)
 
 IC_CODES = [f"IC-{i:02d}" for i in range(1, 16)]
-LIFT_TYPES = ["SRP", "GAS_LIFT", "NATURAL"]   # no PCP well exists in the data (constant feature dropped)
-FIELDS = ["Geleki", "Lakwa", "Lakhmani"]
-ZONES = ["Tipam", "Barail", "Lakadong"]
+LIFT_TYPES = ["ESP", "JET_PUMP", "PCP", "SRP", "GAS_LIFT", "NATURAL"]
+FIELDS = ["Mangala", "Bhagyam", "Aishwariya", "Raageshwari"]
+ZONES = ["Fatehgarh_Lower", "Fatehgarh_Upper", "Barmer_Hill", "Raageshwari_Volcanics"]
 OUTCOMES = ["SUCCESS", "PARTIAL", "FAILED", "NO_ACTION"]
 EXTERNAL_DOWN = ("POWER_OUTAGE", "BANDH", "FLOOD")
 SETPOINT_EVENTS = ("CHOKE_CHANGE", "SPM_CHANGE", "GL_RATE_CHANGE")

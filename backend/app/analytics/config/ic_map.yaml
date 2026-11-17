@@ -1,62 +1,64 @@
-# IC-01..IC-15 <-> job_catalogue.job_code (SDD §8.1, K-2). Written from
-# app.analytics.generator.catalogue.IC_MAP / IC_LABELS at Stage N; that module is the source of truth.
-# Stage Q adds archetype aliases (e.g. "ESP Replacement" -> IC-08) for TC-021.
+# IC-01..IC-15 <-> job_catalogue.job_code (Barmer Basin — Cairn Oil & Gas).
+# Synchronised 1-to-1 with app.analytics.generator.catalogue.IC_MAP / IC_LABELS.
 classes:
   IC-01:
-    label: "SRP pump change"
+    label: "Artificial lift pump overhaul / ESP & PCP changeout"
     job_codes: [PUMP_OVERHAUL]
   IC-02:
-    label: "Rod string repair"
+    label: "Rod / drive-string / ESP power-cable remediation"
     job_codes: [ROD_REPLACE]
   IC-03:
-    label: "Tubing leak repair"
+    label: "Production tubing replacement / descaling"
     job_codes: [TUBING_REPLACE]
   IC-04:
-    label: "Wax removal / control"
+    label: "Waxy crude thermal & solvent flow assurance"
     job_codes: [WAX_SCRAPE, WAX_HOTOIL, WAX_SOLVENT, WAX_INHIBITOR, WAX_HEATER]
   IC-05:
-    label: "Scale removal / inhibition"
+    label: "Inorganic & polymer scale treatment"
     job_codes: [SCALE_ACID_BULLHEAD, SCALE_INHIBITOR]
   IC-06:
-    label: "Sand cleanout / control"
+    label: "Unconsolidated sand & proppant cleanout / control"
     job_codes: [SAND_CLEANOUT, SAND_CONTROL]
   IC-07:
-    label: "Gas-lift valve change"
+    label: "Hydraulic jet-pump insert & lift-valve changeout"
     job_codes: [GLV_REPLACE]
   IC-08:
-    label: "Lift optimisation / conversion"
+    label: "Lift optimisation & ESP / jet-pump conversion"
     job_codes: [LIFT_OPTIM, GAS_SEP_INSTALL, LIFT_CONVERSION]
   IC-09:
-    label: "Matrix stimulation (acid / frac)"
+    label: "Hydraulic proppant fracturing & matrix stimulation"
     job_codes: [MATRIX_ACID, HYDRAULIC_FRAC]
   IC-10:
-    label: "Perforation work (re-perforation)"
+    label: "Stacked Fatehgarh perforation / re-perforation"
     job_codes: [RE_PERFORATION, ADD_PERFORATION]
   IC-11:
-    label: "Water shut-off squeeze"
+    label: "Polymer / water breakthrough conformance & squeeze"
     job_codes: [CEMENT_SQUEEZE, POLYMER_GEL]
   IC-12:
-    label: "Zonal isolation"
+    label: "Zonal isolation & up-hole Fatehgarh zone transfer"
     job_codes: [STRADDLE_PACKER, ZONE_TRANSFER]
   IC-13:
-    label: "Coning control (choke back)"
+    label: "Conformance choke & drawdown management"
     job_codes: [CHOKE_BACK]
   IC-14:
-    label: "Surface and integrity repair"
+    label: "Wellhead, heated flowline & casing barrier repair"
     job_codes: [SURFACE_REPAIR, CASING_REPAIR]
   IC-15:
-    label: "No job justified / terminal"
+    label: "Sub-economic / no intervention justified"
     job_codes: [NO_JOB_JUSTIFIED, PLUG_ABANDON]
-# Stage Q (TC-021, BDD-F03-S06): V§2 WS-3 archetype names -> IC. ESP has no wells in this dataset.
 archetypes:
   "GLV Replacement": IC-07
+  "Jet Pump Insert Changeout": IC-07
   "Squeeze / Water Shut-off": IC-11
+  "Polymer Conformance Squeeze": IC-11
   "Acid Stimulation": IC-09
+  "Hydraulic Fracturing": IC-09
   "Sand Cleanout": IC-06
   "Pump Replacement": IC-01
   "Re-perforation": IC-10
   "Tubing Leak Repair": IC-03
+  "Hot Oil Wax Flush": IC-04
   "ESP Replacement":
-    ic: IC-08
-    label: "Lift optimisation / conversion"
-    disclosure: "no ESP wells in this dataset (lift types SRP, GAS_LIFT, NATURAL, PCP)"
+    ic: IC-01
+    label: "Artificial lift pump overhaul / ESP & PCP changeout"
+    disclosure: "ESP & PCP wet-end replacement maps to IC-01; ESP <-> Jet-Pump lift conversion maps to IC-08 (Barmer lift mix: ESP, JET_PUMP, PCP, SRP, GAS_LIFT, NATURAL)."

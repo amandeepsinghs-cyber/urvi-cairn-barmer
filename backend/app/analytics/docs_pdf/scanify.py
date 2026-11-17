@@ -29,7 +29,7 @@ from app.analytics.docs_pdf.facts import FIELDS, iter_specs, norm_type, stable_h
 from app.analytics.docs_pdf.paths import docs_dir, facts_path, pdf_path
 from app.analytics.docs_pdf.render import BANNER, FOOTER_PREFIX, compose
 
-FORCED_SCANS = {"DOC-CBL-GK129-1998"}  # landing document_index flags this 1998 log as scanned (no text layer)
+FORCED_SCANS = {"DOC-CBL-MNG042-2014"}  # landing document_index flags this 2014 log as scanned (no text layer)
 DPI = 110
 PAGE_PX = (int(8.27 * DPI), int(11.69 * DPI))
 MARGIN_PX = int(0.6 * DPI)

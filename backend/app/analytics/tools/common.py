@@ -3,8 +3,8 @@
 Port of ADK ``tools/common.py`` (v0.3.0) made field-aware:
 
 * Tables come from the process repository (``get_repository()``), never from a module-level path.
-  Well-keyed tables are the concatenation of the three fields, so every per-well tool works for
-  ``GK-`` / ``LKW-`` / ``LKM-`` wells without a field argument (K-6).
+  Well-keyed tables are the concatenation of the four Barmer fields, so every per-well tool works for
+  ``MNG-`` / ``BHG-`` / ``ASH-`` / ``RAG-`` wells without a field argument (K-6).
 * ``as_of`` defaults are ``settings.AS_OF`` (D-15), never a literal date.
 * ``to_jsonable`` turns any tool value into JSON-safe data for the REST envelope (SDD §13.1).
 * ``currency_keys`` implements rule 8 (D-1): no currency key may appear in a tool value.

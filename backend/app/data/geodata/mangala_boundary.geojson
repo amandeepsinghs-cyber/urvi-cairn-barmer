@@ -1,0 +1,336 @@
+{
+ "features": [
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.573,
+       25.958
+      ],
+      [
+       71.570785,
+       25.974823
+      ],
+      [
+       71.564292,
+       25.9905
+      ],
+      [
+       71.553962,
+       26.003962
+      ],
+      [
+       71.5405,
+       26.014292
+      ],
+      [
+       71.524823,
+       26.020785
+      ],
+      [
+       71.508,
+       26.023
+      ],
+      [
+       71.491177,
+       26.020785
+      ],
+      [
+       71.4755,
+       26.014292
+      ],
+      [
+       71.462038,
+       26.003962
+      ],
+      [
+       71.451708,
+       25.9905
+      ],
+      [
+       71.445215,
+       25.974823
+      ],
+      [
+       71.443,
+       25.958
+      ],
+      [
+       71.445215,
+       25.941177
+      ],
+      [
+       71.451708,
+       25.9255
+      ],
+      [
+       71.462038,
+       25.912038
+      ],
+      [
+       71.4755,
+       25.901708
+      ],
+      [
+       71.491177,
+       25.895215
+      ],
+      [
+       71.508,
+       25.893
+      ],
+      [
+       71.524823,
+       25.895215
+      ],
+      [
+       71.5405,
+       25.901708
+      ],
+      [
+       71.553962,
+       25.912038
+      ],
+      [
+       71.564292,
+       25.9255
+      ],
+      [
+       71.570785,
+       25.941177
+      ],
+      [
+       71.573,
+       25.958
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "field": "Mangala",
+    "is_synthetic_geometry": true,
+    "kind": "FIELD_BOUNDARY",
+    "name": "Mangala field boundary",
+    "source": "field_master.boundary_geojson"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.515916,
+       25.983733
+      ],
+      [
+       71.503802,
+       25.997757
+      ],
+      [
+       71.487026,
+       25.996575
+      ],
+      [
+       71.476065,
+       25.977219
+      ],
+      [
+       71.491758,
+       25.968499
+      ],
+      [
+       71.506355,
+       25.967124
+      ],
+      [
+       71.514736,
+       25.980606
+      ],
+      [
+       71.515916,
+       25.983733
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "MNG-PAD-A",
+    "cluster_type": "WELL_PAD",
+    "field": "Mangala",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 43,
+    "name": "MNG-PAD-A",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.492807,
+       25.947762
+      ],
+      [
+       71.503101,
+       25.942644
+      ],
+      [
+       71.532371,
+       25.95405
+      ],
+      [
+       71.536106,
+       25.963907
+      ],
+      [
+       71.522718,
+       25.980315
+      ],
+      [
+       71.505254,
+       25.984064
+      ],
+      [
+       71.495608,
+       25.966741
+      ],
+      [
+       71.492807,
+       25.947762
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "MNG-PAD-B",
+    "cluster_type": "WELL_PAD",
+    "field": "Mangala",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 61,
+    "name": "MNG-PAD-B",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.507784,
+       25.964398
+      ],
+      [
+       71.495042,
+       25.932135
+      ],
+      [
+       71.519755,
+       25.927317
+      ],
+      [
+       71.526752,
+       25.930338
+      ],
+      [
+       71.534216,
+       25.935011
+      ],
+      [
+       71.536733,
+       25.949101
+      ],
+      [
+       71.533026,
+       25.956096
+      ],
+      [
+       71.520299,
+       25.961972
+      ],
+      [
+       71.507784,
+       25.964398
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "MNG-PAD-C",
+    "cluster_type": "WELL_PAD",
+    "field": "Mangala",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 45,
+    "name": "MNG-PAD-C",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.47853,
+       25.929857
+      ],
+      [
+       71.488234,
+       25.918655
+      ],
+      [
+       71.50172,
+       25.915316
+      ],
+      [
+       71.515959,
+       25.91611
+      ],
+      [
+       71.515957,
+       25.93064
+      ],
+      [
+       71.500596,
+       25.950473
+      ],
+      [
+       71.489836,
+       25.948673
+      ],
+      [
+       71.47853,
+       25.929857
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "MNG-PAD-D",
+    "cluster_type": "WELL_PAD",
+    "field": "Mangala",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 31,
+    "name": "MNG-PAD-D",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  }
+ ],
+ "is_synthetic_geometry": true,
+ "name": "mangala_boundary",
+ "type": "FeatureCollection"
+}

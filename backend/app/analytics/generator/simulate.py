@@ -1,4 +1,4 @@
-"""Native production simulator (Lakwa, Lakhmani, Geleki prepend).
+"""Native production simulator for Cairn Oil & Gas — Barmer Basin (Mangala, Bhagyam, Aishwariya, Raageshwari).
 
 One renewal process per well over a daily calendar:
 
@@ -78,7 +78,7 @@ class WellParams:
     hazard_mult: float
     is_idle: bool
     lift_type: str
-    wht_base: float = 45.0
+    wht_base: float = 54.0
     glr_base: float | None = None
     glp_base: float | None = None
     choke: int = 16
@@ -127,11 +127,17 @@ def draw_native_params(cfg: FieldConfig, wells: pd.DataFrame, rng: np.random.Gen
     for row in wells.itertuples(index=False):
         u = rng.uniform
         lt = row.lift_type
+        if lt == "SRP":
+            spm_b = float(rng.choice([6.0, 8.0, 10.0]))
+        elif lt == "PCP":
+            spm_b = float(rng.choice([90.0, 110.0, 130.0, 150.0]))
+        else:
+            spm_b = None
         p = WellParams(
             q_i=float(u(*r.q_i_bopd)), b=float(u(*r.b)), d_i_day=float(u(*r.d_i_per_yr)) / 365.25,
             wc_init=float(u(*r.wc_init_pct)), wc_slope_day=float(u(*r.wc_slope_pp_per_yr)) / 365.25,
             thp_base=float(u(*r.thp_kgcm2)), chp_base=float(u(*r.chp_kgcm2)),
-            spm_base=float(rng.choice([6.0, 8.0, 10.0, 12.0])) if lt == "SRP" else None,
+            spm_base=spm_b,
             gor_base=float(u(*r.gor_scf_bbl)), hazard_mult=1.0, is_idle=(row.status == "IDLE"), lift_type=lt,
             wht_base=float(u(*r.wht_degc)),
             glr_base=float(u(*r.gl_inj_rate_mscfd)) if lt == "GAS_LIFT" else None,
@@ -150,7 +156,7 @@ def draw_native_params(cfg: FieldConfig, wells: pd.DataFrame, rng: np.random.Gen
 
 
 def params_from_v030(v030_params: dict, cfg: FieldConfig, wells: pd.DataFrame, rng: np.random.Generator) -> dict[str, WellParams]:
-    """Geleki prepend: reuse the frozen v0.3.0 per-well parameters; draw only the gap-column bases."""
+    """Reuse per-well parameters; draw only the gap-column bases."""
     r = cfg.reservoir
     out = {}
     for row in wells.itertuples(index=False):
@@ -169,7 +175,7 @@ def params_from_v030(v030_params: dict, cfg: FieldConfig, wells: pd.DataFrame, r
 
 
 def gap_column_bases(cfg: FieldConfig, wells: pd.DataFrame, seed: int) -> dict[str, tuple[float, float, float]]:
-    """(wht_base, glr_base, glp_base) per well from a dedicated stream (shared by prepend and v0.3.0 core)."""
+    """(wht_base, glr_base, glp_base) per well from a dedicated stream."""
     rng = np.random.default_rng([seed, 77])
     r = cfg.reservoir
     out = {}
@@ -220,13 +226,17 @@ def apply_signature(arr: dict, kind: str, a: int, b: int, s: float, p: WellParam
         if p.lift_type == "GAS_LIFT":
             arr["glr_mult"][sl] *= 1 + 0.35 * s * pr
             arr["glp_add"][sl] += -6.0 * s * pr
+        elif p.lift_type == "JET_PUMP":
+            # Hydraulic Jet-Pump Venturi nozzle/throat erosion signature
+            arr["chp_add"][sl] += -5.5 * s * pr
+            arr["thp_add"][sl] += 3.2 * s * pr
         arr["m_liq"][sl] *= 1 - 0.30 * s * pr
     elif kind == "LIFT":
         if p.lift_type == "GAS_LIFT":
             osc = np.sin(2 * math.pi * np.arange(n) / 5.0)
             arr["m_liq"][sl] *= 1 - 0.10 * s * pr + 0.12 * s * osc
             arr["glr_mult"][sl] *= 1 + 0.10 * s * osc
-        elif p.lift_type == "SRP":
+        elif p.lift_type in ("SRP", "PCP"):
             arr["m_liq"][sl] *= 1 - 0.15 * s * pr
             arr["runtime"][sl] *= 1 - 0.15 * s * pr
             arr["gor_mult"][sl] *= 1 + 0.10 * s * pr
@@ -268,7 +278,7 @@ def _signature_kind(job: str, lift: str, rng: np.random.Generator) -> tuple[str,
     alt = rng.integers(0, 2)
     if u < P_CONFUSE:
         cand = CONFUSABLE[kind][int(alt)]
-        if not (cand == "GLV" and lift != "GAS_LIFT"):
+        if not (cand == "GLV" and lift not in ("GAS_LIFT", "JET_PUMP")):
             kind = cand
     if rng.random() < P_WEAK:
         s *= 0.3
@@ -290,7 +300,7 @@ def draw_external_events(cfg: FieldConfig, n_days: int, start: date, rng: np.ran
             ev.append(dict(event_type="GRID_POWER_OUTAGE", cluster_id=c.cluster_id, d0=d0,
                            n=1 if partial else int(rng.integers(1, 4)), partial=bool(partial),
                            runtime=float(rng.uniform(0.4, 0.8))))
-        # monsoon floods (June-September)
+        # monsoon / desert flash-rain access loss (June-September)
         for yr in range(start.year, start.year + int(math.ceil(years)) + 1):
             if rng.random() < rates.get("FLOOD_ACCESS_LOSS", 0.0):
                 d = (date(yr, 6, 1) - start).days + int(rng.integers(0, 120))
@@ -408,21 +418,6 @@ class WellSim:
             jobs = self.job_override
             job = str(self.rng.choice(jobs))
             return job, JOB_SPECS[job]["failure_code"], not bool(REQUIRES_RIG[job])
-        if self.job_mode == "v030_mix":
-            from .fields.geleki import V030_FAILURE_MIX
-            mix = V030_FAILURE_MIX[lift]
-            codes = list(mix)
-            fc = str(self.rng.choice(codes, p=np.array([mix[c] for c in codes])))
-            if lift == "SRP":
-                rl = fc in ("SURFACE", "SCALE") or (fc == "WAX" and self.rng.random() < 10.0 / 15.0)
-            elif lift == "GAS_LIFT":
-                rl = fc in ("GL_HEADING", "SURFACE", "SCALE") or (fc == "WAX" and self.rng.random() < 0.20)
-            else:
-                rl = fc in ("SURFACE", "SCALE")
-            w = PREPEND_FAILURE_TO_JOB[(fc, bool(rl))]
-            js = list(w)
-            job = str(self.rng.choice(js, p=np.array([w[j] for j in js]) / sum(w.values())))
-            return job, fc, bool(rl)
         w = self.cfg.mechanism_weights[lift]
         js = list(w)
         pr = np.array([w[j] for j in js], dtype=float)
@@ -490,7 +485,7 @@ class WellSim:
                 cyc.repair = int(max(1, math.ceil(base * self.rng.uniform(0.8, 1.6)))) if not rigless else int(self.rng.integers(1, 4))
             op = dm.outcome_p
             cyc.outcome = str(self.rng.choice(["SUCCESS", "PARTIAL", "FAILED"], p=list(op)))
-            cyc.rig_id = f"RIG-ASSAM-{int(self.rng.integers(1, 16)):02d}" if not rigless and mode != "REVIEW" else None
+            cyc.rig_id = f"RIG-BARMER-{int(self.rng.integers(1, 16)):02d}" if not rigless and mode != "REVIEW" else None
             total = cyc.deferred + cyc.wait_rig + cyc.wait_mat + cyc.wait_permit + cyc.wait_crew + cyc.repair
             if fail + total + 3 >= limit and limit < self.n:
                 break   # fixture / anchor windows: never start a cycle that cannot finish before them
@@ -524,16 +519,12 @@ class WellSim:
                 self._set_status(d_cur, d_cur + nd, st, ep_reason, None, False)
                 self._event(etype, d_cur, min(self.n, d_cur + nd) - 1, None)
                 d_cur += nd
-            if mode == "FAILURE" and rigless:
-                pass
             cyc.job_start = d_cur
             cyc.job_end = d_cur + cyc.repair - 1
             cyc.wo_id = f"WO-{self.row.well_id}-{self.idp}{wo_seq:03d}"
             cyc.report_doc_id = f"DOC-SCAN-{self.row.well_id}-{self.idp}{wo_seq:03d}"
             self._mark_down(cyc.job_start, cyc.job_end + 1, fc)
             self._set_status(cyc.job_start, cyc.job_end + 1, "UNDER_WORKOVER", ep_reason, cyc.wo_id, rigless)
-            if mode == "FAILURE":   # pre-job days from failure until rig arrives are down too
-                pass
             for ev in self.events:
                 if ev["trigger_ref"] is None:
                     ev["trigger_ref"] = cyc.wo_id
@@ -604,7 +595,7 @@ class WellSim:
         rates = self.cfg.ops_event_rates
         years = self.n / 365.25
         kinds = [("CHOKE_CHANGE", rates.get("CHOKE_CHANGE", 0.0))]
-        if self.p.lift_type == "SRP":
+        if self.p.lift_type in ("SRP", "PCP"):
             kinds.append(("SPM_CHANGE", rates.get("SPM_CHANGE", 0.0)))
         if self.p.lift_type == "GAS_LIFT":
             kinds.append(("GL_RATE_CHANGE", rates.get("GL_RATE_CHANGE", 0.0)))
@@ -626,7 +617,10 @@ class WellSim:
                     self.a["m_ops"][d:] *= (new / old) ** 0.3
                 elif etype == "SPM_CHANGE":
                     old = self.spm[d]
-                    new = float(np.clip(old + self.rng.choice([-2.0, 2.0]), 4.0, 14.0))
+                    if self.p.lift_type == "PCP":
+                        new = float(np.clip(old + self.rng.choice([-15.0, 15.0]), 60.0, 180.0))
+                    else:
+                        new = float(np.clip(old + self.rng.choice([-2.0, 2.0]), 4.0, 14.0))
                     self.spm[d:] = new
                     self.a["m_ops"][d:] *= (new / old) ** 0.25
                 else:
@@ -647,6 +641,7 @@ class WellSim:
         potential = np.zeros(n)
         oil_series = np.full(n, np.nan)
         prepend = self.is_prepend
+        perf_top = float(self.row.perf_top_m)
         for d in range(n):
             dt = self.start + timedelta(days=d)
             counter += 1
@@ -714,7 +709,7 @@ class WellSim:
                                       oil_rate_bopd=q_oil, water_rate_bwpd=q_water,
                                       gas_rate_mscfd=round(float(q_oil * p.gor_base / 1000.0), 1),
                                       thp_kgcm2=thp, chp_kgcm2=chp,
-                                      fluid_level_m=round(float(rng.uniform(700, 1600)), 1),
+                                      fluid_level_m=round(float(rng.uniform(0.22 * perf_top, 0.68 * perf_top)), 1),
                                       pump_intake_p_kgcm2=round(float(rng.uniform(20, 55)), 1),
                                       test_quality=str(rng.choice(["GOOD", "SUSPECT", "REJECTED"], p=[0.93, 0.05, 0.02])),
                                       is_prepend=prepend))

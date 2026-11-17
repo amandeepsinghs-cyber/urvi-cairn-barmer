@@ -36,7 +36,7 @@ export const PersonaPicker: React.FC<{ lang?: Lang; compact?: boolean }> = ({
       {capabilities && capabilities.enforced === false && (
         <span
           className="text-[10px] text-emerald-300/80 font-sans shrink-0 pl-1.5 border-l border-border"
-          title="Showcase: every role sees everything. Role-based access (CMD / ED / Field Engineer) can be switched on per deployment."
+          title="Showcase: every role sees everything. Role-based access (COO / CIO, Asset Manager, Production Engineer) can be switched on per deployment."
         >
           RBAC available
         </span>

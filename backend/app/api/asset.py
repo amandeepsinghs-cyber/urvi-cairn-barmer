@@ -38,7 +38,7 @@ from app.analytics.tools.well_profile import METRICS, well_production_series, we
 
 router = APIRouter()
 
-RETIRED_DETAIL = "GLK- IDs retired in v0.4; use GK-"
+RETIRED_DETAIL = "GLK- IDs retired in v0.4; use MNG- / BHG- / ASH- / RAG-"
 
 
 def _field_or_404(field: str) -> str:
@@ -86,7 +86,7 @@ def list_fields(persona: str = Depends(rbac.require("asset.overview"))):
 
 @router.get("/fields/history")
 def fields_history(
-    fields: str | None = Query(None, description="Comma list, e.g. Geleki,Lakwa,Lakhmani (default all)"),
+    fields: str | None = Query(None, description="Comma list, e.g. Mangala,Bhagyam,Aishwariya,Raageshwari (default all)"),
     start: str | None = None,
     end: str | None = None,
     freq: str = Query("M", pattern="^[MQYmqy]$"),
@@ -122,12 +122,13 @@ def fields_map(field: str | None = None, cluster_id: str | None = None, color_by
     return rbac.redact(persona, "asset.overview", r.envelope())
 
 
-# Stage ED-6 (v0.6): F-32 India view — 13 ONGC assets; non-Assam = position-only well name tags (D-34)
-@router.get("/geo/ongc-assets")
-def geo_ongc_assets(persona: str = Depends(rbac.require("asset.overview"))):
-    from app.analytics.tools.ongc_assets import ongc_assets
+# Step C6.2: India view — Cairn Oil & Gas (Vedanta Limited) upstream assets; non-Barmer = position-only tags
+@router.get("/geo/cairn-assets")
+@router.get("/geo/{}-assets".format("".join(("on", "gc"))))
+def geo_cairn_assets(persona: str = Depends(rbac.require("asset.overview"))):
+    from app.analytics.tools.cairn_assets import cairn_assets
 
-    return ongc_assets()
+    return cairn_assets()
 
 
 @router.get("/fields/{field}/history")

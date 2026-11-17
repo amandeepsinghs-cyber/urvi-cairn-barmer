@@ -105,6 +105,8 @@ export const WellDeepDiveDrawer: React.FC<WellDeepDiveDrawerProps> = ({
   const [compareRec, setCompareRec] = useState<string | undefined>(undefined);
   useEffect(() => {
     if (view === 'summary') setMonths(24);
+    else if (view === 'interventions') setMonths(60);
+    else if (view === 'overview') setMonths(36);
   }, [view, wellId]);
   useEffect(() => {
     setCompareOpen(view === 'compare');
@@ -770,15 +772,29 @@ export const WellDeepDiveDrawer: React.FC<WellDeepDiveDrawerProps> = ({
             </>
             )}
 
-            {show(['summary', 'interventions']) && (
+            {show(['summary', 'overview', 'interventions']) && (
             <>
             {/* Section 8: Interventions Summary */}
             <div className="bg-[#0d1117] border border-border rounded-lg p-3 space-y-2">
-              <div className="text-xs font-mono uppercase text-textMuted font-bold flex items-center justify-between">
-                <span>Interventions Summary</span>
-                <span className="text-white text-xs font-mono">
-                  Total: {formatNum(profile.interventions_summary.total, 0)}
+              <div className="text-xs font-mono uppercase text-textMuted font-bold flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5">
+                  <Wrench className="w-3.5 h-3.5 text-accent" />
+                  Interventions Summary
                 </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-white text-xs font-mono">
+                    Total: {formatNum(profile.interventions_summary.total, 0)}
+                  </span>
+                  {onViewChange && view !== 'interventions' && profile.interventions_summary.total > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => onViewChange('interventions')}
+                      className="normal-case font-sans text-[11px] px-2 py-0.5 rounded border border-accent/40 text-accent hover:bg-accent/20 hover:text-white transition-colors"
+                    >
+                      View all {profile.interventions_summary.total} →
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-mono">
                 <div className="bg-surface/50 border border-border/60 rounded p-2">
@@ -804,7 +820,7 @@ export const WellDeepDiveDrawer: React.FC<WellDeepDiveDrawerProps> = ({
             </>
             )}
 
-            {show(['summary', 'production', 'interventions']) && (
+            {show(['summary', 'overview', 'production', 'interventions']) && (
             <>
             {/* Section 9: Production Section with Months Selector */}
             <div className="bg-[#0d1117] border border-border rounded-lg p-4 space-y-3">

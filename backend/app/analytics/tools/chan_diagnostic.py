@@ -2,7 +2,7 @@
 
 Port of ADK ``tools/chan_diagnostic.py``. Changes in the port (SDD §3.2, rule 1 "never substitute"):
 
-* The v0.3.0 per-well calibration overrides (GK-129 / GK-117 / GK-141 / GK-103 hard-coded slopes,
+* The v0.3.0 per-well calibration overrides (legacy hard-coded slopes,
   r² and injector steps) are **removed**; every well goes through the same computation.
 * ``r_squared`` is the real log-log fit quality (v0.3.0 clamped it to [0.45, 0.96], which made the
   ``INDETERMINATE`` branch unreachable).

@@ -1,20 +1,45 @@
-"""Formation tops generator for subsurface stratigraphic layering.
+"""Formation tops generator for Barmer Basin subsurface stratigraphic layering.
 
-Stage N / WellPulse v0.4 synthetic data generation.
+Generates continuous, non-overlapping stratigraphic columns from the 7-unit
+Barmer Basin lithostratigraphic sequence (docs/build.md Part I §2).
 """
+
+from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 
-LITHOLOGY_MAP = {
-    "Alluvium": "Unconsolidated sand and clay",
-    "Namsang": "Sandstone with clay and pebble beds",
-    "Girujan": "Mottled clay",
-    "Tipam": "Massive sandstone, minor shale",
-    "Barail": "Sand-shale-coal alternation",
-    "Kopili": "Shale with thin sandstone",
-    "Lakadong": "Limestone and sandstone (Sylhet)",
+LITHOLOGY_MAP: dict[str, str] = {
+    "Thar_Alluvium_Kapurdi": "Quaternary aeolian Thar dune sand, calcrete and Eocene Kapurdi fuller's earth clay",
+    "Akli_Thumbli": "Palaeocene-Eocene lignite-bearing carbonaceous shale and friable Thumbli sandstone",
+    "Dharvi_Dungar": "Palaeocene lacustrine grey claystone and regional top-seal shale",
+    "Barmer_Hill": "Palaeocene lacustrine siliceous porcellanite, diatomite and laminated mudstone",
+    "Fatehgarh_Upper": "Upper Fatehgarh (FM1-FM2) sinuous meandering fluvial channel sandstone and siltstone",
+    "Fatehgarh_Lower": "Lower Fatehgarh (FM3-FM5) stacked multi-storey braided channel and sheetflood sandstone",
+    "Raageshwari_Volcanics": "Late Cretaceous Prithvi basaltic lava flows and Agni felsic pyroclastics",
 }
+
+FORMATION_ORDER: tuple[str, ...] = (
+    "Thar_Alluvium_Kapurdi",
+    "Akli_Thumbli",
+    "Dharvi_Dungar",
+    "Barmer_Hill",
+    "Fatehgarh_Upper",
+    "Fatehgarh_Lower",
+    "Raageshwari_Volcanics",
+)
+
+NOMINAL_THICKNESS_RANGES: dict[str, tuple[float, float]] = {
+    "Thar_Alluvium_Kapurdi": (45.0, 115.0),
+    "Akli_Thumbli": (95.0, 260.0),
+    "Dharvi_Dungar": (85.0, 250.0),
+    "Barmer_Hill": (65.0, 190.0),
+    "Fatehgarh_Upper": (75.0, 175.0),
+    "Fatehgarh_Lower": (115.0, 260.0),
+    "Raageshwari_Volcanics": (150.0, 500.0),
+}
+
+MIN_LAYER_THICKNESS_M = 18.0
 
 
 def generate_formation_tops(wells: pd.DataFrame, seed: int) -> pd.DataFrame:
@@ -45,99 +70,60 @@ def generate_formation_tops(wells: pd.DataFrame, seed: int) -> pd.DataFrame:
         perf_top_m = float(row["perf_top_m"])
         perf_bottom_m = float(row["perf_bottom_m"])
         td_md_m = float(row["total_depth_md_m"])
-
-        # Per well, draw ALL six thicknesses first in that order, plus offset
-        t_all = float(rng.uniform(300.0, 500.0))
-        t_nam = float(rng.uniform(400.0, 700.0))
-        t_tip = float(rng.uniform(450.0, 650.0))
-        t_bar = float(rng.uniform(600.0, 900.0))
-        t_kop = float(rng.uniform(150.0, 300.0))
-        t_lak = float(rng.uniform(80.0, 200.0))
-        offset = float(rng.uniform(40.0, 150.0))
-
-        top_z = perf_top_m - offset
-
-        if current_zone == "Tipam":
-            thick_tip = max(t_tip, (perf_bottom_m - top_z) + 20.0)
-            top_tip = top_z
-            bot_tip = top_tip + thick_tip
-            top_bar = bot_tip
-            bot_bar = top_bar + t_bar
-            top_kop = bot_bar
-            bot_kop = top_kop + t_kop
-            top_lak = bot_kop
-            bot_lak = top_lak + t_lak
-            upper_deep_top = top_tip
-
-        elif current_zone == "Barail":
-            thick_bar = max(t_bar, (perf_bottom_m - top_z) + 20.0)
-            top_bar = top_z
-            bot_bar = top_bar + thick_bar
-            bot_tip = top_bar
-            top_tip = bot_tip - t_tip
-            top_kop = bot_bar
-            bot_kop = top_kop + t_kop
-            top_lak = bot_kop
-            bot_lak = top_lak + t_lak
-            upper_deep_top = top_tip
-
-        elif current_zone == "Lakadong":
-            thick_lak = max(t_lak, (perf_bottom_m - top_z) + 20.0)
-            top_lak = top_z
-            bot_lak = top_lak + thick_lak
-            bot_kop = top_lak
-            top_kop = bot_kop - t_kop
-            bot_bar = top_kop
-            top_bar = bot_bar - t_bar
-            bot_tip = top_bar
-            top_tip = bot_tip - t_tip
-            upper_deep_top = top_tip
-
-        else:
-            raise ValueError(f"Unknown current_zone: {current_zone}")
-
-        # Alluvium, Namsang, Girujan
-        gir_thick = upper_deep_top - (t_all + t_nam)
-        if gir_thick < 100.0:
-            target_nam_bottom = upper_deep_top - 100.0
-            if target_nam_bottom - t_all >= 50.0:
-                all_bottom = t_all
-                nam_bottom = target_nam_bottom
-            else:
-                nam_bottom = target_nam_bottom
-                target_all_bottom = nam_bottom - 50.0
-                all_bottom = max(50.0, target_all_bottom)
-        else:
-            all_bottom = t_all
-            nam_bottom = t_all + t_nam
-
-        b0 = 0.0
-        b1 = round(all_bottom, 1)
-        b2 = round(nam_bottom, 1)
-        b3 = round(upper_deep_top, 1)
-        b4 = round(bot_tip, 1)
-        b5 = round(bot_bar, 1)
-        b6 = round(bot_kop, 1)
-        b7 = round(bot_lak, 1)
-
-        candidates = [
-            ("Alluvium", b0, b1),
-            ("Namsang", b1, b2),
-            ("Girujan", b2, b3),
-            ("Tipam", b3, b4),
-            ("Barail", b4, b5),
-            ("Kopili", b5, b6),
-            ("Lakadong", b6, b7),
-        ]
-
         td_rounded = round(td_md_m, 1)
-        kept = []
-        for form_name, top_m, bot_m in candidates:
-            if top_m < td_rounded:
-                kept.append([form_name, top_m, bot_m])
 
-        if kept:
-            kept[-1][2] = td_rounded
+        # Draw nominal thicknesses in fixed order per well for deterministic RNG stream
+        drawn_weights = [
+            float(rng.uniform(*NOMINAL_THICKNESS_RANGES[f])) for f in FORMATION_ORDER
+        ]
+        offset = float(rng.uniform(12.0, 42.0))
+
+        forms = list(FORMATION_ORDER)
+        if current_zone in forms:
+            z_idx = forms.index(current_zone)
+        else:
+            z_idx = 4
+            forms[z_idx] = current_zone
+
+        n_above = z_idx
+        min_overburden = round(n_above * MIN_LAYER_THICKNESS_M, 1)
+        max_offset = max(6.0, min(offset, perf_top_m - min_overburden))
+        z_top = round(max(min_overburden, perf_top_m - max_offset), 1)
+
+        # Partition [0.0, z_top] across the n_above overburden units with >= MIN_LAYER_THICKNESS_M each
+        over_weights = np.array(drawn_weights[:n_above], dtype=float)
+        over_weights = over_weights / over_weights.sum()
+        rem_above = max(0.0, z_top - n_above * MIN_LAYER_THICKNESS_M)
+        raw_thicks = MIN_LAYER_THICKNESS_M + rem_above * over_weights
+
+        boundaries = [0.0]
+        acc = 0.0
+        for k in range(n_above - 1):
+            acc += float(raw_thicks[k])
+            b_k = round(acc, 1)
+            # Enforce strict >= 15.0m thickness and leave room for remaining overburden layers
+            min_b = round(boundaries[-1] + MIN_LAYER_THICKNESS_M, 1)
+            max_b = round(z_top - (n_above - 1 - k) * MIN_LAYER_THICKNESS_M, 1)
+            b_k = max(min_b, min(max_b, b_k))
+            boundaries.append(b_k)
+        boundaries.append(z_top)
+
+        kept: list[tuple[str, float, float]] = []
+        for k in range(n_above):
+            kept.append((forms[k], boundaries[k], boundaries[k + 1]))
+
+        # Target producing zone must strictly contain [perf_top_m, perf_bottom_m]
+        rem_below_perf = round(td_rounded - perf_bottom_m, 1)
+        if z_idx < len(forms) - 1 and rem_below_perf >= 28.0:
+            pad_below = round(float(rng.uniform(6.0, max(7.0, rem_below_perf - MIN_LAYER_THICKNESS_M))), 1)
+            z_bot = round(perf_bottom_m + pad_below, 1)
+            if td_rounded - z_bot >= 16.0:
+                kept.append((forms[z_idx], z_top, z_bot))
+                kept.append((forms[z_idx + 1], z_bot, td_rounded))
+            else:
+                kept.append((forms[z_idx], z_top, td_rounded))
+        else:
+            kept.append((forms[z_idx], z_top, td_rounded))
 
         for form_name, top_m, bot_m in kept:
             records.append({
@@ -145,9 +131,9 @@ def generate_formation_tops(wells: pd.DataFrame, seed: int) -> pd.DataFrame:
                 "field": fld,
                 "cluster_id": cid,
                 "formation": form_name,
-                "top_md_m": top_m,
-                "bottom_md_m": bot_m,
-                "lithology": LITHOLOGY_MAP[form_name],
+                "top_md_m": round(float(top_m), 1),
+                "bottom_md_m": round(float(bot_m), 1),
+                "lithology": LITHOLOGY_MAP.get(form_name, "Fluvial sandstone and claystone sequence"),
             })
 
     return pd.DataFrame(records, columns=columns)

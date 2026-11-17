@@ -7,19 +7,19 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
     hindi: 'भूमिका',
   },
   'persona.ED': {
-    english: 'Executive Director',
-    hinglish: 'Executive Director',
-    hindi: 'कार्यकारी निदेशक',
+    english: 'COO / CIO (Executive)',
+    hinglish: 'COO / CIO (Executive)',
+    hindi: 'सीओओ / सीआईओ (कार्यकारी)',
   },
   'persona.ASSET_MANAGER': {
-    english: 'Asset Manager / PE',
-    hinglish: 'Asset Manager / PE',
-    hindi: 'एसेट मैनेजर / पीई',
+    english: 'Asset Manager — Barmer',
+    hinglish: 'Asset Manager — Barmer',
+    hindi: 'एसेट मैनेजर — बाड़मेर',
   },
   'persona.FIELD_ENGINEER': {
-    english: 'Field Engineer',
-    hinglish: 'Field Engineer',
-    hindi: 'फ़ील्ड इंजीनियर',
+    english: 'Production / Well Services Engineer',
+    hinglish: 'Production / Well Services Engineer',
+    hindi: 'उत्पादन / वेल सर्विसेज़ इंजीनियर',
   },
   'persona.demo_note': {
     english: 'Demo persona switch — not a security boundary',

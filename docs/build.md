@@ -623,6 +623,14 @@ Canonical `LIFT_TYPES` across generator, Silver/Gold tables, and `features.py`:
   ! grep -rn -iE "\b(ongc|oil and natural gas|geleki|lakwa|lakhmani|sivasagar|nazira)\b" backend/app/agent/ backend/app/live/ backend/app/api/ && (cd backend && uv run python -c "from app.agent.prompt import build_system_prompt; p=build_system_prompt(); assert 'Cairn Oil & Gas' in p and 'Mangala' in p and 'ONGC' not in p; print('C6.6 agent & voice OK')")
   ```
 
+### Step C6.7 — Restore Authentic Indian English (`en-IN`) Voice Accent in Gemini Live & Browser TTS (`[O]`)
+* **Files:** `backend/app/live/session.py`, `backend/app/live/live_prompt.md`, `frontend/src/components/agent/VoiceAgentPanel.tsx`
+* **Instructions:** Pass `language_code="en-IN"` (or `"hi-IN"` when `language == "hindi"`) in `types.SpeechConfig(...)` inside `build_live_config`, add explicit Indian English (`en-IN`) prosody & Indian field-name pronunciation instructions in `live_prompt.md`, and prioritize female Indian voices in `VoiceAgentPanel.tsx::speakText`.
+* **Verify:**
+  ```bash
+  (cd backend && uv run pytest tests/unit/test_r6_language_default.py tests/integration/test_ws_live.py -q) && (cd frontend && npm run build)
+  ```
+
 ---
 
 ## Stage C7 · Frontend Map, Voice Controls, Persona UI, Architecture Tab & Docs (6 Steps · Day 2 PM)
@@ -673,6 +681,27 @@ Canonical `LIFT_TYPES` across generator, Silver/Gold tables, and `features.py`:
 * **Verify:**
   ```bash
   ! grep -n -iE "\b(geleki|lakwa|lakhmani|sivasagar|gk-129)\b" README.md docs/how_urvi_works.md docs/ml_recommendation_engine.md docs/data_access_plan.md && echo "C7.6 docs OK"
+  ```
+
+### Step C7.7 — Add Top-Line Single-Agent Multi-Tool Hybrid Architecture Banner (`[F]` + `[O]`)
+* **Files:** `frontend/src/components/architecture/ArchitectureView.tsx`, `frontend/scripts/build_architecture.py`, `frontend/scripts/architecture_explain.py`, `frontend/public/architecture/{current.html,current-light.html,target.html,target-light.html,explain-current.json,explain-target.json}`, `docs/how_urvi_works.md`, `README.md`, `frontend/dist/`
+* **Instructions:** Elevate the core architectural thesis to the very top line across all Architecture surfaces (`ArchitectureView.tsx` persistent header callout bar, `build_architecture.py` top callout box inside `current`/`target` dark & light HTMLs, `architecture_explain.py` / `docs/how_urvi_works.md` opening paragraph, and `README.md`):
+  > **Single-Agent, Multi-Tool Hybrid Architecture:** *Natural spoken & typed language in (Gemini ADK / Live) → deterministic engineering physics, ML models & numeric-grounding guards underneath — best of both worlds with minimal hallucination.*
+  Rebuild `frontend/public/architecture/*`, `docs/how_urvi_works.md`, and `frontend/dist/`.
+* **Verify:**
+  ```bash
+  uv run --project backend python frontend/scripts/build_architecture.py && (cd frontend && npm run build) && grep -q "Single-Agent, Multi-Tool Hybrid Architecture" frontend/src/components/architecture/ArchitectureView.tsx frontend/public/architecture/current.html frontend/public/architecture/target.html docs/how_urvi_works.md && ! grep -rn -i "ongc" frontend/dist/ && echo "C7.7 top-line architecture banner OK"
+  ```
+
+### Step C7.8 — Visual Interventions Parity, Live Voice View Routing & Dual-Stack Startup Guard (`[O]`)
+* **Files:** `backend/run.py`, `run_local.sh`, `frontend/vite.config.ts`, `frontend/src/App.tsx`, `backend/app/live/{voice_tools.py,live_prompt.md}`, `frontend/src/components/agent/VoiceAgentPanel.tsx`, `frontend/src/components/well/{WellDeepDiveDrawer.tsx,ProductionMarkersChart.tsx}`, `frontend/src/components/map/WellMap.tsx`, `frontend/dist/`
+* **Instructions:**
+  1. **Startup Race Fix:** Bind local Uvicorn to `0.0.0.0:8002` with Vite (`host: '::'`, port `5180`) proxying `/api` and `/ws` to `127.0.0.1:8002`, gate `run_local.sh` Vite launch on `GET /api/wells/kpis == 200`, and add mount retry logic in `App.tsx`.
+  2. **Live Voice Panel Navigation:** Add `well_id` + `recent_interventions` to `voice_tools.well_summary`, resolve `payload.id` / transcript well IDs in `VoiceAgentPanel.tsx`, upgrade the open well canvas view automatically when `onInputTranscript` streams `"interventions"` / `"workovers"` after an early tool call, and add `open_well ... view=interventions` mappings in `live_prompt.md`.
+  3. **Visual Interventions & Facility Icons:** Render `Interventions Summary` (`View all N →` button) and `ProductionMarkersChart` on `Overview` as well as `Summary`/`Interventions` (`5 Years` default on `Interventions`), upgrade `<ReferenceLine>` markers to `strokeWidth={2}` with staggered pill badges + earlier-workover outcome pills, and recognize `MPT`/`CPF`/`RGT` in `WellMap.tsx` `isCentralFacility`.
+* **Verify:**
+  ```bash
+  (cd frontend && npm run build) && (cd backend && uv run pytest tests/integration/test_ws_live.py tests/unit/test_r6_language_default.py -q) && ! grep -rn -i "ongc" frontend/dist/ && echo "C7.8 visual interventions parity OK"
   ```
 
 ---

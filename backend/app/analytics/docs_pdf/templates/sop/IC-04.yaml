@@ -1,10 +1,10 @@
 sop_id: SOP-IC-04
 intervention_class: IC-04
-title: Standard Operating Procedure for Wax Removal and Paraffin Control
-purpose: Define safe operational procedures and equipment specifications for mechanical scraping, hot oil treatment, chemical
-  solvent soaking, and inhibitor application to clear wax depositions.
-scope: Covers all wax management interventions on Upper Assam paraffinic crude wells ({n_job_codes} catalogue job codes) utilizing
-  {equipment_list}.
+title: Standard Operating Procedure for Waxy Crude Removal, Hot-Oil Circulation, and Trace-Heater Control
+purpose: Define safe operational procedures and equipment specifications for mechanical scraping, hot-oil circulation unit (HOCU)
+  flushing, chemical solvent soaking, skin-effect trace-heater restoration, and inhibitor application to clear high-pour-point paraffin wax depositions.
+scope: Covers all wax management and thermal flow-assurance interventions on Barmer Basin waxy crude wells across Mangala, Bhagyam,
+  and Aishwariya ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
 applicability:
 - Severe production decline caused by paraffin wax deposition inside production tubing or flowlines.
 - Inability to run subsurface tools or bottomhole pressure bombs due to solid wax obstruction.
@@ -54,8 +54,8 @@ procedure:
   - Repeat runs with progressively larger gauge cutters until full tubing drift is confirmed.
 - phase: Thermal and Chemical Treatment
   steps:
-  - Heat flush fluid in hot oiler unit to the approved temperature below fluid flash point.
-  - Circulate hot fluid down casing annulus or tubing to melt soft wax accumulations.
+  - Heat flush crude or treated water in the hot-oil circulation unit (HOCU) above the Fatehgarh wax appearance temperature and below flash point.
+  - Circulate heated fluid down casing annulus, insulated flowline, or tubing to melt solid paraffin wax accumulations.
   - Pump prescribed volume of aromatic solvent blend into tubing string under low pump pressure.
   - Displace solvent with treated formation brine or crude to place chemical across target interval.
   - Shut in well for the programme soak duration to allow maximum wax dissolution.
@@ -63,7 +63,7 @@ procedure:
 - phase: Post Treatment Verification and Flowback
   steps:
   - Open well slowly through calibrated surface choke to flow back dissolved wax and solvent.
-  - Monitor fluid return at the group gathering station separator for emulsion or solid wax.
+  - Monitor fluid return at the multi-well pad test separator or central processing terminal for emulsion or solid wax.
   - Record flowing tubing pressure, casing pressure, and gross liquid production rate.
   - Disconnect surface treating hoses, depressurize lines, and flush equipment with clean water.
   - Clean wellsite cellar, collect chemical waste in certified drums, and remove safety barriers.
@@ -73,8 +73,8 @@ job_variants:
   - Run graduated mechanical wireline wax scrapers to clear paraffin deposits stand by stand.
   - Verify slickline depth counter, monitor line pull tension, and inspect recovered solid wax.
   WAX_HOTOIL:
-  - Circulate heated oil down tubing or annulus to melt wax deposits above reservoir pour point.
-  - Monitor pumping pressure and fluid return temperature at the surface flowline.
+  - Circulate heated oil from the hot-oil circulation unit (HOCU) down tubing, annulus, or insulated pad flowline to melt wax above pour point.
+  - Monitor HOCU pump discharge pressure and return line temperature at the pad manifold.
   WAX_SOLVENT:
   - Pump specialized aromatic paraffin solvent blend into tubing string and soak for programme duration.
   - Displace solvent to target depth using filtered compatible brine or clean light crude.
@@ -82,12 +82,12 @@ job_variants:
   - Inject continuous or batch polymeric wax inhibitor chemical to prevent paraffin crystallization.
   - Set injection rate on surface chemical metering pump and confirm chemical supply levels.
   WAX_HEATER:
-  - Inspect downhole electrical heating cable and surface control panel connections.
-  - Energize heating system according to approved thermal schedule and monitor bottomhole temperature.
+  - Inspect surface skin-effect heat-tracing transformers, downhole electrical heating cable, and flowline thermal insulation continuity.
+  - Restore and energize trace-heater circuit according to approved thermal schedule and verify temperature above wax appearance threshold.
 acceptance_criteria:
 - Full drift gauge toolstring passes freely through entire production tubing string.
 - Surface flowing tubing pressure stabilizes at expected level without wax throttling.
-- Liquid delivery to group gathering station matches or exceeds pre-deposition baseline.
+- Liquid delivery to the central processing terminal matches or exceeds pre-deposition baseline.
 post_job:
 - Record quantity of recovered wax, chemical volumes injected, and soak duration.
 - Establish recurring wireline scraping or chemical dosing frequency based on field results.
@@ -95,8 +95,8 @@ post_job:
 lessons_learned:
 - Asset statistics show {jobs_all_fields} wax control jobs with {success_pct_all} operational success.
 - Median duration for wax interventions across all asset fields is {median_rig_days_all} rig days.
-- Early chemical inhibition significantly extends the interval between mechanical scraping runs.
+- Early chemical inhibition and continuous skin-effect trace heating prevent costly flowline wax gelling during cold ambient nights.
 references:
-- Paraffin and Wax Management Guidelines for Assam Crude Wells.
+- Waxy Crude Flow Assurance and HOCU Operating Guidelines for Barmer Basin Fields.
 - Slickline Wireline Operating Procedures and Safety Rules.
 - Hazardous Chemical Handling and Waste Management Standard.

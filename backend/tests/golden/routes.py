@@ -8,8 +8,8 @@ The websocket ``/api/wells/{well}/live`` route is handled separately (see
 
 from __future__ import annotations
 
-# Stage N: GLK- IDs retired; one golden well per field (Geleki, Lakwa fixture, Lakhmani).
-GOLDEN_WELLS = ["GK-129", "LKW-047", "LKM-061"]
+# Stage N: GLK- IDs retired; one golden well per field (Mangala, Bhagyam, Aishwariya).
+GOLDEN_WELLS = ["MNG-042", "BHG-019", "ASH-023"]
 
 # Chat/audio requests run with Gemini disabled (local fallback engine): see conftest.py.
 _CHAT_BODY = {"message": "What happened to this well and what do you recommend?", "language": "english"}
@@ -20,7 +20,7 @@ ROUTES: list[tuple[str, str, str, dict | None]] = [
     ("healthz", "GET", "/api/healthz", None),
     ("wells_kpis", "GET", "/api/wells/kpis", None),
     ("wells_list", "GET", "/api/wells", None),
-    ("wells_list_filtered", "GET", "/api/wells?status=all&basin=Assam&search=GK", None),
+    ("wells_list_filtered", "GET", "/api/wells?status=all&basin=Barmer&search=MNG", None),
     ("field_infrastructure", "GET", "/api/field/infrastructure", None),
     ("well_detail", "GET", "/api/wells/{well}", None),
     ("well_reports", "GET", "/api/wells/{well}/reports", None),

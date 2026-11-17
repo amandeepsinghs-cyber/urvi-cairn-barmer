@@ -21,15 +21,15 @@ FLOW = [
      {"field_production_history"}, set(), set()),
     ("L1_plot", "Can you give me a plot?", {"field": None, "well_id": None},
      {"field_production_history"}, {"field_history_chart"}, {"field_history"}),
-    ("L2", "How many wells in Geleki are either sick or have lost production?", {"field": "Geleki", "well_id": None},
+    ("L2", "How many wells in Mangala are either sick or have lost production?", {"field": "Mangala", "well_id": None},
      {"classify_well_health", "attribute_decline"}, {"health_buckets"}, {"field_health"}),
     ("L3", "Can you give me a priority list of all the wells that need intervention?",
-     {"field": "Geleki", "well_id": None}, {"rank_candidates"}, {"priority_queue"}, {"priority"}),
-    ("L4", "Tell me more about GK-129 and show me its production history", {"field": "Geleki", "well_id": None},
+     {"field": "Mangala", "well_id": None}, {"rank_candidates"}, {"priority_queue"}, {"priority"}),
+    ("L4", "Tell me more about MNG-042 and show me its production history", {"field": "Mangala", "well_id": None},
      {"well_profile", "plot_production"}, {"well_profile", "well_production_chart"}, {"well"}),
-    ("L5_nba", "What are the next best recommended interventions?", {"field": "Geleki", "well_id": "GK-129"},
+    ("L5_nba", "What are the next best recommended interventions?", {"field": "Mangala", "well_id": "MNG-042"},
      {"recommend_next_best_action"}, {"nba"}, {"well"}),
-    ("L5_why_not", "Why not just wax removal?", {"field": "Geleki", "well_id": "GK-129"},
+    ("L5_why_not", "Why not just wax removal?", {"field": "Mangala", "well_id": "MNG-042"},
      {"compare_interventions"}, {"counterfactual"}, {"well"}),
 ]
 
@@ -67,8 +67,8 @@ def test_demo_flow_fake_llm(client):
 
 
 def test_hinglish_l2_turn(client):
-    prompt = "Geleki mein kitne wells sick hain ya production lose kar rahe hain?"
-    body = _turn(client, f"hi-{uuid.uuid4().hex[:6]}", prompt, {"field": "Geleki"}, persona="ED", language="hinglish")
+    prompt = "Mangala mein kitne wells sick hain ya production lose kar rahe hain?"
+    body = _turn(client, f"hi-{uuid.uuid4().hex[:6]}", prompt, {"field": "Mangala"}, persona="ED", language="hinglish")
     assert "classify_well_health" in {c["name"] for c in body["tool_calls"]}
     assert body["language"] == "hinglish"
     _assert_numbers_grounded(body, prompt)
@@ -82,9 +82,9 @@ def test_field_engineer_denied_field_aggregate_via_chat(client):
     assert not body["artifacts"]
 
 
-def test_lkm090_no_job_justified(client):
-    prompt = "What should we do on LKM-090?"
-    body = _turn(client, f"nj-{uuid.uuid4().hex[:6]}", prompt, {"field": "Lakhmani", "well_id": "LKM-090"})
+def test_rag014_no_job_justified(client):
+    prompt = "What should we do on RAG-014?"
+    body = _turn(client, f"nj-{uuid.uuid4().hex[:6]}", prompt, {"field": "Raageshwari", "well_id": "RAG-014"})
     assert "recommend_next_best_action" in {c["name"] for c in body["tool_calls"]}
     assert "NO_JOB_JUSTIFIED" in str((body.get("trace") or {}).get("tool_returns")) or \
         "no job" in body["response"].lower()
@@ -94,8 +94,8 @@ def test_lkm090_no_job_justified(client):
 def test_sessions_do_not_leak_tool_calls_between_turns(client):
     """K-4: the second turn's tool_calls/artifacts come from that turn only."""
     sid = f"k4-{uuid.uuid4().hex[:6]}"
-    _turn(client, sid, "Tell me more about GK-129 and show me its production history", {"field": "Geleki"})
-    body = _turn(client, sid, "How many wells in Geleki are either sick or have lost production?", {"field": "Geleki"})
+    _turn(client, sid, "Tell me more about MNG-042 and show me its production history", {"field": "Mangala"})
+    body = _turn(client, sid, "How many wells in Mangala are either sick or have lost production?", {"field": "Mangala"})
     assert "well_profile" not in {c["name"] for c in body["tool_calls"]}
     assert "well_profile" not in {a["kind"] for a in body["artifacts"]}
 

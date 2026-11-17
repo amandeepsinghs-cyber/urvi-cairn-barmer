@@ -120,6 +120,13 @@ export const ArchitectureView: React.FC<ArchitectureViewProps> = ({ mode, onMode
           </button>
         </div>
       </div>
+      <div className="px-4 py-1.5 bg-[#0f172a]/95 border-b border-cyan-500/30 text-[11px] text-slate-200 flex items-center gap-2 shrink-0">
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+        <span>
+          <strong className="text-cyan-300 font-semibold">Single-Agent, Multi-Tool Hybrid Architecture:</strong>{' '}
+          Natural spoken &amp; typed language in (Gemini ADK / Live) → deterministic engineering physics, ML models &amp; numeric-grounding guards underneath — best of both worlds with minimal hallucination.
+        </span>
+      </div>
       <div className="flex-1 min-h-0 flex">
         <iframe
           key={mode}

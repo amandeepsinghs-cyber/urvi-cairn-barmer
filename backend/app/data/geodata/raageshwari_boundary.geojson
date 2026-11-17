@@ -1,0 +1,276 @@
+{
+ "features": [
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.773,
+       25.322
+      ],
+      [
+       71.771126,
+       25.336235
+      ],
+      [
+       71.765631,
+       25.3495
+      ],
+      [
+       71.756891,
+       25.360891
+      ],
+      [
+       71.7455,
+       25.369631
+      ],
+      [
+       71.732235,
+       25.375126
+      ],
+      [
+       71.718,
+       25.377
+      ],
+      [
+       71.703765,
+       25.375126
+      ],
+      [
+       71.6905,
+       25.369631
+      ],
+      [
+       71.679109,
+       25.360891
+      ],
+      [
+       71.670369,
+       25.3495
+      ],
+      [
+       71.664874,
+       25.336235
+      ],
+      [
+       71.663,
+       25.322
+      ],
+      [
+       71.664874,
+       25.307765
+      ],
+      [
+       71.670369,
+       25.2945
+      ],
+      [
+       71.679109,
+       25.283109
+      ],
+      [
+       71.6905,
+       25.274369
+      ],
+      [
+       71.703765,
+       25.268874
+      ],
+      [
+       71.718,
+       25.267
+      ],
+      [
+       71.732235,
+       25.268874
+      ],
+      [
+       71.7455,
+       25.274369
+      ],
+      [
+       71.756891,
+       25.283109
+      ],
+      [
+       71.765631,
+       25.2945
+      ],
+      [
+       71.771126,
+       25.307765
+      ],
+      [
+       71.773,
+       25.322
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "field": "Raageshwari",
+    "is_synthetic_geometry": true,
+    "kind": "FIELD_BOUNDARY",
+    "name": "Raageshwari field boundary",
+    "source": "field_master.boundary_geojson"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.711218,
+       25.30448
+      ],
+      [
+       71.713975,
+       25.323907
+      ],
+      [
+       71.711645,
+       25.328663
+      ],
+      [
+       71.69591,
+       25.330579
+      ],
+      [
+       71.696975,
+       25.323896
+      ],
+      [
+       71.711218,
+       25.30448
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "RAG-OIL-1",
+    "cluster_type": "WELL_PAD",
+    "field": "Raageshwari",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 6,
+    "name": "RAG-OIL-1",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.727772,
+       25.327383
+      ],
+      [
+       71.72844,
+       25.351513
+      ],
+      [
+       71.717388,
+       25.353605
+      ],
+      [
+       71.702846,
+       25.349513
+      ],
+      [
+       71.693236,
+       25.33899
+      ],
+      [
+       71.69272,
+       25.337569
+      ],
+      [
+       71.69957,
+       25.322205
+      ],
+      [
+       71.708136,
+       25.320351
+      ],
+      [
+       71.727772,
+       25.327383
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "RAG-RDG-N",
+    "cluster_type": "WELL_PAD",
+    "field": "Raageshwari",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 29,
+    "name": "RAG-RDG-N",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     [
+      [
+       71.700845,
+       25.308948
+      ],
+      [
+       71.719668,
+       25.293469
+      ],
+      [
+       71.736301,
+       25.296886
+      ],
+      [
+       71.740799,
+       25.304422
+      ],
+      [
+       71.738365,
+       25.329312
+      ],
+      [
+       71.725399,
+       25.339098
+      ],
+      [
+       71.701758,
+       25.327735
+      ],
+      [
+       71.700845,
+       25.308948
+      ]
+     ]
+    ],
+    "type": "Polygon"
+   },
+   "properties": {
+    "cluster_id": "RAG-RDG-S",
+    "cluster_type": "WELL_PAD",
+    "field": "Raageshwari",
+    "is_synthetic_geometry": true,
+    "kind": "CLUSTER_POLYGON",
+    "n_wells": 25,
+    "name": "RAG-RDG-S",
+    "source": "convex hull of well_master locations (+margin)"
+   },
+   "type": "Feature"
+  }
+ ],
+ "is_synthetic_geometry": true,
+ "name": "raageshwari_boundary",
+ "type": "FeatureCollection"
+}

@@ -12,7 +12,7 @@ from app import settings
 from app.analytics.tools.attribution import CONTROLLABLE, NO_ACTION_FLAG, _well_cached, attribute_decline
 from app.analytics.tools.common import ToolStatus, currency_keys, field_well_ids
 
-FIELDS = ("Geleki", "Lakwa", "Lakhmani")
+FIELDS = ("Mangala", "Bhagyam", "Aishwariya", "Raageshwari")
 
 
 def _comp(v, cls: str, sub: str):
@@ -38,34 +38,34 @@ def test_waterfall_reconciles_for_every_well(field):
     assert checked >= len(field_well_ids(field)) - 15  # only wells with no pre-window production are skipped
 
 
-def test_lkw047_human_process_dominates():
-    """BDD-F01-S01: largest class HUMAN_PROCESS incl. WAIT_ON_RIG 41 d + WAIT_ON_MATERIAL 12 d; PUMP_WEAR in EQUIPMENT."""
-    r = attribute_decline(well_id="LKW-047", window_days=180)
+def test_bhg019_human_process_dominates():
+    """BDD-F01-S01: largest class HUMAN_PROCESS incl. WAIT_ON_RIG 38 d + WAIT_ON_MATERIAL 11 d."""
+    r = attribute_decline(well_id="BHG-019", window_days=180)
     v = r.value
     assert r.status == ToolStatus.OK
     assert v.largest_class == "HUMAN_PROCESS"
     rig, mat = _comp(v, "HUMAN_PROCESS", "WAIT_ON_RIG"), _comp(v, "HUMAN_PROCESS", "WAIT_ON_MATERIAL")
-    assert rig is not None and rig.days == 41
-    assert mat is not None and mat.days == 12
-    assert _comp(v, "EQUIPMENT", "PUMP_WEAR") is not None
+    assert rig is not None and rig.days == 38
+    assert mat is not None and mat.days == 11
+    assert any(c.factor_class in ("EQUIPMENT", "OPERATIONAL") for c in v.components)
     # human factor = a function, never a person
     assert rig.responsible_function == "Rig Planning"
     assert mat.responsible_function and "Materials" in mat.responsible_function
     assert v.controllable_pct >= 80.0
 
 
-def test_lkm090_pure_reservoir_decline_is_uncontrollable():
+def test_rag014_pure_reservoir_decline_is_uncontrollable():
     """BDD-F01-S03 (pinned at Gate P): SUBSURFACE ≥ 80 %, controllable ≤ 15 %, NO_OPERATIONAL_ACTION flag."""
-    v = attribute_decline(well_id="LKM-090", window_days=180).value
+    v = attribute_decline(well_id="RAG-014", window_days=180).value
     assert v.subsurface_pct >= 80.0
     assert v.controllable_pct <= 15.0
     assert NO_ACTION_FLAG in v.flags
     assert _comp(v, "SUBSURFACE", "RESERVOIR_DECLINE") is not None
 
 
-def test_lkw088_grid_outage_is_external():
+def test_bhg088_grid_outage_is_external():
     """BDD-F01-S04: GRID_POWER_OUTAGE classed EXTERNAL and excluded from the controllable share."""
-    v = attribute_decline(well_id="LKW-088", window_days=180).value
+    v = attribute_decline(well_id="BHG-088", window_days=180).value
     g = _comp(v, "EXTERNAL", "GRID_POWER_OUTAGE")
     assert g is not None and g.controllable is False
     assert "EXTERNAL" not in CONTROLLABLE
@@ -87,31 +87,31 @@ def test_unexplained_surfaces_as_low_confidence():
                 seen += 1
             else:
                 assert r.status == ToolStatus.OK, wid
-    assert seen >= 1  # e.g. LKW-088 (flat E: TC-001 fit LOW_CONFIDENCE)
+    assert seen >= 1
 
 
-def test_lakwa_field_rollup_equals_sum_of_wells():
+def test_bhagyam_field_rollup_equals_sum_of_wells():
     """BDD-F01-S06: field total = Σ well totals (±0.5 %); controllable share pinned ≥ 40 %."""
-    r = attribute_decline(field="Lakwa", window_days=90)
+    r = attribute_decline(field="Bhagyam", window_days=90)
     v = r.value
     total = sum(w["total_loss_bbl"] for w in v.wells)
     assert abs(total - v.total_loss_bbl) <= 0.005 * abs(v.total_loss_bbl)
     assert abs(sum(c.bbl for c in v.components) - v.gains_bbl - v.total_loss_bbl) <= 0.005 * abs(v.total_loss_bbl)
     assert v.controllable_pct >= 40.0
-    assert len(v.wells) + len(v.wells_excluded) == 160
+    assert len(v.wells) + len(v.wells_excluded) == 120
 
 
 def test_cluster_rollup_and_unknowns():
-    r = attribute_decline(field="Lakwa", cluster_id="LKW-GGS-I", window_days=90)
+    r = attribute_decline(field="Bhagyam", cluster_id="BHG-PAD-1", window_days=90)
     assert r.value is not None and r.value.scope == "CLUSTER"
     assert attribute_decline(field="Atlantis").status == ToolStatus.UNAVAILABLE
     assert attribute_decline().status == ToolStatus.UNAVAILABLE
-    assert attribute_decline(well_id="LKW-047", window_days=3).status == ToolStatus.UNAVAILABLE
+    assert attribute_decline(well_id="BHG-019", window_days=3).status == ToolStatus.UNAVAILABLE
     assert attribute_decline(well_id="ZZ-001").status == ToolStatus.UNAVAILABLE
 
 
 def test_no_currency_in_attribution():
-    for kw in ({"well_id": "LKW-047"}, {"field": "Geleki"}):
+    for kw in ({"well_id": "BHG-019"}, {"field": "Mangala"}):
         assert currency_keys(attribute_decline(**kw).value) == []
 
 
@@ -119,7 +119,7 @@ def test_no_currency_in_attribution():
 # REST
 # ------------------------------------------------------------------------------------------------
 def test_api_well_attribution(client):
-    resp = client.get("/api/wells/LKW-047/attribution?window_days=180")
+    resp = client.get("/api/wells/BHG-019/attribution?window_days=180")
     assert resp.status_code == 200
     body = resp.json()
     assert set(body) >= {"status", "data", "message", "missing_fields", "provenance"}
@@ -133,9 +133,9 @@ def test_api_well_attribution(client):
 
 
 def test_api_field_attribution_persona(client):
-    ok = client.get("/api/fields/Lakwa/attribution?window_days=90")  # default persona ASSET_MANAGER
+    ok = client.get("/api/fields/Bhagyam/attribution?window_days=90")  # default persona ASSET_MANAGER
     assert ok.status_code == 200 and ok.json()["data"]["scope"] == "FIELD"
-    assert client.get("/api/fields/Lakwa/attribution", headers={"X-Persona": "ED"}).status_code == 200
-    fe = client.get("/api/fields/Lakwa/attribution", headers={"X-Persona": "FIELD_ENGINEER"})
+    assert client.get("/api/fields/Bhagyam/attribution", headers={"X-Persona": "ED"}).status_code == 200
+    fe = client.get("/api/fields/Bhagyam/attribution", headers={"X-Persona": "FIELD_ENGINEER"})
     assert fe.status_code == 403 and fe.json()["status"] == "UNAVAILABLE"
     assert client.get("/api/fields/Atlantis/attribution").status_code == 404

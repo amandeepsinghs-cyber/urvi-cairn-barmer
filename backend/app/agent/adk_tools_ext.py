@@ -87,7 +87,7 @@ def fit_decline_curve(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-001", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-001", "well_id", "Which well? e.g. MNG-042.")
     return invoke(
         tool_context,
         tool_id="TC-001",
@@ -109,7 +109,7 @@ def chan_diagnostic(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-002", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-002", "well_id", "Which well? e.g. MNG-042.")
     return invoke(
         tool_context,
         tool_id="TC-002",
@@ -130,7 +130,7 @@ def fillage_proxy(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-003", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-003", "well_id", "Which well? e.g. MNG-042.")
     return invoke(
         tool_context,
         tool_id="TC-003",
@@ -151,7 +151,7 @@ def check_offsets(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-004", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-004", "well_id", "Which well? e.g. MNG-042.")
     return invoke(
         tool_context,
         tool_id="TC-004",
@@ -173,7 +173,7 @@ def detect_mechanical_signature(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-005", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-005", "well_id", "Which well? e.g. MNG-042.")
     return invoke(
         tool_context,
         tool_id="TC-005",
@@ -193,7 +193,7 @@ def predict_failure(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-006", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-006", "well_id", "Which well? e.g. MNG-042.")
     return invoke(
         tool_context,
         tool_id="TC-006",
@@ -213,7 +213,7 @@ def trigger_scan(
 
     f = ctx_field(tool_context, field)
     if not f:
-        return _missing("TC-007", "field", "Which field? Geleki, Lakwa or Lakhmani.")
+        return _missing("TC-007", "field", "Which field? Mangala, Bhagyam, Aishwariya or Raageshwari.")
     return invoke(
         tool_context,
         tool_id="TC-007",
@@ -236,7 +236,7 @@ def route_intervention(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-008", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-008", "well_id", "Which well? e.g. MNG-042.")
     mech = (mechanism or "").strip()
     if not mech:
         return _missing("TC-008", "mechanism", "Which decline mechanism? e.g. WAX, CHANNELLING, SCALE, SAND.")
@@ -263,7 +263,7 @@ def estimate_uplift(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-009", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-009", "well_id", "Which well? e.g. MNG-042.")
     jc = (job_code or "").strip().upper()
     if not jc:
         return _missing("TC-009", "job_code", "Which job code? e.g. WAX_HOTOIL, MATRIX_ACID.")
@@ -317,7 +317,7 @@ def generate_draft_plan(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-013", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-013", "well_id", "Which well? e.g. MNG-042.")
     return invoke(
         tool_context,
         tool_id="TC-013",
@@ -338,7 +338,7 @@ def generate_report(
 
     f = ctx_field(tool_context, field)
     if not f:
-        return _missing("TC-014", "field", "Which field? Geleki, Lakwa or Lakhmani.")
+        return _missing("TC-014", "field", "Which field? Mangala, Bhagyam, Aishwariya or Raageshwari.")
     p = (period or "WEEKLY").strip().upper()
     if p not in ("DAILY", "WEEKLY", "MONTHLY"):
         p = "WEEKLY"
@@ -362,7 +362,7 @@ def schedule_rigs(
 
     f = ctx_field(tool_context, field)
     if not f:
-        return _missing("TC-015", "field", "Which field? Geleki, Lakwa or Lakhmani.")
+        return _missing("TC-015", "field", "Which field? Mangala, Bhagyam, Aishwariya or Raageshwari.")
     return invoke(
         tool_context,
         tool_id="TC-015",
@@ -389,7 +389,7 @@ def query_wells(
 
     f = ctx_field(tool_context, field)
     if not f:
-        return _missing("TC-018", "field", "Which field? Geleki, Lakwa or Lakhmani.")
+        return _missing("TC-018", "field", "Which field? Mangala, Bhagyam, Aishwariya or Raageshwari.")
     valid_orders = {"oil_rate_bopd", "decline_residual_pct", "deferred_bopd", "days_to_failure", "water_cut_pct"}
     ob = (order_by or "decline_residual_pct").strip().lower()
     if ob not in valid_orders:
@@ -629,13 +629,13 @@ def compare_offset_decline(
     """TC-033: what is wrong with this well? Compares its decline, water cut and THP with its nearest offset wells
     over `months` (default 24). Verdict WELL_SPECIFIC (problem in this well), RESERVOIR_WIDE (offsets decline
     alike), WATER (scope WELL or AREA), RESTORED (a recent job restored rate), MIXED or INSUFFICIENT, with a
-    one-line headline, each offset's last job and the mechanical signature. Use for 'what's wrong with GK-129',
+    one-line headline, each offset's last job and the mechanical signature. Use for 'what's wrong with MNG-042',
     'compare decline with nearby wells', 'is it the well or the reservoir'."""
     from app.analytics.tools.offset_decline import offset_decline_compare as tc033
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-033", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-033", "well_id", "Which well? e.g. MNG-042.")
     return invoke(
         tool_context,
         tool_id="TC-033",
@@ -659,7 +659,7 @@ def well_anomalies(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-034", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-034", "well_id", "Which well? e.g. MNG-042.")
     return invoke(
         tool_context,
         tool_id="TC-034",
@@ -682,7 +682,7 @@ def wax_sand_behaviour(
 
     wid = ctx_well(tool_context, well_id)
     if not wid:
-        return _missing("TC-035", "well_id", "Which well? e.g. GK-129.")
+        return _missing("TC-035", "well_id", "Which well? e.g. MNG-042.")
     return invoke(
         tool_context,
         tool_id="TC-035",
@@ -711,8 +711,8 @@ def ui_control(
 ) -> dict:
     """Drive the dashboard screen (v0.6 ED-11, hands-off). Call it whenever the user asks to show, open, move,
     switch or close something on screen; call it once per change. Actions and values:
-    map_view india|assam · fullscreen on|off · basemap satellite|scada · flowlines on|off · legend on|off ·
-    zoom in|out · focus_field Geleki|Lakwa|Lakhmani|ALL · focus_cluster (GGS / cluster id, e.g. GGS-01) · focus_well (well_id) · open_well (well_id, view =
+    map_view india|barmer · fullscreen on|off · basemap satellite|scada · flowlines on|off · legend on|off ·
+    zoom in|out · focus_field Mangala|Bhagyam|Aishwariya|Raageshwari|ALL · focus_cluster (pad / cluster id, e.g. MNG-PAD-B) · focus_well (well_id) · open_well (well_id, view =
     summary|overview|production|interventions|wellbore|pressures|diagnosis|recommendation|offsets|history|nearby)
     · open_screen field_history|field_compare|field_health · panel expand|restore|close ·
     language english|hinglish|hindi · report open|print|close (well_id) · agent dock|undock ·

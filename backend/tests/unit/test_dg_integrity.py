@@ -1,8 +1,10 @@
 """Unit tests for Stage DG integrity generator (WH-14).
 
 Covers:
-- 100% coverage of well_master for wellhead_rating across all 3 fields (412 wells).
-- Rating class is smallest API class in [2000, 3000, 5000, 10000] >= 1.5 x field max THP psi.
+- 100% coverage of well_master for wellhead_rating across all 4 Barmer fields (460 wells).
+- Rating class is smallest API class in [2000, 3000, 5000, 10000] >= 1.5 x field max THP psi
+  and >= FIELD_MIN_WELLHEAD_PSI (3k/5k psi MBA oil wells, 10k psi Raageshwari Deep Gas wells;
+  5k psi on RAG-014 safety-veto fixture).
 - xmas_tree_rating_psi matches wellhead_class_psi.
 - last_service_date is <= AS_OF (2026-09-23).
 - Barrier test dates strictly within (last WO end, AS_OF].
@@ -10,7 +12,8 @@ Covers:
 - SSSV tested only on wells with gas-lift or flowing lift type.
 - PACKER tested only on wells with a PACKER component in tubing_string.
 - MASTER_VALVE, WING_VALVE, ANNULUS standard.
-- FAIL result strictly restricted to wells with CASING_LEAK or TUBING_LEAK history.
+- FAIL result strictly restricted to wells with CASING_LEAK or TUBING_LEAK history (plus RAG-014).
+- RAG-014 deterministically records a FAIL on its latest ANNULUS barrier test.
 - Overall FAIL rate <= 5%.
 - test_pressure_kgcm2 = 1.1 x max THP or CHP, rounded to 1 decimal.
 - Determinism across multiple runs with fixed seed.
@@ -29,13 +32,13 @@ from app.analytics.generator.dg.common import AS_OF, FIELDS, finalize, load_fiel
 
 @pytest.fixture(scope="module")
 def field_contexts():
-    """Load FieldContext for all 3 fields once for tests."""
+    """Load FieldContext for all 4 Barmer fields once for tests."""
     return {f: load_field(f) for f in FIELDS}
 
 
 @pytest.fixture(scope="module")
 def generated_tables(field_contexts):
-    """Generate integrity tables for all 3 fields."""
+    """Generate integrity tables for all 4 Barmer fields."""
     return {f: integrity.generate(ctx) for f, ctx in field_contexts.items()}
 
 
@@ -81,12 +84,13 @@ def test_wellhead_rating_coverage_and_schema(field_name, field_contexts, generat
 
 
 def test_wellhead_rating_total_well_count(generated_tables):
-    """Total wells across all three fields must be 412 (142 + 160 + 110)."""
+    """Total wells across all four Barmer fields must be 460 (180 + 120 + 100 + 60)."""
     total = sum(len(generated_tables[f]["wellhead_rating"]) for f in FIELDS)
-    assert total == 412
-    assert len(generated_tables["geleki"]["wellhead_rating"]) == 142
-    assert len(generated_tables["lakwa"]["wellhead_rating"]) == 160
-    assert len(generated_tables["lakhmani"]["wellhead_rating"]) == 110
+    assert total == 460
+    assert len(generated_tables["mangala"]["wellhead_rating"]) == 180
+    assert len(generated_tables["bhagyam"]["wellhead_rating"]) == 120
+    assert len(generated_tables["aishwariya"]["wellhead_rating"]) == 100
+    assert len(generated_tables["raageshwari"]["wellhead_rating"]) == 60
 
 
 @pytest.mark.parametrize("field_name", FIELDS)
@@ -101,18 +105,24 @@ def test_wellhead_rating_rules(field_name, field_contexts, generated_tables):
     max_thp_kgcm2 = float(valid_thp.max()) if not valid_thp.empty else 40.0
     field_max_thp_psi = max_thp_kgcm2 * 14.2233
     required_min_psi = 1.5 * field_max_thp_psi
+    field_floor_psi = float(integrity.FIELD_MIN_WELLHEAD_PSI.get(field_name.lower(), 3000))
 
     api_classes = [2000, 3000, 5000, 10000]
-    expected_class = next(c for c in api_classes if c >= required_min_psi)
+    expected_class = next(c for c in api_classes if c >= max(required_min_psi, field_floor_psi))
+    rag014_expected = next(c for c in api_classes if c >= max(required_min_psi, 5000.0))
 
     for _, row in df.iterrows():
+        wid = row["well_id"]
         wh_class = row["wellhead_class_psi"]
         xt_rating = row["xmas_tree_rating_psi"]
         svc_date = row["last_service_date"]
 
         assert wh_class in api_classes
         assert wh_class >= required_min_psi
-        assert wh_class == expected_class
+        if wid == "RAG-014":
+            assert wh_class == rag014_expected
+        else:
+            assert wh_class == expected_class
         assert xt_rating == wh_class
         assert svc_date <= AS_OF
 
@@ -217,7 +227,7 @@ def test_barrier_tests_barrier_types(field_name, field_contexts, generated_table
 
 @pytest.mark.parametrize("field_name", FIELDS)
 def test_barrier_tests_fail_rate_and_leak_wells(field_name, field_contexts, generated_tables):
-    """FAIL allowed ONLY on wells with CASING_LEAK or TUBING_LEAK; rate <= 5% overall."""
+    """FAIL allowed ONLY on wells with CASING_LEAK or TUBING_LEAK (or pinned RAG-014); rate <= 5% overall."""
     ctx = field_contexts[field_name]
     wo = ctx.t("workover_history")
     df = generated_tables[field_name]["barrier_tests"]
@@ -225,10 +235,10 @@ def test_barrier_tests_fail_rate_and_leak_wells(field_name, field_contexts, gene
     if df.empty:
         return
 
-    leak_wells = set()
+    leak_wells = set(integrity.PINNED_BARRIER_FAIL_WELLS)
     if not wo.empty and "failure_code" in wo.columns:
         leaks = wo[wo["failure_code"].astype(str).str.strip().str.upper().isin(["CASING_LEAK", "TUBING_LEAK"])]
-        leak_wells = set(leaks["well_id"].dropna().astype(str))
+        leak_wells |= set(leaks["well_id"].dropna().astype(str))
 
     # All FAIL rows must belong to leak_wells
     fail_rows = df[df["result"] == "FAIL"]
@@ -236,8 +246,19 @@ def test_barrier_tests_fail_rate_and_leak_wells(field_name, field_contexts, gene
         assert wid in leak_wells, f"FAIL on well {wid} without leak failure code"
 
 
+def test_rag014_barrier_veto_fixture(generated_tables):
+    """RAG-014 must deterministically record a FAIL on its latest ANNULUS barrier test."""
+    bt = generated_tables["raageshwari"]["barrier_tests"]
+    r14 = bt[bt["well_id"] == "RAG-014"]
+    assert not r14.empty, "RAG-014 must have barrier test rows"
+    assert (r14["result"] == "FAIL").any(), "RAG-014 must have at least one FAIL barrier test"
+    ann = r14[r14["barrier"] == "ANNULUS"].sort_values("test_date")
+    assert not ann.empty, "RAG-014 must have ANNULUS barrier tests"
+    assert ann.iloc[-1]["result"] == "FAIL", "Latest ANNULUS barrier test on RAG-014 must be FAIL"
+
+
 def test_overall_barrier_fail_rate(generated_tables):
-    """Overall FAIL rate across all 3 fields must be <= 5%."""
+    """Overall FAIL rate across all 4 Barmer fields must be <= 5%."""
     all_tests = pd.concat([generated_tables[f]["barrier_tests"] for f in FIELDS], ignore_index=True)
     assert len(all_tests) > 0
 

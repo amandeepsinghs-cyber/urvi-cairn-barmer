@@ -22,19 +22,19 @@ def qtd():
     return compare_fields()
 
 
-def test_lakwa_worst_in_pinned_band_with_controllable_driver(qtd):
+def test_bhagyam_worst_in_pinned_band_with_controllable_driver(qtd):
     assert qtd.status == ToolStatus.OK
     v = qtd.value
     assert v.period == "QTD" and v.window_start == date(2026, 7, 1) and v.window_end == settings.AS_OF
-    assert v.worst_field == "Lakwa" and v.ranking[0] == "Lakwa"
-    lakwa = next(r for r in v.rows if r["field"] == "Lakwa")
-    tgt, tol = GAP_TARGET["Lakwa"]
-    assert abs(lakwa["gap_pct"] - tgt * 100) <= tol * 100
-    assert lakwa["in_pinned_band"] is True
-    assert v.top_driver["field"] == "Lakwa"
+    assert v.worst_field == "Bhagyam" and v.ranking[0] == "Bhagyam"
+    bhagyam = next(r for r in v.rows if r["field"] == "Bhagyam")
+    tgt, tol = GAP_TARGET["Bhagyam"]
+    assert abs(bhagyam["gap_pct"] - tgt * 100) <= tol * 100
+    assert bhagyam["in_pinned_band"] is True
+    assert v.top_driver["field"] == "Bhagyam"
     assert v.top_driver["factor_class"] in CONTROLLABLE and v.top_driver["controllable"] is True
     # the driver is the largest class of the TC-019 rollup, not picked for being controllable
-    assert v.top_driver["factor_class"] == max(lakwa["deferred_by_factor"], key=lakwa["deferred_by_factor"].get)
+    assert v.top_driver["factor_class"] == max(bhagyam["deferred_by_factor"], key=bhagyam["deferred_by_factor"].get)
 
 
 def test_every_field_in_its_pinned_band(qtd):
@@ -66,12 +66,12 @@ def test_kpi_completeness_ws1(qtd):
 
 
 def test_active_interventions_are_open_under_workover_episodes(qtd):
-    s = load_table("well_status_history", "Lakwa")
+    s = load_table("well_status_history", "Bhagyam")
     a = settings.AS_OF
     cur = s[(s["start_date"] <= a) & (s["end_date"].isna() | (s["end_date"] >= a))]
     cur = cur.sort_values("start_date").groupby("well_id").tail(1)
-    lakwa = next(r for r in qtd.value.rows if r["field"] == "Lakwa")
-    assert lakwa["active_interventions"] == int((cur["status"] == "UNDER_WORKOVER").sum())
+    bhagyam = next(r for r in qtd.value.rows if r["field"] == "Bhagyam")
+    assert bhagyam["active_interventions"] == int((cur["status"] == "UNDER_WORKOVER").sum())
 
 
 def test_no_currency_and_jsonable(qtd):
@@ -94,16 +94,16 @@ def test_missing_target_excluded(monkeypatch):
     def fake(name, field=None):
         df = real(name, field)
         if name == "field_targets":
-            return df[df["field"] != "Geleki"]
+            return df[df["field"] != "Mangala"]
         return df
 
     fp._field_row.cache_clear()
     monkeypatch.setattr(fp, "load_table", fake)
     try:
         r = compare_fields(period="MTD")
-        assert "Geleki" not in r.value.ranking
-        assert any(e["field"] == "Geleki" for e in r.value.excluded)
-        assert next(x for x in r.value.rows if x["field"] == "Geleki")["gap_pct"] == "UNAVAILABLE"
+        assert "Mangala" not in r.value.ranking
+        assert any(e["field"] == "Mangala" for e in r.value.excluded)
+        assert next(x for x in r.value.rows if x["field"] == "Mangala")["gap_pct"] == "UNAVAILABLE"
         assert r.status == ToolStatus.LOW_CONFIDENCE
     finally:
         fp._field_row.cache_clear()

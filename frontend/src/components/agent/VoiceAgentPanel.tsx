@@ -42,7 +42,7 @@ interface VoiceAgentPanelProps {
   onAgentAction?: (a: ChatAction) => void;
   /** Extra header buttons supplied by the floating frame (expand / minimise). */
   headerActions?: React.ReactNode;
-  /** Short "what the agent sees" label, e.g. "Lakwa · LKW-019 · Production". */
+  /** Short "what the agent sees" label, e.g. "Bhagyam · BHG-019 · Production". */
   contextLabel?: string;
   /** Reports voice state so the minimised launcher can show LIVE / listening / speaking. */
   onStatusChange?: (s: AgentVoiceStatus) => void;
@@ -50,7 +50,7 @@ interface VoiceAgentPanelProps {
   onOpenFieldReport?: (wellId: string) => void;
 }
 
-/** Step 5: "prepare the field report / crew pack / printable report for GK-129". */
+/** Step 5: "prepare the field report / crew pack / printable report for MNG-042". */
 const FIELD_REPORT_RE =
   /\b(field|crew|site|rig)[\s-]+(report|pack)\b|\bwell[\s-]+pack\b|\breport\s+for\s+(the\s+)?(crew|field|site|rig)\b|\bprint(able)?\s+(the\s+)?report\b/i;
 const WELL_ID_RE = /\b([A-Z]{2,3})[\s-]?(\d{3})\b/i;
@@ -166,6 +166,7 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
   // explicitly asks for history / deep dive / report (isExplicitDetailRequest).
   const lastUserTextRef = useRef<string>('');
   const lastUiAtRef = useRef<number>(0); // ED-14: when Live last drove the screen (D-41 safety net)
+  const lastLiveNavRef = useRef<ChatAction | null>(null); // Re-align canvas view if transcript arrives after tool call
 
   // Step 5: an explicit "field report / crew pack" request opens the printable report overlay for the
   // well named in the message (or the selected well) and leaves a re-open chip in the chat. Held in a
@@ -295,6 +296,26 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
             prev.map((m) => (m.id === msgId ? { ...m, text: m.text + textDelta } : m))
           );
         }
+        // If Gemini Live already fired a well tool before input_audio_transcription finished streaming
+        // keywords like "interventions" / "workovers", upgrade the open well canvas view immediately.
+        if (lastLiveNavRef.current && onAgentAction && lastLiveNavRef.current.screen === 'well') {
+          const refinedView = pickCanvasView(lastLiveNavRef.current.source_tool, lastUserTextRef.current);
+          const m = !lastLiveNavRef.current.well_id ? lastUserTextRef.current.match(/\b(mng|bhg|ash|rag)[\s-]?(\d{3})\b/i) : null;
+          const inferredWellId = m ? `${m[1].toUpperCase()}-${m[2]}` : lastLiveNavRef.current.well_id;
+          if (
+            (refinedView !== lastLiveNavRef.current.view && refinedView !== 'overview') ||
+            (inferredWellId && inferredWellId !== lastLiveNavRef.current.well_id)
+          ) {
+            const updated: ChatAction = {
+              ...lastLiveNavRef.current,
+              well_id: inferredWellId,
+              view: refinedView,
+              explicit: isExplicitDetailRequest(lastUserTextRef.current),
+            };
+            lastLiveNavRef.current = updated;
+            onAgentAction(updated);
+          }
+        }
       },
 
       onCaptionDelta: (textDelta) => {
@@ -342,8 +363,9 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
             })
           );
         }
-        // Spoken request (transcribed this turn): "prepare the field report for GK-129".
+        // Spoken request (transcribed this turn): "prepare the field report for MNG-042".
         if (currentUserMsgIdRef.current) fieldReportRef.current(lastUserTextRef.current);
+        lastLiveNavRef.current = null;
         currentUserMsgIdRef.current = null;
         currentAgentMsgIdRef.current = null;
       },
@@ -448,8 +470,18 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
           return;
         }
         if (!onAgentAction) return;
+        const transcriptWellMatch = lastUserTextRef.current.match(/\b(mng|bhg|ash|rag)[\s-]?(\d{3})\b/i);
+        const transcriptWellId = transcriptWellMatch
+          ? `${transcriptWellMatch[1].toUpperCase()}-${transcriptWellMatch[2]}`
+          : null;
         const actionWellId: string | null =
-          payload?.well_id ?? payload?.data?.well_id ?? payload?.data?.identity?.well_id ?? null;
+          payload?.well_id ??
+          payload?.id ??
+          payload?.data?.well_id ??
+          payload?.data?.id ??
+          payload?.data?.identity?.well_id ??
+          transcriptWellId ??
+          null;
         let targetScreen: ChatAction['screen'] | null = null;
         if (kind === 'field_history_chart') targetScreen = 'field_history';
         else if (kind === 'field_comparison') targetScreen = 'field_compare';
@@ -472,6 +504,9 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
             explicit: isExplicitDetailRequest(lastUserTextRef.current),
             view: pickCanvasView(kind, lastUserTextRef.current),
           };
+          if (targetScreen === 'well') {
+            lastLiveNavRef.current = nav;
+          }
           if (targetScreen === 'field_health' || targetScreen === 'priority') {
             // ED-14 (D-41): a display request ("only show non producing wells") may consult health tools, but if
             // the agent drove the screen in the same turn it must not also jump to the Health & priority screen.
@@ -487,6 +522,7 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
       },
 
       onInterrupted: () => {
+        lastLiveNavRef.current = null;
         currentUserMsgIdRef.current = null;
         currentAgentMsgIdRef.current = null;
       },
@@ -604,7 +640,7 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
       } else if (language === 'hindi') {
         greetingText = `नमस्ते, मैं **उर्वी AI एजेंट** हूँ। किसी भी फील्ड या वेल के बारे में पूछिए।`;
       } else {
-        greetingText = `Hello, I am **Urvi AI Agent** for Assam Asset. Ask about any field, priority candidates, or select a wellhead.`;
+        greetingText = `Hello, I am **Urvi AI Agent** for Cairn Oil & Gas, Barmer. Ask about any field, priority candidates, or select a wellhead.`;
       }
     }
 
@@ -677,20 +713,31 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
     }
 
     if (!targetVoice) {
-      targetVoice = availableVoices.find(
-        (v) =>
-          v.lang === 'en-IN' ||
-          v.lang === 'en_IN' ||
-          v.name.toLowerCase().includes('india') ||
-          v.name.toLowerCase().includes('neerja') ||
-          v.name.toLowerCase().includes('prabhat') ||
-          v.name.toLowerCase().includes('heera') ||
-          v.name.toLowerCase().includes('ravi') ||
-          v.name.toLowerCase().includes('veena') ||
-          v.name.toLowerCase().includes('kiran') ||
-          v.lang === 'hi-IN' ||
-          v.lang === 'hi_IN'
-      );
+      // Prefer authentic female Indian English / Hindi voices (e.g. Isha, Veena, Sangeeta, Neerja, Lekha, Google हिन्दी)
+      // before male Indian voices so text-mode TTS matches Urvi's female Indian voice persona.
+      const femaleIndian = availableVoices.find((v) => {
+        const nm = v.name.toLowerCase();
+        const lg = v.lang.replace('_', '-').toLowerCase();
+        return (
+          nm.includes('isha') ||
+          nm.includes('veena') ||
+          nm.includes('sangeeta') ||
+          nm.includes('neerja') ||
+          nm.includes('heera') ||
+          nm.includes('kiran') ||
+          nm.includes('lekha') ||
+          nm.includes('kalpana') ||
+          nm.includes('google हिन्दी') ||
+          (lg === 'en-in' && nm.includes('female'))
+        );
+      });
+      targetVoice =
+        femaleIndian ||
+        availableVoices.find((v) => {
+          const nm = v.name.toLowerCase();
+          const lg = v.lang.replace('_', '-').toLowerCase();
+          return lg === 'en-in' || nm.includes('india') || nm.includes('rishi') || nm.includes('prabhat') || lg === 'hi-in';
+        });
     }
 
     if (targetVoice) {
@@ -959,7 +1006,7 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
           ]
         : [
             'Kaun se wells highest priority par hain?',
-            'Lakwa vs Geleki field compare karo',
+            'Bhagyam vs Mangala field compare karo',
             'Underperforming wells ki health report dikhao',
             '5 year field production history batao',
           ]
@@ -986,7 +1033,7 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
         ]
       : [
           'Show high priority intervention candidates',
-          'Compare Lakwa and Geleki performance',
+          'Compare Bhagyam and Mangala performance',
           'Show health buckets and at-risk wells',
           '5-year field production history',
         ];
@@ -1014,7 +1061,7 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <UrviMark size={28} title="Urvi" />
-            <h3 className="text-xs font-bold text-white font-sans truncate" title="Urvi AI Agent · WellPulse">Urvi AI Agent</h3>
+            <h3 className="text-xs font-bold text-white font-sans truncate" title="Urvi AI Agent · Cairn Oil & Gas">Urvi AI Agent</h3>
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
@@ -1072,7 +1119,7 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
           <div className="flex items-center gap-1 min-w-0 text-textMuted" title="Screen context sent with every question">
             <span>Context:</span>
             <span className="text-white truncate" data-testid="agent-context-chip">
-              {contextLabel || 'Assam Asset'}
+              {contextLabel || 'Barmer Basin'}
             </span>
           </div>
           <select

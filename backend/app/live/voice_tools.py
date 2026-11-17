@@ -8,7 +8,7 @@ Later stages extend the registry without touching ``session.py``::
     from app.live.voice_tools import register_voice_tool
 
     @register_voice_tool(name="compare_fields", action_kind="field_comparison",
-                         description="TC-024: compare Geleki, Lakwa and Lakhmani ...")
+                         description="TC-024: compare Mangala, Bhagyam, Aishwariya and Raageshwari ...")
     def _compare_fields(period: str = "L12M") -> dict:
         from app.analytics.field_compare import compare_fields   # resolved lazily at call time
         return compare_fields(period=period)
@@ -304,7 +304,7 @@ def _v_list_problem_wells(status: str = "failed", limit: int = 5) -> dict[str, A
 @register_voice_tool(
     name="well_summary",
     description=(
-        "Summary of one well (e.g. 'GK-129'): status, lift type, formation, current oil / gas / water cut "
+        "Summary of one well (e.g. 'MNG-042'): status, lift type, formation, current oil / gas / water cut "
         "and pressures. Use whenever the user asks about a specific well or 'this well'."
     ),
     action_kind="well_profile",
@@ -316,7 +316,18 @@ def _v_well_summary(well_id: str) -> dict[str, Any]:
     keep = ("id", "name", "field", "status", "status_reason", "health_bucket", "lift_type", "formation",
             "cluster_id", "spud_date", "current_metrics")
     out = {k: w[k] for k in keep if k in w}
-    out["workover_count"] = len(w.get("workovers") or [])
+    out["well_id"] = w.get("id")
+    workovers = w.get("workovers") or []
+    out["workover_count"] = len(workovers)
+    out["recent_interventions"] = [
+        {
+            "date": j.get("date"),
+            "job_code": j.get("catalogue_job_code") or j.get("type"),
+            "outcome": j.get("outcome"),
+            "uplift_bopd": j.get("flow_delta_bopd"),
+        }
+        for j in workovers[-5:]
+    ]
     # ``status`` is the tool envelope status (OK/ERROR); the well's condition is ``well_health``.
     out["well_health"] = w.get("status")
     out["status"] = "OK"
@@ -331,7 +342,7 @@ def _v_well_summary(well_id: str) -> dict[str, Any]:
 @register_voice_tool(
     name="compare_fields",
     description=(
-        "TC-024: compare fields (Geleki, Lakwa, Lakhmani) on production vs plan / decline to find the "
+        "TC-024: compare fields (Mangala, Bhagyam, Aishwariya, Raageshwari) on production vs plan / decline to find the "
         "underperforming field. Use for 'which field is underperforming', 'kaunsa field peeche hai'."
     ),
     action_kind="field_comparison",
@@ -369,7 +380,7 @@ def _envelope_for_voice(r: Any, max_wells: int = 5) -> dict[str, Any]:
     description=(
         "TC-019: why did production decline? Splits lost oil over a window (default 180 days) into "
         "SUBSURFACE, EQUIPMENT, OPERATIONAL, HUMAN_PROCESS (a delay owned by a function, never a person), "
-        "EXTERNAL and UNEXPLAINED, with barrels, % and controllable share. Give well_id (e.g. 'LKW-047') "
+        "EXTERNAL and UNEXPLAINED, with barrels, % and controllable share. Give well_id (e.g. 'BHG-019') "
         "for one well, or field (optionally cluster_id) for a field rollup. Use for 'why did it decline', "
         "'human factor or controllable', 'production kyun gira'."
     ),
@@ -385,8 +396,8 @@ def _v_attribute_decline(well_id: str = "", field: str = "", cluster_id: str = "
 @register_voice_tool(
     name="classify_well_health",
     description=(
-        "TC-020: which wells are OK, at risk, underperforming or not producing in a field (Geleki, Lakwa, "
-        "Lakhmani), optionally one cluster. 'Sick or lost production' = AT_RISK + UNDERPERFORMING. Use for "
+        "TC-020: which wells are OK, at risk, underperforming or not producing in a field (Mangala, Bhagyam, "
+        "Aishwariya, Raageshwari), optionally one cluster. 'Sick or lost production' = AT_RISK + UNDERPERFORMING. Use for "
         "'how many wells are sick', 'kitne wells band hain', 'which wells are not producing'."
     ),
     action_kind="health_buckets",
@@ -411,7 +422,7 @@ def _v_classify_well_health(field: str, cluster_id: str = "") -> dict[str, Any]:
 @register_voice_tool(
     name="compare_fields",
     description=(
-        "TC-024: which field is not performing? Ranks Geleki, Lakwa, Lakhmani by gap to target (period QTD, "
+        "TC-024: which field is not performing? Ranks Mangala, Bhagyam, Aishwariya, Raageshwari by gap to target (period QTD, "
         "MTD, YTD or L12M; default QTD) with actual vs target BOPD, uptime, water cut, health counts, active "
         "interventions, rig / rigless candidates and the worst field's top loss driver (factor class, "
         "controllable or not). Use for 'which field is underperforming', 'kaunsa field peeche hai'."
@@ -450,7 +461,7 @@ def _v_field_production_history(fields: str = "", freq: str = "M") -> dict[str, 
 @register_voice_tool(
     name="well_profile",
     description=(
-        "TC-029 + TC-017: tell me about one well (e.g. 'GK-129'): zone / formation, lift type, casing and tubing "
+        "TC-029 + TC-017: tell me about one well (e.g. 'MNG-042'): zone / formation, lift type, casing and tubing "
         "sizes, lithology, health bucket, current rate, decline residual, last test and pressure survey, the "
         "interventions in the last `months` (24 / 36 / 60; job, date, outcome) and nearby wells in the same "
         "cluster with bucket, rate and decline residual, plus data.checks: offset-decline verdict + headline "
@@ -524,9 +535,9 @@ def _ed_checks(well_id: str) -> dict[str, Any]:
     description=(
         "TC-021: which of 15 intervention types (IC-01..IC-15) the ML model predicts for a well, with the top-3 "
         "calibrated probabilities, the main driving signals (direction up/down) and the model's holdout quality. "
-        "Give well_id (e.g. 'LKM-023'). Leave well_id empty to get only the model-quality card (holdout macro-F1, "
+        "Give well_id (e.g. 'ASH-023'). Leave well_id empty to get only the model-quality card (holdout macro-F1, "
         "top-3 accuracy, rule-baseline macro-F1, synthetic-data disclosure). Use for 'what job does this well need', "
-        "'how good is this model / can I trust it', 'ESP replacement' (maps to IC-08; no ESP wells in the data), "
+        "'how good is this model / can I trust it', 'ESP / Jet Pump intervention', "
         "'kaunsa intervention chahiye'."
     ),
     action_kind="intervention_classification",
@@ -552,8 +563,8 @@ def _v_classify_intervention(well_id: str = "", top_k: int = 3) -> dict[str, Any
         "TC-022: ranked next best actions for one well (job, intervention class, diagnostic fit, uplift BOPD, "
         "deferred bbl over 12 months, p_success, rig-days, cost band, earliest rig slot, risk flags, SOP id), the "
         "physics route vs the ML suggestion, guardrail flags (coning -> choke back; reservoir decline -> no job) "
-        "and rejected candidates with reasons, plus data.multimodal (WellPulse multimodal NN top 3 with p_success_pct, "
-        "look-alike wells, drivers by modality, methodology). Use for 'what should we do on GK-129', 'next best "
+        "and rejected candidates with reasons, plus data.multimodal (multimodal NN top 3 with p_success_pct, "
+        "look-alike wells, drivers by modality, methodology). Use for 'what should we do on MNG-042', 'next best "
         "action', 'how did you decide', 'methodology', "
         "'kya karein', 'kaunsa job'."
     ),
@@ -603,7 +614,7 @@ def _v_compare_interventions(well_id: str, alternative: str, recommended: str = 
     description=(
         "TC-023: field-dispatch history pack (dossier PDF) for one well: three highlights, sections, sources and "
         "the PDF link. Give well_id. Use for 'I'm going to the field tomorrow', 'history pack', "
-        "'kal LKW-047 ja raha hoon, iski poori history de do'."
+        "'kal BHG-019 ja raha hoon, iski poori history de do'."
     ),
     action_kind="dossier",
 )
@@ -626,9 +637,9 @@ def _v_dossier(well_id: str) -> dict[str, Any]:
     name="ui_control",
     description=(
         "Drive the dashboard screen. Call whenever the user asks to show, open, move, zoom, switch, hide or close "
-        "anything on screen; once per change. action / value: map_view india|assam, fullscreen on|off, basemap "
-        "satellite|scada, flowlines on|off, legend on|off, zoom in|out, focus_field Geleki|Lakwa|Lakhmani|ALL, "
-        "focus_cluster (GGS id e.g. GGS-01), focus_well (well_id), open_well (well_id + view: summary|overview|production|interventions|wellbore|"
+        "anything on screen; once per change. action / value: map_view india|barmer, fullscreen on|off, basemap "
+        "satellite|scada, flowlines on|off, legend on|off, zoom in|out, focus_field Mangala|Bhagyam|Aishwariya|Raageshwari|ALL, "
+        "focus_cluster (pad id e.g. MNG-PAD-B), focus_well (well_id), open_well (well_id + view: summary|overview|production|interventions|wellbore|"
         "pressures|diagnosis|recommendation|offsets|history|nearby), open_screen field_history|field_compare|"
         "field_health, panel expand|restore|close, language english|hinglish|hindi, report open|print|close, agent "
         "dock|undock, health_filter all|healthy|attention|not_producing (map shows only that health tag; "

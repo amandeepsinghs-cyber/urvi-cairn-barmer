@@ -7,7 +7,7 @@ config {
   columns: {
     workover_id: "Unique intervention workover event identifier",
     well_id: "Unique well identifier",
-    field: "Field name (e.g., Geleki, Lakwa, Lakhmani)",
+    field: "Field name (e.g., Mangala, Bhagyam, Aishwariya, Raageshwari)",
     cluster_id: "Cluster identifier",
     start_date: "Intervention start date",
     catalogue_job_code: "Standard catalogue job code (e.g., GLV_REPLACE, IC_01...)",

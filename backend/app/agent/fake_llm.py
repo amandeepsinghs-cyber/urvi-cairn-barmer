@@ -111,7 +111,8 @@ class FakeLlm(BaseLlm):
         calls = router.route(text, _ui(llm_request), texts[:-1])
         if not calls:
             yield LlmResponse(content=types.Content(role="model", parts=[types.Part(
-                text="WellPulse runs on synthetic, representative data for Geleki, Lakwa and Lakhmani. "
+                text="Urvi AI Agent runs on synthetic, representative data for Cairn Oil & Gas Barmer Basin "
+                     "(Mangala, Bhagyam, Aishwariya and Raageshwari). "
                      "Ask about field production, sick wells, the priority list, a well, or the next best action.")]))
             return
         parts = [types.Part(function_call=types.FunctionCall(name=n, args={k: v for k, v in a.items() if v not in (None, "")}))

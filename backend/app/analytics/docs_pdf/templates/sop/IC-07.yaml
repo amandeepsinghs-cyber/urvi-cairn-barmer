@@ -1,14 +1,14 @@
 sop_id: SOP-IC-07
 intervention_class: IC-07
-title: Standard Operating Procedure for Gas-Lift Valve Replacement by Slickline
-purpose: Define step-by-step procedures for safely retrieving and installing gas-lift valves, dummy valves, and orifice valves
-  in side pocket mandrels using slickline kick-over tools.
-scope: Applies to all continuous and intermittent gas-lift wells across Assam assets ({n_job_codes} catalogue job codes) utilizing
-  {equipment_list}.
+title: Standard Operating Procedure for Wireline Jet-Pump Insert and Gas-Lift Valve Replacement
+purpose: Define step-by-step procedures for safely retrieving and installing hydraulic jet-pump nozzle-throat inserts via reverse
+  circulation or slickline, as well as retrieving and installing gas-lift valves in side pocket mandrels.
+scope: Applies to hydraulic jet-pump and continuous gas-lift wells across Cairn Oil & Gas Barmer Basin assets including Mangala,
+  Aishwariya, and Raageshwari ({n_job_codes} catalogue job codes) utilizing {equipment_list}.
 applicability:
-- Gas-lift diagnostic survey showing leaking dummy valve, cut orifice, or faulty operating valve.
-- Multi-point gas injection causing high lift gas consumption and poor lift efficiency.
-- Requirement to re-distribute gas injection depth to a deeper or shallower side pocket mandrel.
+- Hydraulic jet-pump cavitation, nozzle or throat erosion, or gas-lift diagnostic survey indicating faulty operating valve.
+- Loss of power-fluid pump efficiency, elevated power-fluid return ratio, or multi-point gas injection inefficiency.
+- Requirement to resize hydraulic jet-pump nozzle-throat insert or redistribute gas injection depth to another mandrel.
 roles:
 - Wellsite supervisor
 - Slickline supervisor
@@ -67,12 +67,12 @@ procedure:
   - Pressurize casing annulus with lift gas to verify valve closure or expected injection response.
   - Conduct pressure hold test on annulus to confirm integrity of newly installed valve packings.
   - Open lift gas supply wing valve and establish design gas injection rate through choke.
-  - Monitor flowing tubing pressure, casing injection pressure, and liquid delivery at gathering station.
-  - Complete gas-lift valve replacement report and file documentation with production section.
+  - Monitor flowing tubing pressure, power-fluid or casing injection pressure, and liquid delivery at the central processing terminal.
+  - Complete insert or gas-lift valve replacement report and file documentation with production section.
 job_variants:
   GLV_REPLACE:
-  - Retrieve defective gas-lift valve from side pocket mandrel using slickline kick-over tool.
-  - Install calibrated replacement valve with verified port size and pressure test casing barrier.
+  - Retrieve eroded hydraulic jet-pump nozzle-throat insert or defective gas-lift valve from sliding sleeve or side pocket mandrel.
+  - Install calibrated replacement jet-pump insert or gas-lift valve with verified port geometry and pressure test tubing or casing barrier.
 acceptance_criteria:
 - Replacement valve latches securely into side pocket mandrel and releases running tool cleanly.
 - Annulus pressure test confirms zero leakage through valve packings to the approved test pressure.

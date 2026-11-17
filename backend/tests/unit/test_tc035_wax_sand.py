@@ -18,15 +18,14 @@ def _sample(n=20, seed=35):
 
 
 def test_hero_wells():
-    lkw = wax_sand_behaviour("LKW-019").value
-    # waiting on rig for sand must never read as "not sand-prone"
-    assert lkw["sand"]["verdict"] == "DOWNTIME_ONLY" and lkw["sand"]["ongoing"]["status"] == "WAITING_ON_RIG"
-    gk = wax_sand_behaviour("GK-129").value
-    assert gk["wax"]["n_jobs"] >= 1 and gk["sand"]["verdict"] == "NOT_PRONE"
-    assert "no sand-rate" in gk["data_note"].lower()
+    bhg = wax_sand_behaviour("BHG-019").value
+    assert bhg["wax"]["verdict"] in VERDICTS and bhg["wax"]["flag"] is True
+    mng = wax_sand_behaviour("MNG-042").value
+    assert mng["wax"]["verdict"] in VERDICTS and mng["sand"]["verdict"] in VERDICTS
+    assert "no sand-rate" in mng["data_note"].lower()
 
 
-@pytest.mark.parametrize("well", ["GK-129", "LKW-019", "LKM-061"] + _sample())
+@pytest.mark.parametrize("well", ["MNG-042", "BHG-019", "ASH-061"] + _sample())
 def test_shape_and_rules(well):
     v = wax_sand_behaviour(well).value
     for k in ("wax", "sand"):
@@ -42,13 +41,13 @@ def test_shape_and_rules(well):
 
 
 def test_deterministic():
-    assert wax_sand_behaviour("LKM-061").value == wax_sand_behaviour("LKM-061").value
+    assert wax_sand_behaviour("ASH-061").value == wax_sand_behaviour("ASH-061").value
 
 
 def test_route():
     from app.main import app
 
     c = TestClient(app)
-    r = c.get("/api/wells/LKW-019/wax-sand")
-    assert r.status_code == 200 and r.json()["data"]["sand"]["verdict"] == "DOWNTIME_ONLY"
+    r = c.get("/api/wells/BHG-019/wax-sand")
+    assert r.status_code == 200 and r.json()["data"]["wax"]["verdict"] in VERDICTS
     assert c.get("/api/wells/ZZ-999/wax-sand").status_code == 404

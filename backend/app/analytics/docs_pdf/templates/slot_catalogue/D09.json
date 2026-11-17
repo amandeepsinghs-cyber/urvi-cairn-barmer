@@ -7,9 +7,9 @@
   "doc_id": {
    "source": "corpus",
    "examples": [
-    "FS-LKW-2024",
-    "FS-GK-2021",
-    "FS-LKW-2023"
+    "FS-BHG-2024",
+    "FS-MNG-2021",
+    "FS-BHG-2023"
    ],
    "missing_share": 0.0
   },
@@ -33,9 +33,9 @@
   "doc_title": {
    "source": "corpus",
    "examples": [
-    "Lakwa Field Annual Review 2024",
-    "Geleki Field Annual Review 2021 (part year)",
-    "Lakwa Field Annual Review 2023"
+    "Bhagyam Field Annual Review 2024",
+    "Mangala Field Annual Review 2021 (part year)",
+    "Bhagyam Field Annual Review 2023"
    ],
    "missing_share": 0.0
   },
@@ -51,25 +51,26 @@
   "field": {
    "source": "field_master.field",
    "examples": [
-    "Lakwa",
-    "Geleki",
-    "Lakhmani"
+    "Bhagyam",
+    "Mangala",
+    "Aishwariya"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Geleki",
-    "Lakhmani",
-    "Lakwa"
+    "Aishwariya",
+    "Bhagyam",
+    "Mangala",
+    "Raageshwari"
    ]
   },
   "asset": {
    "source": "field_master.asset",
    "examples": [
-    "Assam"
+    "Barmer Basin"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Assam"
+    "Barmer Basin"
    ]
   },
   "as_of": {
@@ -328,11 +329,11 @@
   "primary_reservoirs": {
    "source": "field_master.primary_reservoirs",
    "examples": [
-    "Tipam,Barail,Lakadong"
+    "Fatehgarh_Lower,Fatehgarh_Upper,Barmer_Hill,Raageshwari_Volcanics"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Tipam,Barail,Lakadong"
+    "Fatehgarh_Lower,Fatehgarh_Upper,Barmer_Hill,Raageshwari_Volcanics"
    ]
   },
   "centroid_lat": {
@@ -378,9 +379,9 @@
   "study_topic": {
    "source": "document_index.title",
    "examples": [
-    "History of Water Injection in Geleki Asset",
-    "Tipam Sand Reservoir Geological Study Geleki",
-    "Geleki Surface Flowline Wax Scraping Protocol"
+    "History of Water & Polymer Injection in Mangala Asset",
+    "Fatehgarh Sandstone Reservoir Geological Study Mangala",
+    "Mangala Surface Flowline Wax Scraping Protocol"
    ],
    "missing_share": 0.0
   }
@@ -480,13 +481,13 @@
    "source": "daily_production + well_master.cluster_id",
    "example_rows": [
     {
-     "cluster_id": "LKW-GGS-I",
+     "cluster_id": "BHG-PAD-1",
      "wells": "61",
      "oil": "1,152,388",
      "avg_oil_bopd": "3,148.6"
     },
     {
-     "cluster_id": "GK-CENTRAL",
+     "cluster_id": "MNG-PAD-A",
      "wells": "54",
      "oil": "524,127",
      "avg_oil_bopd": "5,697.0"
@@ -505,14 +506,14 @@
    "source": "cluster_master",
    "example_rows": [
     {
-     "cluster_id": "LKW-GGS-I",
-     "cluster_type": "GGS",
+     "cluster_id": "BHG-PAD-1",
+     "cluster_type": "CPF",
      "n_wells": "61",
      "center_lat": "27.076",
      "center_lon": "94.624"
     },
     {
-     "cluster_id": "GK-NE",
+     "cluster_id": "MNG-PAD-B",
      "cluster_type": "FAULT_BLOCK",
      "n_wells": "60",
      "center_lat": "26.980",
@@ -532,18 +533,18 @@
    "source": "facility_master",
    "example_rows": [
     {
-     "facility_id": "LKW-GGS-I",
-     "type": "GGS",
-     "name": "Lakwa Group Gathering Station I",
+     "facility_id": "BHG-PAD-1",
+     "type": "CPF",
+     "name": "Bhagyam Central Processing Facility (BHG-CPF)",
      "capacity_bopd": "7,000",
-     "serviced_cluster_ids": "LKW-GGS-I"
+     "serviced_cluster_ids": "BHG-PAD-1"
     },
     {
-     "facility_id": "GGS-01",
-     "type": "GGS",
-     "name": "Gas Gathering Station 1 (Geleki South)",
+     "facility_id": "MPT-NAGANA",
+     "type": "CPF",
+     "name": "Mangala Processing Terminal (MPT-NAGANA)",
      "capacity_bopd": "6,000",
-     "serviced_cluster_ids": "GK-SW"
+     "serviced_cluster_ids": "MNG-PAD-C"
     }
    ],
    "max_rows_seen": 4
@@ -597,10 +598,10 @@
   "year"
  ],
  "sample_doc_ids": [
-  "FS-LKW-2024",
-  "FS-GK-2021",
-  "FS-LKW-2023",
-  "FS-LKM-2026",
+  "FS-BHG-2024",
+  "FS-MNG-2021",
+  "FS-BHG-2023",
+  "FS-ASH-2026",
   "DOC-FIELD-WATERFLOOD-HIST"
  ]
 }

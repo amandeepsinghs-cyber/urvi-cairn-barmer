@@ -988,7 +988,7 @@ def build_well_dossier(well_id: str, persona: str | None = None, as_of: date | s
     if not rbac.allowed(p, "docs.sop_dossier"):
         return rbac.denied(p, "docs.sop_dossier", "dossier")
     if wid.startswith("GLK-"):
-        return unavailable(TOOL_ID, params, t0, ["well_id"], "GLK- IDs retired in v0.4; use GK-")
+        return unavailable(TOOL_ID, params, t0, ["well_id"], "GLK- IDs retired in v0.4; use MNG- / BHG- / ASH- / RAG-")
     if well_master_row(wid) is None:
         return unavailable(TOOL_ID, params, t0, ["well_id"], f"Well {well_id} not found.")
     name = dossier_name(wid, aso, p)

@@ -4,37 +4,41 @@
 > if ever needed. **It must never touch the ONGC demo:** the GitHub remote is `amandeepsinghs-cyber/urvi-cairn-barmer`,
 > every Google Cloud target is a Cairn placeholder (`urvi-cairn-barmer-ai-agent`, service `urvi-cairn-app`, datasets
 > `urvi_cairn_*`), and `deploy/deploy.sh` refuses to run against the ONGC project / service or while the project is a
-> placeholder. Start with [`plan_prompt.md`](./plan_prompt.md) (kickoff prompt) and [`backlog_refinements.md`](./backlog_refinements.md). The ONGC content below is the inherited
-> baseline and will be replaced as the Barmer version is built.
+> placeholder. Start with [`plan_prompt.md`](./plan_prompt.md) (kickoff prompt) and [`backlog_refinements.md`](./backlog_refinements.md). The documentation below covers the
+> Barmer Basin (`RJ-ON-90/1`) Cairn Oil & Gas implementation.
 
-# WellPulse: Energy Well Operations & Voice AI Platform
-## Geleki Brownfield Asset (Assam, India • ONGC)
+# Urvi AI Agent: Barmer Basin Well Operations & Voice AI Platform
+## Barmer Basin (`RJ-ON-90/1`, Rajasthan • Cairn Oil & Gas / Vedanta Limited)
 
-WellPulse is an industrial operations intelligence platform designed for mature brownfield production and integrity management in the **Geleki Oil Field (Sivasagar, Assam)**. It combines high-resolution **Aerial Satellite Mapping** with tagged wellhead markers (`GLK-101` to `GLK-150`), 3-tier operational health prioritization (Healthy, Needs Attention, Failed), 24-month deep telemetry drilldown (BOPD, MCFD, Water Cut %, Pressures), chronological workover and intervention histories, and a voice-enabled conversational AI agent with real-time well context injection.
+> **Single-Agent, Multi-Tool Hybrid Architecture:** Natural spoken & typed language in (Gemini ADK / Live) → deterministic engineering physics, ML models & numeric-grounding guards underneath — best of both worlds with minimal hallucination.
+
+**Urvi** is an industrial operations intelligence and Voice AI platform tailored for **Cairn Oil & Gas (Vedanta Limited)** across the **Barmer Basin (`RJ-ON-90/1`, Rajasthan)**. It manages **460 synthetic wells** spanning four producing assets — **Mangala (180)**, **Bhagyam (120)**, **Aishwariya (100)**, and **Raageshwari (60)** — across a **60-month window (`2021-10-01` to `2026-09-30`)**.
+
+Built for Barmer's distinct operating physics — high-pour-point waxy crude (**42°C pour point / 59°C WAT**), **HPAM polymer & ASP chemical floods**, **MPT Nagana** (Mangala Processing Terminal) & **RGT** (Raageshwari Gas Terminal) gathering networks, and **6 lift systems** (`JET_PUMP`, `ESP`, `PCP`, `SRP`, `GAS_LIFT`, `NATURAL`) — Urvi pairs high-resolution **Aerial Satellite Mapping** (`MNG-001..180`, `BHG-001..120`, `ASH-001..100`, `RAG-001..060`) with 4-tier operational health screening, 60-month telemetry drilldowns, causal decline attribution, multimodal intervention ranking, and a tool-grounded Voice + Text AI copilot.
 
 ---
 
-## Documentation (v0.5 doc set, 0.5.0-draft)
+## Documentation
 
-> The README below describes the platform architecture and capabilities. The v0.5 expansion is canonically defined in [`docs/v05_change_brief.md`](./docs/v05_change_brief.md):
+> Detailed architecture, build gates, and Barmer domain specifications live in [`docs/`](./docs):
 
 | Doc | Purpose |
 |---|---|
-| [`backlog_refinements.md`](./backlog_refinements.md) | **Start here for the latest state:** latest changes, open user refinements (R-n), backlog (BL-n) |
-| [`docs/how_urvi_works.md`](./docs/how_urvi_works.md) | Plain-English walkthrough of the architecture (same text as the Explain button in the Architecture tab) |
-| [`docs/ml_recommendation_engine.md`](./docs/ml_recommendation_engine.md) | ML and recommendation engine: every model and rule, training, inference, decisions; present system and production design |
-| [`docs/data_access_plan.md`](./docs/data_access_plan.md) | Where real ONGC data comes from, how Urvi fetches it (via the EDP) and how it stays in India (residency routes, controls) |
-| [`docs/v05_change_brief.md`](./docs/v05_change_brief.md) | **Canonical source of truth for v0.5**: user feedback U-1..U-7, stages AC..W2, decisions D-25..D-32 |
-| [`verbatim.md`](./verbatim.md) | Source of truth: the user's verbatim requirements (v0.4 baseline) |
-| [`docs/BRD.md`](./docs/BRD.md) | Business requirements, personas, success metrics (v0.5 updated) |
-| [`docs/features.md`](./docs/features.md) | Feature catalogue F-01…F-26 with verbatim anchors (v0.5 updated) |
-| [`docs/BDD.md`](./docs/BDD.md) | Gherkin acceptance scenarios (104) |
-| [`docs/SDD.md`](./docs/SDD.md) | Design; authoritative route table (§13) and layout (§4) |
-| [`docs/build.md`](./docs/build.md) | Stage-by-stage build commands and gates (M…W, AC…W2) |
-| [`docs/checklist.md`](./docs/checklist.md) | Live progress tracker |
-| [`docs/DELEGATION.md`](./docs/DELEGATION.md) | Orchestrator vs. Flash vs. Argon task split |
-| [`docs/EXECUTION_PLAN.md`](./docs/EXECUTION_PLAN.md) | Autonomous run policy, milestones MS-0…MS-19, git and failure rules |
-| [`docs/CONSISTENCY_REPORT.md`](./docs/CONSISTENCY_REPORT.md) | Doc-set alignment record and residual issues |
+| [`backlog_refinements.md`](./backlog_refinements.md) | Latest changes, open refinements (`R-n`), and backlog (`BL-n`) |
+| [`docs/how_urvi_works.md`](./docs/how_urvi_works.md) | Plain-English walkthrough of the architecture (mirrors the UI Architecture Explain panel) |
+| [`docs/ml_recommendation_engine.md`](./docs/ml_recommendation_engine.md) | ML and recommendation engine: classifier, survival trigger, multimodal success engine, and counterfactual scoring |
+| [`docs/data_access_plan.md`](./docs/data_access_plan.md) | Cairn Oil & Gas (Vedanta Limited) data sources (AVEVA/OSIsoft PI, SAP S/4HANA, WellView) and India data residency (`asia-south1`) |
+| [`docs/v05_change_brief.md`](./docs/v05_change_brief.md) | Answer-canvas, multimodal success scorer, field report, and data-gap closure design brief |
+| [`verbatim.md`](./verbatim.md) | Source of truth: verbatim user requirements |
+| [`docs/BRD.md`](./docs/BRD.md) | Business requirements, personas, and success metrics |
+| [`docs/features.md`](./docs/features.md) | Feature catalogue (`F-01`…`F-26`) |
+| [`docs/BDD.md`](./docs/BDD.md) | Gherkin acceptance scenarios |
+| [`docs/SDD.md`](./docs/SDD.md) | Software design; authoritative route table and layout |
+| [`docs/build.md`](./docs/build.md) | Stage-by-stage Barmer build instructions and verification gates |
+| [`docs/checklist.md`](./docs/checklist.md) | Live conversion and verification progress tracker |
+| [`docs/DELEGATION.md`](./docs/DELEGATION.md) | Multi-agent task split and fact-slot rules |
+| [`docs/EXECUTION_PLAN.md`](./docs/EXECUTION_PLAN.md) | Autonomous execution policy, milestones, and verification rules |
+| [`docs/CONSISTENCY_REPORT.md`](./docs/CONSISTENCY_REPORT.md) | Doc-set alignment record |
 
 ---
 
@@ -42,24 +46,31 @@ WellPulse is an industrial operations intelligence platform designed for mature 
 
 ```
                       ┌────────────────────────────────────────┐
-                      │    WellPulse Web Application (Vite)     │
+                      │      Urvi Web Application (Vite)       │
+                      │       React 18 · Tailwind (:5180)      │
                       └───────────────────┬────────────────────┘
                                           │
                   ┌───────────────────────┼───────────────────────┐
                   ▼                       ▼                       ▼
         ┌───────────────────┐   ┌───────────────────┐   ┌───────────────────┐
-        │ Satellite GIS Map │   │  24-Month Curves  │   │  Voice AI Copilot │
-        │ (Tagged GLK Pins) │   │(Recharts BOPD/psi)│   │ (STT / Wave / TTS)│
-        │ 🟢 🟡 🔴 Triage   │   │  Workover Log     │   │ Context Injection │
+        │ Satellite GIS Map │   │ 60-Month Curves   │   │  Voice AI Copilot │
+        │ (460 Barmer Wells)│   │(Recharts BOPD/psi)│   │ (Gemini Live/ADK) │
+        │ 🟢 🟡 🔴 Triage   │   │  Pads, MPT & RGT  │   │ Context Injection │
         └───────────────────┘   └───────────────────┘   └───────────────────┘
                                           │
                                           ▼
                       ┌────────────────────────────────────────┐
                       │    FastAPI Backend Server (:8002)      │
-                      │  • 50 Geleki Wells Synthetic Engine    │
-                      │  • Hybrid Gemini 2.5 + Local Engine    │
+                      │  • 460-Well Barmer Synthetic Lakehouse │
+                      │  • BigQuery urvi_cairn_{bronze,silver, │
+                      │    gold} (asia-south1) + GCS + Parquet │
+                      │  • ADK Gemini Agent + ML Scorers       │
                       └────────────────────────────────────────┘
 ```
+
+- **Cloud Run Service:** `urvi-cairn-app` (`us-central1` for synthetic Gemini Live demo; `asia-south1` Mumbai target for production data)
+- **Cloud Storage:** `gs://urvi-cairn-barmer-ai-agent-datalake`
+- **BigQuery Lakehouse (`asia-south1`):** `urvi_cairn_bronze`, `urvi_cairn_silver`, `urvi_cairn_gold`
 
 ---
 
@@ -72,46 +83,43 @@ chmod +x run_local.sh
 ./run_local.sh
 ```
 
-- **Dashboard UI**: [http://localhost:5173](http://localhost:5173)
-- **FastAPI Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **API Health Check**: [http://localhost:8000/api/health](http://localhost:8000/api/health)
+- **Dashboard UI**: [http://localhost:5180](http://localhost:5180)
+- **FastAPI Documentation**: [http://localhost:8002/docs](http://localhost:8002/docs)
+- **API Health Check**: [http://localhost:8002/api/health](http://localhost:8002/api/health)
 
 ---
 
 ## Project Structure
 
 ```
-wellpulse/
-├── archive/                     # Preserved prototypes for learning & reference
-│   ├── LEARNINGS.md             # Review of previous Streamlit & Vertex approaches
-│   ├── drilling-dashboard/      # Archived prototype
-│   └── drilling-intelligence/   # Archived prototype
-├── docs/                        # Complete Engineering Specifications
+urvi_cairn_barmer/
+├── docs/                        # Engineering specs, Barmer build plan, data access plan
 │   ├── BRD.md                   # Business Requirements Document
 │   ├── BDD.md                   # Behavior-Driven Development (Gherkin Scenarios)
 │   ├── SDD.md                   # Software Design Document & System Architecture
-│   ├── features.md              # Feature Catalog (MoSCoW Prioritized)
-│   ├── build.md                 # Local Build, Prerequisites & Run Guide
+│   ├── features.md              # Feature Catalog
+│   ├── data_access_plan.md      # Cairn/Vedanta India Data Residency Plan (asia-south1)
+│   ├── build.md                 # Barmer Basin Build Guide & Gates
 │   └── checklist.md             # Phased Delivery & Verification Tracker
-├── backend/                     # Python FastAPI Service
+├── backend/                     # Python FastAPI Service (:8002)
 │   ├── app/
-│   │   ├── api/                 # Endpoints (/wells, /wells/{id}/history, /chat)
-│   │   ├── services/            # Telemetry generator & contextual AI copilot
-│   │   └── data/                # Generated 24-month well dataset (730 days)
-│   ├── requirements.txt         # FastAPI, Uvicorn, Pydantic, google-genai
-│   └── run.py                   # Server launcher
-├── frontend/                    # Modern React 18 + Vite + Tailwind Client
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── map/             # Leaflet GIS Map with custom radar pins
-│   │   │   ├── telemetry/       # 24-Month Recharts (BOPD, MCFD, Pressures)
-│   │   │   ├── timeline/        # Chronological workover & intervention log
-│   │   │   ├── agent/           # Voice AI assistant with STT, Waveform & TTS
-│   │   │   └── common/          # Header, fleet KPI ribbon & search
-│   │   ├── types/               # TypeScript interfaces
-│   │   └── App.tsx              # Multi-pane industrial operations dashboard
-│   ├── package.json
-│   └── vite.config.ts
+│   │   ├── agent/               # ADK Copilot, RBAC, UI control, number grounding
+│   │   ├── analytics/           # 460-well Barmer generator, ML scorers, PDF docs_pdf
+│   │   ├── api/                 # REST routers (/api/wells, /api/fields, /api/chat, /api/geo)
+│   │   ├── data_access/         # Parquet + BigQuery (urvi_cairn_*) repository adapters
+│   │   ├── live/                # Gemini Live bidirectional voice session proxy
+│   │   └── data/                # Landing parquets (mangala, bhagyam, aishwariya, raageshwari) & PDFs
+│   └── tests/                   # Unit, integration, BDD, golden contracts, and agent evals
+├── frontend/                    # React 18 + Vite + Tailwind Client (:5180)
+│   ├── public/brand/            # Cairn Oil & Gas / Vedanta brand assets
+│   ├── public/architecture/     # Auto-generated Current & Target architecture SVGs + narrative
+│   └── src/
+│       ├── agent/               # Voice/text UI command bus (uiCommands.ts)
+│       ├── components/map/      # Leaflet GIS Map (India blocks + Barmer Basin drill-down)
+│       ├── components/decision/ # Health buckets, priority queue, SHAP attribution, NBA
+│       ├── components/well/     # Wellbore diagram, offset decline, printable Field Report
+│       └── components/agent/    # Voice + Text Copilot with waveform, TTS, and artifact cards
+├── deploy/                      # Cloud Run deployment, BigQuery DDL, smoke tests
 ├── run_local.sh                 # Unified local startup script
 └── README.md                    # Landing documentation
 ```
@@ -120,59 +128,34 @@ wellpulse/
 
 ## Core Capabilities
 
-1. **Geospatial Health Prioritization (3 Tiers)**:
-   - 🟢 **Healthy / Optimal**: Telemetry within target decline envelope.
-   - 🟡 **Needs Attention / Warning**: Flow decline >15%, water cut spikes, pressure anomalies.
-   - 🔴 **Critical / Failed**: ESP pump motor failure, zero flow, or emergency shut-in with pulsing radar pins.
-2. **24-Month Historical Telemetry**:
-   - High-resolution daily time series for 50 wells across Wolfcamp and Bone Spring formations.
-   - Tracks Oil (BOPD), Gas (MCFD), Water Cut (%), Tubing Pressure (psi), and Casing Pressure (psi).
-3. **Chronological Workover Log**:
-   - Detailed history of past interventions (Acid stimulations, ESP replacements, scale squeezes) with contractor, date, cost in USD, and post-intervention flow delta (+BOPD).
-4. **Voice-Enabled Contextual AI Copilot**:
-   - In-browser Speech-to-Text (STT) and dynamic audio waveform animations.
-   - Audible Text-to-Speech (TTS) response playback.
-   - Ingests selected well telemetry and workover history to answer diagnostic questions and formulate prescriptive workover recommendations.
-5. **Tool-grounded agent (v0.4)**:
-   - Text chat (`POST /api/chat`) runs an in-process ADK agent on `gemini-3.8-flash` via Vertex AI with ADC (no API key).
-   - Every number in an answer must come from that turn's tool results; a guardrail masks anything else.
-   - If the model is unreachable the reply is marked `degraded`; `WELLPULSE_AGENT_LLM=fake` runs a deterministic scripted model for CI/offline demos.
+1. **Geospatial Health Prioritization & Barmer Asset Topology**:
+   - **India Block Overview → Barmer Basin Drill-Down**: Displays Cairn/Vedanta India blocks (`Barmer`, `Ravva`, `Cambay`, `Jorhat`) with live drill-down into `RJ-ON-90/1` pads (`MNG-PAD-*`, `BHG-PAD-*`, `ASH-PAD-*`, `ASH-ABH-3`, `RAG-RDG-*`, `RAG-OIL-1`) and central facilities (`MPT-NAGANA`, `BHG-CPF`, `ASH-CPF`, `RGT-TERMINAL`).
+   - 🟢 **Healthy / Optimal**, 🟡 **Needs Attention** (wax deposition, lift wear, HPAM polymer channelling, sand influx), 🔴 **Not Producing** (failed lift/heater/feeder trips).
+2. **60-Month Multi-Field Telemetry (`2021-10-01`..`2026-09-30`)**:
+   - Daily time series across **460 synthetic wells** in **Fatehgarh Lower**, **Fatehgarh Upper**, **Barmer Hill**, and **Raageshwari Volcanics** formations.
+   - Tracks Oil (BOPD), Gas (MCFD), Water Cut (%), Wellhead & Tubing/Casing Pressures, Wellhead Temperature (critical for `42°C` pour-point / `59°C` WAT waxy crude monitoring), and Lift Telemetry across all **6 lift types** (`JET_PUMP`, `ESP`, `PCP`, `SRP`, `GAS_LIFT`, `NATURAL`).
+3. **Chronological Workover, Integrity & Hazard Records**:
+   - Workover logs (`IC-01`..`IC-15`), tubing tallies, minimum-curvature deviation surveys (including `Barmer_Hill` horizontal laterals), wellhead pressure ratings, annular barrier tests (e.g., `RAG-014` safety veto), fluid hazards (`H2S`, `CO2`, wax WAT, HPAM breakthrough), and fishing records.
+4. **Question-Driven Answer Canvas & Multimodal Success Engine**:
+   - Dynamic middle canvas renders the exact engineering view requested (`overview`, `production`, `interventions`, `wellbore`, `pressures`, `diagnosis`, `recommendation`, `compare`, `nearby`) while keeping conversational answers concise (≤ 3 sentences).
+   - Ranks top-3 candidate interventions (`P(success)` calibrated via mechanism classifier + field base rates + `k=5` analog wells, deferred bbl ÷ rig-days, qualitative cost bands `LOW`/`MED`/`HIGH`) alongside counterfactual defenses (`MNG-042`, `BHG-019`, `ASH-023`, `ASH-061`, `RAG-014`).
+5. **Printable A4 Field Report & SOP Corpus**:
+   - Server-rendered A4 Field Report (`GET /api/wells/{id}/report`) with Cairn Oil & Gas (Vedanta Limited) branding, wellbore schematic, and job program, backed by 14 Barmer-specific SOPs (`IC-01`..`IC-14`) and synthetic well dossiers/CBL scans (`MNG-042` `DOC-CBL-MNG042-2014` / `DOC-SCAN-MNG-042-2019`).
+6. **Tool-Grounded Voice & Text AI Copilot**:
+   - ADK agent on `gemini-3.8-flash` (Vertex AI ADC) + Gemini Live voice interface (`english`, `hinglish`, `hindi`) with strict number-grounding verification and Vedanta RBAC personas (*COO / CIO*, *Asset Manager — Barmer*, *Production / Well Services Engineer*).
 
 ---
 
-## What's New in v0.5 (2026-10-08)
+### Core API Routes
 
-> **Canonical Source**: [`docs/v05_change_brief.md`](./docs/v05_change_brief.md) (user feedback U-1..U-7; build order AC → DF → DG → NN → FR → W2).
-
-WellPulse v0.5 transforms the application from an all-in-one well dump into an interactive, question-driven operations intelligence platform:
-
-1. **Question-Driven Answer Canvas (F-20, F-21; Stage AC)**:
-   - Middle panel dynamically displays the specific view matching the user's question (`overview`, `production`, `interventions`, `wellbore`, `pressures`, `diagnosis`, `recommendation`, `compare`, `nearby`, `report`), replacing the monolithic Deep Dive (D-25).
-   - Conversational responses are strictly capped at ≤ 3 sentences plus an optional collapsed card; full-history data dumps in chat are eliminated.
-   - Middle panel expands over the map area for deep technical views, while the conversational AI agent remains pinned on the right as the operational command centre (ESC or restore button restores map).
-2. **Multimodal Success Engine (F-23; Stage NN)**:
-   - Presented in UI as an advanced multimodal neural network combining 24-month production time series, static geology and completion data, decline context, and candidate intervention embeddings (art-of-the-possible demo, Decision D-32).
-   - Powered by a deterministic demo scorer (`backend/app/analytics/tools/success_engine.py`) calculating $P(\text{success} \mid c) = \text{clip}(p_{\text{mechanism}}(c)^{0.5} \times (0.5 \cdot \text{base\_rate} + 0.5 \cdot \text{analog\_rate}), 0.05, 0.95)$ using existing `ic-hgb-v1` probabilities, Bayesian-shrunk field historical base rates, and $k=5$ look-alike analog well success rates.
-   - Production path (Vertex AI custom training job, Model Registry `wellpulse-success-nn`, and batch scoring into `gold.intervention_success_scores`) is presented to the user in the "How did you decide?" architecture diagram panel (no training job in v0.5, D-27, D-32).
-3. **Top-3 Recommendations with Analogs & Attributions (F-24; Stage NN, AC)**:
-   - Ranks top 3 candidate interventions (primary + 2 alternatives) plus `NO_JOB_JUSTIFIED` by deferred bbl × p_success ÷ rig-days with qualitative cost band (`LOW`/`MED`/`HIGH`; no currency point estimates, D-1).
-   - Full explainability: evidence chain, k-NN look-alike analog wells (`similar_wells`, k=5 on standardised `build_features` vectors), and top 3 feature drivers from SHAP.
-4. **Printable HTML Field Report & Job Program (F-25; Stage FR)**:
-   - Server-rendered A4-printable HTML report (`GET /api/wells/{id}/report`) for workover crews featuring ONGC branding, wellbore architecture SVG, completion diagrams, and an actionable job program.
-   - 100% fact-validated through `facts.json` sidecar.
-5. **Synthetic Data Gap Closure (F-22; Stage DG)**:
-   - Closes 6 structural data gaps across all 412 wells in `well_master`: `tubing_tally`, `deviation_survey`, `barrier_tests`, `wellhead_rating`, `fluid_hazards`, and `fishing_records` (`is_synthetic=true`, D-29). Fully generated and verified with unit tests.
-6. **11-Step Demo Flow & Verification (F-26; Stage DF)**:
-   - End-to-end verified sequence from field comparison to field report link on Lakwa → `LKW-019` across chat and voice.
-
-### New v0.5 API Routes
-
-| Method | Route | Description | Stage / Tool Contract |
+| Method | Route | Description | Contract |
 |---|---|---|---|
-| `GET` | `/api/wells/{id}/recommendations?k=3` | Top-3 ranked candidate interventions with calibrated P(success), analogs, and drivers | Stage NN, AC (`TC-030`) |
-| `GET` | `/api/wells/{id}/similar?class=` | Look-alike analog wells (k=5) based on feature space | Stage NN (`TC-031`) |
-| `GET` | `/api/wells/{id}/report` | Printable A4 HTML field report with wellbore SVG and job program | Stage FR (`TC-032`) |
-| `GET` | `/api/wells/{id}/tubing-tally` | Detailed joint-by-joint tubing tally for completion architecture | Stage DG (`TC-033`, DONE) |
-| `GET` | `/api/wells/{id}/deviation` | Directional deviation survey stations (MD, Inc, Azi, TVD) | Stage DG (`TC-033`, DONE) |
-| `GET` | `/api/wells/{id}/integrity` | Barrier tests and wellhead ratings for well integrity review | Stage DG (`TC-033`, DONE) |
+| `GET` | `/api/geo/cairn-assets` | Cairn / Vedanta India blocks overview + Barmer live hub | `ED-6` |
+| `GET` | `/api/fields/{field}/priority` | Ranked intervention candidates (`Mangala`, `Bhagyam`, `Aishwariya`, `Raageshwari`) | `TC-005` |
+| `GET` | `/api/wells/{id}/recommendations?k=3` | Top-3 ranked candidate interventions with calibrated `P(success)`, analogs, and SHAP drivers | `TC-030` |
+| `GET` | `/api/wells/{id}/similar` | Look-alike analog wells (`k=5`) on standardised feature space | `TC-031` |
+| `GET` | `/api/wells/{id}/report` | Printable A4 HTML field report with wellbore SVG and Cairn branding | `TC-032` |
+| `GET` | `/api/wells/{id}/tubing-tally` | Joint-by-joint tubing tally for completion architecture | `TC-033` |
+| `GET` | `/api/wells/{id}/deviation` | Directional deviation survey stations (MD, Inc, Azi, TVD) | `TC-033` |
+| `GET` | `/api/wells/{id}/integrity` | Barrier tests and wellhead ratings for well integrity review | `TC-033` |
 

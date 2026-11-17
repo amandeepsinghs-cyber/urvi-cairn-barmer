@@ -31,7 +31,7 @@ from app.analytics.docs_pdf.facts import DOC_TYPES, TYPE_DIRS
 from app.analytics.docs_pdf.paths import docs_dir, index_dir
 from app.analytics.docs_pdf.validate import extract_text, facts_files
 
-TOKEN_PATTERN = r"(?u)\b[A-Za-z][A-Za-z0-9_\-]+\b"  # words + ids (GK-129, IC-04); bare numbers excluded
+TOKEN_PATTERN = r"(?u)\b[A-Za-z][A-Za-z0-9_\-]+\b"  # words + ids (MNG-042, IC-04); bare numbers excluded
 
 
 def _load(fp: str) -> tuple[dict, list[str]]:

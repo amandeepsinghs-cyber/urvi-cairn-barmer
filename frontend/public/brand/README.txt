@@ -1,1 +1,2 @@
-Place ongc_logo.svg here (supplied by the user; trademark of ONGC). The report falls back to a text wordmark when missing.
+cairn_vedanta_wordmark.svg provides the vector wordmark for Cairn Oil & Gas (Vedanta Limited) · Barmer Basin · Block RJ-ON-90/1.
+The pre-field well pack HTML report embeds /brand/cairn_vedanta_wordmark.svg and falls back to a text wordmark if unavailable.

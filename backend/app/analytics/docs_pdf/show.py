@@ -1,6 +1,6 @@
 """Print the facts and tables of one document (template / hero authors' helper).
 
-    uv run python -m app.analytics.docs_pdf.show DOC-SCAN-GK-129-2019 [--json]
+    uv run python -m app.analytics.docs_pdf.show DOC-SCAN-MNG-042-2019 [--json]
 """
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import sys
 
 from app.analytics.docs_pdf.facts import FIELDS, iter_specs
 
-PREFIX_FIELD = {"GK": "Geleki", "LKW": "Lakwa", "LKM": "Lakhmani"}
+PREFIX_FIELD = {"MNG": "Mangala", "BHG": "Bhagyam", "ASH": "Aishwariya", "RAG": "Raageshwari"}
 
 
 def find(doc_id: str):

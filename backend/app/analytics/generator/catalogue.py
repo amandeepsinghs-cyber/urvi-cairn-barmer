@@ -1,12 +1,9 @@
-"""Job catalogue v2 and intervention-class labels (K-1, K-2; SDD §5.3, §8.1).
+"""Job catalogue v2 and intervention-class labels for Cairn Oil & Gas — Barmer Basin (K-1, K-2; SDD §5.3, §8.1).
 
-* ``build_job_catalogue()``: the frozen 28 v0.3.0 rows (unchanged, same order) + ``GLV_REPLACE``
-  (K-2), with append-only columns ``cost_band``, ``intervention_class``, ``sop_doc_id``.
-* ``IC_MAP`` / ``IC_LABELS``: the pinned job_code ↔ IC-01…IC-15 mapping (also written to
-  ``analytics/config/ic_map.yaml``).
-* ``label_geleki_workovers()``: adds ``catalogue_job_code`` / ``intervention_class`` to Geleki rows
-  whose ``job_code`` is ``JOB_<failure_code>`` (K-1), from a separately seeded stream so no v0.3.0
-  draw is disturbed.
+* ``build_job_catalogue()``: the 28 base rows + ``GLV_REPLACE`` (29 rows total), with append-only
+  columns ``cost_band``, ``intervention_class``, ``sop_doc_id``.
+* ``IC_MAP`` / ``IC_LABELS``: the pinned job_code <-> IC-01..IC-15 mapping across Barmer artificial
+  lift systems (ESP, JET_PUMP, PCP, SRP, GAS_LIFT, NATURAL).
 * ``JOB_SPECS``: per-job simulation semantics used by the native simulator.
 
 Cost band thresholds are on the internal catalogue estimate (``est_cost_lakh_inr``) and the
@@ -27,21 +24,21 @@ COST_BAND_LOW_MAX = 10.0
 COST_BAND_MED_MAX = 35.0
 
 IC_LABELS: dict[str, str] = {
-    "IC-01": "SRP pump change",
-    "IC-02": "Rod string repair",
-    "IC-03": "Tubing leak repair",
-    "IC-04": "Wax removal / control",
-    "IC-05": "Scale removal / inhibition",
-    "IC-06": "Sand cleanout / control",
-    "IC-07": "Gas-lift valve change",
-    "IC-08": "Lift optimisation / conversion",
-    "IC-09": "Matrix stimulation (acid / frac)",
-    "IC-10": "Perforation work (re-perforation)",
-    "IC-11": "Water shut-off squeeze",
-    "IC-12": "Zonal isolation",
-    "IC-13": "Coning control (choke back)",
-    "IC-14": "Surface and integrity repair",
-    "IC-15": "No job justified / terminal",
+    "IC-01": "Artificial lift pump overhaul / ESP & PCP changeout",
+    "IC-02": "Rod / drive-string / ESP power-cable remediation",
+    "IC-03": "Production tubing replacement / descaling",
+    "IC-04": "Waxy crude thermal & solvent flow assurance",
+    "IC-05": "Inorganic & polymer scale treatment",
+    "IC-06": "Unconsolidated sand & proppant cleanout / control",
+    "IC-07": "Hydraulic jet-pump insert & lift-valve changeout",
+    "IC-08": "Lift optimisation & ESP / jet-pump conversion",
+    "IC-09": "Hydraulic proppant fracturing & matrix stimulation",
+    "IC-10": "Stacked Fatehgarh perforation / re-perforation",
+    "IC-11": "Polymer / water breakthrough conformance & squeeze",
+    "IC-12": "Zonal isolation & up-hole Fatehgarh zone transfer",
+    "IC-13": "Conformance choke & drawdown management",
+    "IC-14": "Wellhead, heated flowline & casing barrier repair",
+    "IC-15": "Sub-economic / no intervention justified",
 }
 
 IC_MAP: dict[str, list[str]] = {
@@ -52,7 +49,7 @@ IC_MAP: dict[str, list[str]] = {
     "IC-05": ["SCALE_ACID_BULLHEAD", "SCALE_INHIBITOR"],
     "IC-06": ["SAND_CLEANOUT", "SAND_CONTROL"],
     "IC-07": ["GLV_REPLACE"],
-    "IC-08": ["LIFT_OPTIM", "GAS_SEP_INSTALL", "LIFT_CONVERSION"],   # ESP replacement maps here (no ESP wells)
+    "IC-08": ["LIFT_OPTIM", "GAS_SEP_INSTALL", "LIFT_CONVERSION"],
     "IC-09": ["MATRIX_ACID", "HYDRAULIC_FRAC"],
     "IC-10": ["RE_PERFORATION", "ADD_PERFORATION"],
     "IC-11": ["CEMENT_SQUEEZE", "POLYMER_GEL"],
@@ -64,9 +61,15 @@ IC_MAP: dict[str, list[str]] = {
 JOB_TO_IC: dict[str, str] = {job: ic for ic, jobs in IC_MAP.items() for job in jobs}
 
 GLV_REPLACE_ROW = (
-    "GLV_REPLACE", "Gas-lift valve replacement (slickline)", "GAS_LIFT", "GL_VALVE",
-    "Injection pressure drop with rising injection rate and no liquid response", False,
-    "SLICKLINE_UNIT", 1.0, 4.5,
+    "GLV_REPLACE",
+    "Hydraulic jet-pump nozzle/throat insert & gas-lift valve replacement (wireline)",
+    "GAS_LIFT",
+    "GL_VALVE",
+    "Power-fluid / lift-gas injection pressure drop with rising injection rate and degraded liquid lift",
+    False,
+    "SLICKLINE_UNIT",
+    1.0,
+    4.5,
 )
 
 
@@ -79,7 +82,7 @@ def cost_band(est_cost_lakh_inr: float) -> str:
 
 
 def build_job_catalogue() -> pd.DataFrame:
-    base = generate_job_catalogue()                    # frozen 28 rows, unchanged order/values
+    base = generate_job_catalogue()
     glv = pd.DataFrame([GLV_REPLACE_ROW], columns=list(base.columns))
     df = pd.concat([base, glv], ignore_index=True)
     df["cost_band"] = df["est_cost_lakh_inr"].map(cost_band)
@@ -89,29 +92,32 @@ def build_job_catalogue() -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------------------------
-# K-1: Geleki failure_code → catalogue job (weights; rigless rows only map to rigless jobs).
-# Ambiguity is deliberate (e.g. a "SUDDEN_MECH" stop can be a rod part, a stuck pump or a leak):
-# the label is the job actually done, not a re-statement of the failure code.
+# K-1: Legacy failure_code -> catalogue job mapping (weights; rigless rows only map to rigless jobs).
 # ---------------------------------------------------------------------------------------------
-GELEKI_FAILURE_TO_JOB: dict[tuple[str, bool], dict[str, float]] = {
+PREPEND_FAILURE_TO_JOB: dict[tuple[str, bool], dict[str, float]] = {
     ("TUBING_LEAK", False): {"TUBING_REPLACE": 0.85, "CASING_REPAIR": 0.15},
     ("ROD_PART", False): {"ROD_REPLACE": 1.0},
     ("WAX", False): {"WAX_SCRAPE": 0.85, "WAX_HEATER": 0.15},
     ("WAX", True): {"WAX_HOTOIL": 0.60, "WAX_SOLVENT": 0.25, "WAX_INHIBITOR": 0.15},
     ("PUMP_WEAR", False): {"PUMP_OVERHAUL": 0.80, "LIFT_CONVERSION": 0.10, "GAS_SEP_INSTALL": 0.10},
     ("SURFACE", True): {"SURFACE_REPAIR": 0.75, "LIFT_OPTIM": 0.25},
-    ("OTHER", False): {"MATRIX_ACID": 0.25, "RE_PERFORATION": 0.15, "ADD_PERFORATION": 0.10,
-                       "CEMENT_SQUEEZE": 0.20, "STRADDLE_PACKER": 0.10, "ZONE_TRANSFER": 0.05,
-                       "POLYMER_GEL": 0.05, "HYDRAULIC_FRAC": 0.10},
+    ("OTHER", False): {
+        "MATRIX_ACID": 0.25,
+        "RE_PERFORATION": 0.15,
+        "ADD_PERFORATION": 0.10,
+        "CEMENT_SQUEEZE": 0.20,
+        "STRADDLE_PACKER": 0.10,
+        "ZONE_TRANSFER": 0.05,
+        "POLYMER_GEL": 0.05,
+        "HYDRAULIC_FRAC": 0.10,
+    },
     ("SUDDEN_MECH", False): {"ROD_REPLACE": 0.45, "PUMP_OVERHAUL": 0.35, "TUBING_REPLACE": 0.20},
     ("SAND", False): {"SAND_CLEANOUT": 0.80, "SAND_CONTROL": 0.20},
     ("SCALE", True): {"SCALE_ACID_BULLHEAD": 0.70, "SCALE_INHIBITOR": 0.30},
-    # Tubing-retrievable mandrels need a rig: GLV change done with a rig is still IC-07.
     ("GL_INJ_ANOMALY", False): {"GLV_REPLACE": 0.75, "TUBING_REPLACE": 0.15, "LIFT_CONVERSION": 0.10},
     ("GL_HEADING", True): {"LIFT_OPTIM": 0.85, "GLV_REPLACE": 0.15},
     ("GL_LOADING", False): {"GLV_REPLACE": 0.60, "LIFT_CONVERSION": 0.40},
 }
-# Non-JOB_ codes present in v0.3.0 (GK-129 2019 straddle) map directly.
 DIRECT_JOB_CODES = {"WSO_STRADDLE": "STRADDLE_PACKER"}
 
 
@@ -121,7 +127,7 @@ def _row_rng(seed: int, key: str) -> np.random.Generator:
     return np.random.default_rng(h)
 
 
-def label_geleki_workovers(wo: pd.DataFrame, seed: int = 42_001) -> pd.DataFrame:
+def label_legacy_workovers(wo: pd.DataFrame, seed: int = 42_001) -> pd.DataFrame:
     """Append catalogue_job_code + intervention_class (K-1). Censored rows get None."""
     cat_codes: list[str | None] = []
     for wid, job_code, fc, rigless, cens in zip(
@@ -133,7 +139,7 @@ def label_geleki_workovers(wo: pd.DataFrame, seed: int = 42_001) -> pd.DataFrame
         if job_code in DIRECT_JOB_CODES:
             cat_codes.append(DIRECT_JOB_CODES[job_code])
             continue
-        weights = GELEKI_FAILURE_TO_JOB[(str(fc), bool(rigless))]
+        weights = PREPEND_FAILURE_TO_JOB[(str(fc), bool(rigless))]
         jobs = list(weights)
         p = np.array([weights[j] for j in jobs], dtype=float)
         cat_codes.append(str(_row_rng(seed, str(wid)).choice(jobs, p=p / p.sum())))
@@ -183,5 +189,10 @@ JOB_SPECS: dict[str, dict] = {
     "PLUG_ABANDON": dict(failure_code="RESERVOIR_DECLINE", mode="TERMINAL", signature="RESERVOIR", effect="NONE"),
 }
 
-# Geleki v0.3.0-style failure code → job, used by the prepend (consistent with the frozen labels).
-PREPEND_FAILURE_TO_JOB = GELEKI_FAILURE_TO_JOB
+
+def __getattr__(name: str):
+    if name.startswith("label_") and name.endswith("_workovers"):
+        return label_legacy_workovers
+    if name.endswith("_FAILURE_TO_JOB"):
+        return PREPEND_FAILURE_TO_JOB
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -31,11 +31,11 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="h-16 bg-surface border-b border-border px-4 gap-3 flex items-center justify-between shrink-0 min-w-0">
       {/* Brand & Identity */}
       <div className="flex items-center gap-3 shrink-0">
-        {/* D-42: Urvi is the front-facing brand; WellPulse is the platform underneath */}
+        {/* D-42: Urvi is the front-facing brand for Cairn Oil & Gas (Vedanta Limited), Barmer Basin */}
         <UrviMark size={40} className="rounded-lg shadow-lg shadow-blue-500/20" title="Urvi AI Agent" />
         <div className="flex flex-col leading-tight">
           <h1 className="text-base font-bold tracking-tight text-white font-sans whitespace-nowrap">Urvi AI Agent</h1>
-          <span className="text-[10px] font-sans text-textMuted whitespace-nowrap">on WellPulse</span>
+          <span className="text-[10px] font-sans text-textMuted whitespace-nowrap">Cairn Oil &amp; Gas · Barmer</span>
         </div>
       </div>
 

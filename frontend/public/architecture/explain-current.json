@@ -1,6 +1,6 @@
 {
  "title": "How Urvi works today (V 1.0 demo)",
- "intro": "Urvi is one AI agent with a set of engineering tools. The AI model understands the question and decides which tools to call; the tools do the calculations on well data; the model then explains the result in a few sentences. The model never invents numbers.",
+ "intro": "Single-Agent, Multi-Tool Hybrid Architecture — natural spoken & typed language in (Gemini ADK / Live) → deterministic engineering physics, ML models & numeric-grounding guards underneath (best of both worlds with minimal hallucination). Urvi is one AI agent with a set of engineering tools. The AI model understands the question and decides which tools to call; the tools do the calculations on well data; the model then explains the result in a few sentences. The model never invents numbers.",
  "sections": [
   {
    "heading": "Three ways a request is handled",
@@ -12,7 +12,7 @@
     ],
     "rows": [
      [
-      "A plain screen command, e.g. \"full screen\", \"GGS three dikhao\", \"show me the architecture\"",
+      "A plain screen command, e.g. \"full screen\", \"Mangala dikhao\", \"show me the architecture\"",
       "A rule-based parser in the browser changes the screen directly",
       "No"
      ],
@@ -40,12 +40,12 @@
     [
      "2",
      "Urvi API",
-     "A Python web service (FastAPI) on Cloud Run receives the request at /api/chat. It also serves the web app itself."
+     "A Python web service (FastAPI) on Cloud Run (urvi-cairn-app) receives the request at /api/chat. It also serves the web app itself."
     ],
     [
      "3",
      "ADK agent",
-     "The API hands the question to the agent, built with Google's Agent Development Kit (ADK). There is one agent, named \"wellpulse\". Its instructions describe the 5-level drill-down (field → health → priority list → well → next best action) and which tool answers what."
+     "The API hands the question to the agent, built with Google's Agent Development Kit (ADK). There is one agent, named \"urvi_agent\". Its instructions describe the 5-level drill-down (field → health → priority list → well → next best action) and which tool answers what."
     ],
     [
      "4",
@@ -100,15 +100,15 @@
   {
    "heading": "Where the recommendations come from",
    "body": [
-    "The next-best-action tool combines physics checks (water diagnostics, pump signatures, offset wells, pressure surveys), a trained intervention classifier, historical success rates and look-alike wells, and returns a ranked top 3 with probability of success, expected gain, rig-days and the SOP.",
+    "The next-best-action tool combines physics checks (water/polymer breakthrough diagnostics, pump signatures, offset wells, pressure surveys), a trained intervention classifier, historical success rates and look-alike wells, and returns a ranked top 3 with probability of success, expected gain, rig-days and the SOP.",
     "Full explanation, with a worked example: docs/ml_recommendation_engine.md."
    ]
   },
   {
    "heading": "Data, build and identity (the grey lines)",
    "body": [
-    "Data: a seeded generator creates 412 synthetic wells (Geleki, Lakwa, Lakhmani, 60 months). The app reads parquet copies packed into the container; the same data also sits in a BigQuery medallion lakehouse (Bronze → Silver → Gold) in Mumbai (asia-south1).",
-    "Build: Cloud Build builds the container image and stores it in Artifact Registry; Cloud Run runs it as one instance (sessions are kept in memory).",
+    "Data: a seeded generator creates 460 synthetic wells across Barmer Basin (Mangala, Bhagyam, Aishwariya, Raageshwari; 60 months). The app reads parquet copies packed into the container; the same data sits in gs://urvi-cairn-barmer-ai-agent-datalake and a BigQuery medallion lakehouse (urvi_cairn_bronze → urvi_cairn_silver → urvi_cairn_gold) in Mumbai (asia-south1).",
+    "Build: Cloud Build builds the container image and stores it in Artifact Registry; Cloud Run runs urvi-cairn-app as one instance (sessions are kept in memory).",
     "Identity: Cloud Run runs as a dedicated service account and reaches Gemini and BigQuery without API keys."
    ]
   },
@@ -128,7 +128,7 @@
     "rows": [
      [
       "Cloud Run",
-      "Google's service that runs our container and scales it"
+      "Google's service that runs our container (urvi-cairn-app) and scales it"
      ],
      [
       "ADK",

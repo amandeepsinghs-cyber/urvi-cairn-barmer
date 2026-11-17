@@ -7,9 +7,9 @@
   "doc_id": {
    "source": "corpus",
    "examples": [
-    "DOC-SCAN-GK-008-004",
-    "DOC-SCAN-LKW-129-005",
-    "DOC-SCAN-GK-051-021"
+    "DOC-SCAN-MNG-008-004",
+    "DOC-SCAN-BHG-029-005",
+    "DOC-SCAN-MNG-051-021"
    ],
    "missing_share": 0.0
   },
@@ -33,9 +33,9 @@
   "doc_title": {
    "source": "corpus",
    "examples": [
-    "GK-008 Workover Completion Report \u2014 HYDRAULIC_FRAC (Jan 2024)",
-    "LKW-129 Workover Completion Report \u2014 TUBING_REPLACE (Jul 2023)",
-    "GK-051 Workover Completion Report \u2014 SURFACE_REPAIR (Apr 2026)"
+    "MNG-008 Workover Completion Report — HYDRAULIC_FRAC (Jan 2024)",
+    "BHG-029 Workover Completion Report — TUBING_REPLACE (Jul 2023)",
+    "MNG-051 Workover Completion Report — SURFACE_REPAIR (Apr 2026)"
    ],
    "missing_share": 0.0
   },
@@ -51,25 +51,26 @@
   "field": {
    "source": "field_master.field",
    "examples": [
-    "Geleki",
-    "Lakwa",
-    "Lakhmani"
+    "Mangala",
+    "Bhagyam",
+    "Aishwariya"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Geleki",
-    "Lakhmani",
-    "Lakwa"
+    "Aishwariya",
+    "Bhagyam",
+    "Mangala",
+    "Raageshwari"
    ]
   },
   "asset": {
    "source": "field_master.asset",
    "examples": [
-    "Assam"
+    "Barmer Basin"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Assam"
+    "Barmer Basin"
    ]
   },
   "as_of": {
@@ -82,29 +83,34 @@
   "well_id": {
    "source": "well_master.well_id",
    "examples": [
-    "GK-008",
-    "LKW-129",
-    "GK-051"
+    "MNG-008",
+    "BHG-029",
+    "MNG-051"
    ],
    "missing_share": 0.0
   },
   "cluster_id": {
    "source": "well_master.cluster_id",
    "examples": [
-    "GK-NE",
-    "LKW-GGS-II",
-    "GK-CENTRAL"
+    "MNG-PAD-B",
+    "BHG-PAD-2",
+    "MNG-PAD-A"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "GK-CENTRAL",
-    "GK-NE",
-    "GK-SW",
-    "LKM-GGS-I",
-    "LKM-GGS-II",
-    "LKW-GGS-I",
-    "LKW-GGS-II",
-    "LKW-GGS-III"
+    "ASH-ABH-3",
+    "ASH-PAD-1",
+    "ASH-PAD-2",
+    "BHG-PAD-1",
+    "BHG-PAD-2",
+    "BHG-PAD-3",
+    "MNG-PAD-A",
+    "MNG-PAD-B",
+    "MNG-PAD-C",
+    "MNG-PAD-D",
+    "RAG-OIL-1",
+    "RAG-RDG-N",
+    "RAG-RDG-S"
    ]
   },
   "spud_date": {
@@ -128,15 +134,16 @@
   "current_zone": {
    "source": "well_master.current_zone",
    "examples": [
-    "Lakadong",
-    "Tipam",
-    "Barail"
+    "Barmer_Hill",
+    "Fatehgarh_Lower",
+    "Fatehgarh_Upper"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Barail",
-    "Lakadong",
-    "Tipam"
+    "Barmer_Hill",
+    "Fatehgarh_Lower",
+    "Fatehgarh_Upper",
+    "Raageshwari_Volcanics"
    ]
   },
   "perf_top_m": {
@@ -184,8 +191,11 @@
    ],
    "missing_share": 0.0,
    "categorical_values": [
+    "ESP",
     "GAS_LIFT",
+    "JET_PUMP",
     "NATURAL",
+    "PCP",
     "SRP"
    ]
   },
@@ -311,41 +321,39 @@
   "facility_id": {
    "source": "facility_master.facility_id",
    "examples": [
-    "GGS-03",
-    "LKW-GGS-II",
-    "GGS-02"
+    "MPT-NAGANA",
+    "BHG-PAD-2",
+    "MPT-NAGANA"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "LKM-GGS-I",
-    "LKM-GGS-II",
-    "LKW-GGS-I",
-    "LKW-GGS-II",
-    "LKW-GGS-III"
+    "ASH-CPF",
+    "BHG-CPF",
+    "MPT-NAGANA",
+    "RGT-TERMINAL"
    ]
   },
   "facility_name": {
    "source": "facility_master.name",
    "examples": [
-    "Gas Gathering Station 3 (Geleki North/Barail)",
-    "Lakwa Group Gathering Station II",
-    "Gas Gathering Station 2 (Geleki Central)"
+    "Mangala Processing Terminal (MPT-NAGANA)",
+    "Bhagyam Central Processing Facility (BHG-CPF)",
+    "Mangala Processing Terminal (MPT-NAGANA)"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Lakhmani Group Gathering Station I",
-    "Lakhmani Group Gathering Station II",
-    "Lakwa Group Gathering Station I",
-    "Lakwa Group Gathering Station II",
-    "Lakwa Group Gathering Station III"
+    "Aishwariya Central Processing Facility (ASH-CPF)",
+    "Bhagyam Central Processing Facility (BHG-CPF)",
+    "Mangala Processing Terminal (MPT-NAGANA)",
+    "Raageshwari Gas Terminal (RGT-TERMINAL)"
    ]
   },
   "workover_id": {
    "source": "workover_history.workover_id",
    "examples": [
-    "WO-GK-008-003",
-    "WO-LKW-129-005",
-    "WO-GK-051-020"
+    "WO-MNG-008-003",
+    "WO-BHG-029-005",
+    "WO-MNG-051-020"
    ],
    "missing_share": 0.0
   },
@@ -495,9 +503,9 @@
   "rig_id": {
    "source": "workover_history.rig_id",
    "examples": [
-    "RIG-ASSAM-04",
-    "RIG-ASSAM-11",
-    "RIG-ASSAM-05"
+    "RIG-BARMER-04",
+    "RIG-BARMER-11",
+    "RIG-BARMER-05"
    ],
    "missing_share": 0.34
   },
@@ -1036,9 +1044,9 @@
   "prev_workover_id": {
    "source": "workover_history.workover_id[previous]",
    "examples": [
-    "WO-GK-008-P004",
-    "WO-LKW-129-004",
-    "WO-GK-051-018"
+    "WO-MNG-008-P004",
+    "WO-BHG-029-004",
+    "WO-MNG-051-018"
    ],
    "missing_share": 0.109
   },
@@ -1117,9 +1125,9 @@
   "next_workover_id": {
    "source": "workover_history.workover_id[next]",
    "examples": [
-    "WO-GK-008-006",
-    "WO-LKW-129-006",
-    "WO-LKW-060-005"
+    "WO-MNG-008-006",
+    "WO-BHG-029-006",
+    "WO-BHG-060-005"
    ],
    "missing_share": 0.106
   },
@@ -1211,7 +1219,7 @@
      "length_m": "2,497.8",
      "top_m": "0.0",
      "install_date": "2022-02-07",
-     "workover_id": "WO-GK-124-P001"
+     "workover_id": "WO-MNG-124-P001"
     },
     {
      "seq": "1",
@@ -1220,7 +1228,7 @@
      "length_m": "2,664.4",
      "top_m": "0.0",
      "install_date": "2024-01-11",
-     "workover_id": "WO-GK-106-005"
+     "workover_id": "WO-MNG-106-005"
     }
    ],
    "max_rows_seen": 12
@@ -1242,7 +1250,7 @@
    "source": "workover_history",
    "example_rows": [
     {
-     "workover_id": "WO-GK-008-P001",
+     "workover_id": "WO-MNG-008-P001",
      "start_date": "2021-10-20",
      "end_date": "2021-10-22",
      "catalogue_job_code": "SCALE_INHIBITOR",
@@ -1255,7 +1263,7 @@
      "run_life_days": "19"
     },
     {
-     "workover_id": "WO-LKW-129-001",
+     "workover_id": "WO-BHG-029-001",
      "start_date": "2021-11-08",
      "end_date": "2021-11-09",
      "catalogue_job_code": "SURFACE_REPAIR",
@@ -1279,10 +1287,10 @@
   "workover_id"
  ],
  "sample_doc_ids": [
-  "DOC-SCAN-GK-008-004",
-  "DOC-SCAN-LKW-129-005",
-  "DOC-SCAN-GK-051-021",
-  "DOC-SCAN-LKW-060-004",
-  "DOC-SCAN-GK-124-P001"
+  "DOC-SCAN-MNG-008-004",
+  "DOC-SCAN-BHG-029-005",
+  "DOC-SCAN-MNG-051-021",
+  "DOC-SCAN-BHG-060-004",
+  "DOC-SCAN-MNG-124-P001"
  ]
 }

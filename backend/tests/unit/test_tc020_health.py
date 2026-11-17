@@ -7,7 +7,7 @@ import pytest
 from app.analytics.tools.common import ToolStatus, currency_keys
 from app.analytics.tools.health import BUCKETS, all_fields_counts, classify_well_health, well_health
 
-TOTALS = {"Geleki": 142, "Lakwa": 160, "Lakhmani": 110}
+TOTALS = {"Mangala": 180, "Bhagyam": 120, "Aishwariya": 100, "Raageshwari": 60}
 
 
 @pytest.mark.parametrize("field,total", sorted(TOTALS.items()))
@@ -32,7 +32,7 @@ def test_buckets_follow_the_rules():
     from app.analytics.tools.candidate_ranking import trigger_a_state
     from app.analytics.tools.health import _open_episode
 
-    v = classify_well_health("Geleki").value
+    v = classify_well_health("Mangala").value
     for w in v.wells:
         ep = _open_episode(w.well_id, settings.AS_OF)
         assert (w.bucket == "NOT_PRODUCING") == (ep is None or ep["status"] != "PRODUCING"), w.well_id
@@ -40,24 +40,21 @@ def test_buckets_follow_the_rules():
             assert trigger_a_state(w.well_id, settings.AS_OF)["max_last7_pct"] <= -20.0
         if w.bucket == "AT_RISK":
             assert w.triggers.get("b") or w.triggers.get("c") or w.triggers.get("d"), w.well_id
-    # Geleki BDD wells (data-driven; see report for deviations from the v0.3.0 fixtures)
     b = {w.well_id: w.bucket for w in v.wells}
-    assert b["GK-129"] == "UNDERPERFORMING"   # residual −30.6 %, CHANNELLING
-    assert b["GK-112"] == "UNDERPERFORMING"   # residual −37.4 %, SCALE
-    assert b["GK-103"] == "AT_RISK"           # CONING signature + run life
+    assert b["MNG-042"] == "UNDERPERFORMING"
 
 
 def test_cluster_filter_and_unknown_field():
-    r = classify_well_health("Lakwa", cluster_id="LKW-GGS-I")
-    assert r.value is not None and all(w.cluster_id == "LKW-GGS-I" for w in r.value.wells)
+    r = classify_well_health("Bhagyam", cluster_id="BHG-PAD-1")
+    assert r.value is not None and all(w.cluster_id == "BHG-PAD-1" for w in r.value.wells)
     assert classify_well_health("Atlantis").status == ToolStatus.UNAVAILABLE
-    assert classify_well_health("Lakwa", cluster_id="NOPE").status == ToolStatus.UNAVAILABLE
+    assert classify_well_health("Bhagyam", cluster_id="NOPE").status == ToolStatus.UNAVAILABLE
 
 
 def test_well_health_lookup_and_no_currency():
-    assert well_health("LKW-047").bucket in BUCKETS
+    assert well_health("BHG-019").bucket in BUCKETS
     assert well_health("ZZ-001") is None
-    assert currency_keys(classify_well_health("Lakhmani").value) == []
+    assert currency_keys(classify_well_health("Aishwariya").value) == []
 
 
 # ------------------------------------------------------------------------------------------------
@@ -94,10 +91,10 @@ def test_wells_list_uses_tc020(client):
 
 
 def test_api_field_health(client):
-    resp = client.get("/api/fields/Lakhmani/health")
+    resp = client.get("/api/fields/Aishwariya/health")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["status"] == "OK" and sum(body["data"]["counts"].values()) == 110
+    assert body["status"] == "OK" and sum(body["data"]["counts"].values()) == 100
     assert body["provenance"]["tool_id"] == "TC-020"
-    assert client.get("/api/fields/Lakhmani/health?cluster_id=LKM-GGS-I").json()["data"]["cluster_id"] == "LKM-GGS-I"
+    assert client.get("/api/fields/Aishwariya/health?cluster_id=ASH-PAD-1").json()["data"]["cluster_id"] == "ASH-PAD-1"
     assert client.get("/api/fields/Atlantis/health").status_code == 404

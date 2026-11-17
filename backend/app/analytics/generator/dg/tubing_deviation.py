@@ -1,8 +1,11 @@
-"""Stage DG generator: tubing_tally and deviation_survey (Slice 1).
+"""Stage DG generator: tubing_tally and deviation_survey (Slice 1 — Barmer Basin).
 
-Generates synthetic data-gap tables:
+Generates synthetic data-gap tables for Cairn Oil & Gas Barmer fields
+(Mangala, Bhagyam, Aishwariya, Raageshwari):
 (a) tubing_tally: joint-by-joint tubing tally derived from CURRENT tubing_string rows
-(b) deviation_survey: directional survey stations every 30m to TD using minimum curvature
+(b) deviation_survey: directional survey stations every 30m to TD using minimum curvature,
+    supporting both S-shaped directional MBA/RDG pad wells (MD/TVD ~ 1.12-1.28) and
+    horizontal Barmer_Hill wells in Aishwariya (MD/TVD ~ 1.9-2.3, lateral inc ~ 86-90 deg).
 """
 from __future__ import annotations
 
@@ -27,11 +30,19 @@ COMPONENT_MAP: dict[str, str] = {
     "GLM": "GL_MANDREL",
     "GL_MANDREL": "GL_MANDREL",
     "PUMP": "PUMP",
+    "ESP": "ESP_ASSEMBLY",
+    "ESP_PUMP": "ESP_ASSEMBLY",
+    "ESP_ASSEMBLY": "ESP_ASSEMBLY",
+    "JET_PUMP": "JET_PUMP",
+    "JET_PUMP_CAVITY": "JET_PUMP",
+    "PCP": "PCP_STATOR",
+    "PCP_STATOR": "PCP_STATOR",
     "TUBING_ANCHOR": "TUBING_ANCHOR",
     "PACKER": "PACKER",
     "SEAT_NIPPLE": "SEAT_NIPPLE",
     "SEATING_NIPPLE": "SEAT_NIPPLE",
     "NIPPLE": "SEAT_NIPPLE",
+    "SLIDING_SLEEVE": "SLIDING_SLEEVE",
     "PUP": "PUP",
 }
 
@@ -45,6 +56,8 @@ def _split_tubing_segment(
     target_bottom = round(top_m + length_m, 2)
     curr_top = round(top_m, 2)
     rem = round(target_bottom - curr_top, 2)
+    if rem <= 0.0:
+        return []
     items: list[tuple[str, float, float, float]] = []
 
     # Leave room for a pup of at least 0.3m.
@@ -66,7 +79,8 @@ def _split_tubing_segment(
             curr_top = curr_bot
 
     pup_len = round(target_bottom - curr_top, 2)
-    items.append(("PUP", curr_top, target_bottom, pup_len))
+    if pup_len > 0.0:
+        items.append(("PUP", curr_top, target_bottom, pup_len))
     return items
 
 
@@ -100,6 +114,66 @@ def _min_curv_step(
     d_tvd = (d_md / 2.0) * (np.cos(i1) + np.cos(i2)) * rf
     dls = float(np.degrees(beta)) * (30.0 / d_md)
     return float(d_tvd), dls
+
+
+def _integrate_tvd(stations: np.ndarray, incs: np.ndarray, azi_deg: float) -> float:
+    """Integrate total TVD at final station using minimum curvature."""
+    tvd_accum = 0.0
+    for idx in range(1, len(stations)):
+        dt, _ = _min_curv_step(
+            stations[idx - 1], stations[idx],
+            incs[idx - 1], incs[idx],
+            azi_deg, azi_deg,
+        )
+        tvd_accum += dt
+    return tvd_accum
+
+
+def _s_well_incs(
+    stations: np.ndarray,
+    kop: float,
+    br: float,
+    td_md: float,
+    i_max: float,
+) -> np.ndarray:
+    """Build-hold-drop S-shaped inclination profile for directional pad wells."""
+    build_len = max(30.0, 30.0 * (i_max / br))
+    eob = min(kop + build_len, td_md * 0.55)
+    sod = max(eob + 30.0, td_md * 0.84)
+    i_end = 0.65 * i_max
+
+    test_incs = np.zeros_like(stations)
+    if eob > kop:
+        mb = (stations > kop) & (stations < eob)
+        test_incs[mb] = (stations[mb] - kop) / (eob - kop) * i_max
+    mh = (stations >= eob) & (stations <= sod)
+    test_incs[mh] = i_max
+    if td_md > sod:
+        md_drop = stations > sod
+        test_incs[md_drop] = i_max - (stations[md_drop] - sod) / (td_md - sod) * (i_max - i_end)
+    return test_incs
+
+
+def _horizontal_incs(
+    stations: np.ndarray,
+    u: float,
+    td_tvd: float,
+    td_md: float,
+    inc_lat: float,
+) -> np.ndarray:
+    """Build-and-lateral inclination profile for Barmer_Hill horizontal wells (~86-90 deg)."""
+    kop = u * 0.72 * td_tvd
+    build_len = max(180.0, u * 0.85 * td_tvd)
+    eob = min(kop + build_len, td_md - 60.0)
+    kop = min(kop, max(30.0, eob - 180.0))
+
+    test_incs = np.zeros_like(stations)
+    if eob > kop:
+        mb = (stations > kop) & (stations < eob)
+        test_incs[mb] = (stations[mb] - kop) / (eob - kop) * inc_lat
+    mh = stations >= eob
+    test_incs[mh] = inc_lat
+    return test_incs
 
 
 def generate(ctx: FieldContext) -> dict[str, pd.DataFrame]:
@@ -136,6 +210,7 @@ def generate(ctx: FieldContext) -> dict[str, pd.DataFrame]:
         well_grade = str(rng_tally.choice(["J-55", "N-80"]))
 
         joint_no = 1
+        running_top: float | None = None
         for _, row in curr_ts.iterrows():
             cluster_id = row["cluster_id"]
             comp = str(row["component"]).strip()
@@ -154,8 +229,15 @@ def generate(ctx: FieldContext) -> dict[str, pd.DataFrame]:
                 weight_ppf = np.nan
                 grade = "UNKNOWN"
 
+            row_top = round(float(row["top_m"]), 2)
+            row_bot = round(float(row["top_m"]) + float(row["length_m"]), 2)
+            seg_top = row_top if running_top is None else running_top
+            seg_len = round(row_bot - seg_top, 2)
+            if seg_len <= 0.0:
+                continue
+
             if comp == "TUBING":
-                sub_items = _split_tubing_segment(row["top_m"], row["length_m"], rng_tally)
+                sub_items = _split_tubing_segment(seg_top, seg_len, rng_tally)
                 for ctype, top_md, bot_md, length in sub_items:
                     tally_rows.append({
                         "well_id": well_id,
@@ -173,10 +255,11 @@ def generate(ctx: FieldContext) -> dict[str, pd.DataFrame]:
                         "weight_ppf": weight_ppf,
                     })
                     joint_no += 1
+                    running_top = bot_md
             else:
                 ctype = COMPONENT_MAP.get(comp, comp)
-                top_md = round(float(row["top_m"]), 2)
-                length = round(float(row["length_m"]), 2)
+                top_md = seg_top
+                length = seg_len
                 bot_md = round(top_md + length, 2)
                 tally_rows.append({
                     "well_id": well_id,
@@ -194,6 +277,7 @@ def generate(ctx: FieldContext) -> dict[str, pd.DataFrame]:
                     "weight_ppf": weight_ppf,
                 })
                 joint_no += 1
+                running_top = bot_md
 
     df_tally = pd.DataFrame(tally_rows)
     if df_tally.empty:
@@ -212,6 +296,7 @@ def generate(ctx: FieldContext) -> dict[str, pd.DataFrame]:
     for _, row in wm_sorted.iterrows():
         well_id = str(row["well_id"])
         cluster_id = row["cluster_id"]
+        zone = str(row.get("current_zone") or "")
         td_md = float(row["total_depth_md_m"])
         td_tvd = float(row["total_depth_tvd_m"])
         max_dls = float(row["max_dls_deg_30m"]) if pd.notna(row.get("max_dls_deg_30m")) else np.nan
@@ -224,46 +309,49 @@ def generate(ctx: FieldContext) -> dict[str, pd.DataFrame]:
             stations_list.append(td_md)
         stations = np.array(stations_list)
 
-        if (td_md - td_tvd) < 5.0:
-            # Vertical well profile: slight random walk with inclination < 3 degrees
+        md_tvd_ratio = td_md / max(td_tvd, 1.0)
+        is_horizontal = (zone == "Barmer_Hill" and md_tvd_ratio >= 1.45) or (md_tvd_ratio >= 1.55)
+
+        if (td_md - td_tvd) < 5.0 or md_tvd_ratio < 1.008:
+            # Near-vertical well profile: slight random walk with inclination < 2.8 degrees
             incs = np.zeros_like(stations)
             inc_cur = 0.0
             for i in range(1, len(stations)):
                 inc_cur = np.clip(inc_cur + float(rng_dev.uniform(-0.3, 0.3)), 0.05, 2.8)
                 incs[i] = round(inc_cur, 2)
+        elif is_horizontal:
+            # Horizontal Barmer_Hill well profile: builds to 86.5 - 89.5 deg lateral
+            inc_lat = round(float(rng_dev.uniform(86.5, 89.5)), 2)
+
+            def _sim_horiz(u_val: float) -> float:
+                test_incs = _horizontal_incs(stations, u_val, td_tvd, td_md, inc_lat)
+                return _integrate_tvd(stations, test_incs, azi_deg) - td_tvd
+
+            f_lo, f_hi = _sim_horiz(0.01), _sim_horiz(0.99)
+            if f_lo * f_hi < 0.0:
+                u_sol = float(brentq(_sim_horiz, 0.01, 0.99))
+                incs = _horizontal_incs(stations, u_sol, td_tvd, td_md, inc_lat)
+            else:
+                # Fallback: solve for lateral inclination directly if extreme MD/TVD
+                u_fixed = 0.45
+                def _sim_horiz_inc(deg_val: float) -> float:
+                    test_incs = _horizontal_incs(stations, u_fixed, td_tvd, td_md, deg_val)
+                    return _integrate_tvd(stations, test_incs, azi_deg) - td_tvd
+                inc_sol = float(brentq(_sim_horiz_inc, 45.0, 89.9))
+                incs = _horizontal_incs(stations, u_fixed, td_tvd, td_md, inc_sol)
         else:
-            # Deviated build-and-hold profile
-            kop_choice = float(rng_dev.choice([400.0, 450.0, 500.0, 550.0, 600.0]))
-            kop = min(kop_choice, td_md * 0.25)
-            br = 1.0 if np.isnan(max_dls) else min(1.0, max(0.5, max_dls - 0.1))
+            # S-shaped directional MBA / RDG pad well profile (build -> hold -> drop)
+            kop_choice = float(rng_dev.choice([60.0, 90.0, 120.0, 150.0]))
+            kop = min(kop_choice, round(td_md * 0.08, 1))
+            default_br = 3.5 if td_md < 900.0 else 2.2
+            br = default_br if np.isnan(max_dls) else min(default_br, max(0.5, max_dls - 0.1))
 
-            def _sim_tvd(i_deg: float) -> float:
-                build_len = 30.0 * (i_deg / br)
-                eob = kop + build_len
-                test_incs = np.zeros_like(stations)
-                mb = (stations > kop) & (stations < eob)
-                test_incs[mb] = (stations[mb] - kop) / build_len * i_deg
-                mh = stations >= eob
-                test_incs[mh] = i_deg
+            def _sim_swell(i_deg: float) -> float:
+                test_incs = _s_well_incs(stations, kop, br, td_md, i_deg)
+                return _integrate_tvd(stations, test_incs, azi_deg) - td_tvd
 
-                tvd_accum = 0.0
-                for idx in range(1, len(stations)):
-                    dt, _ = _min_curv_step(
-                        stations[idx - 1], stations[idx],
-                        test_incs[idx - 1], test_incs[idx],
-                        azi_deg, azi_deg,
-                    )
-                    tvd_accum += dt
-                return tvd_accum - td_tvd
-
-            i_sol = brentq(_sim_tvd, 0.1, 75.0)
-            build_len = 30.0 * (i_sol / br)
-            eob = kop + build_len
-            incs = np.zeros_like(stations)
-            mb = (stations > kop) & (stations < eob)
-            incs[mb] = (stations[mb] - kop) / build_len * i_sol
-            mh = stations >= eob
-            incs[mh] = i_sol
+            i_sol = float(brentq(_sim_swell, 0.1, 82.0))
+            incs = _s_well_incs(stations, kop, br, td_md, i_sol)
 
         cur_tvd = 0.0
         survey_rows.append({

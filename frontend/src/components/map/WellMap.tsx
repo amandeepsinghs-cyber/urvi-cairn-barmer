@@ -20,11 +20,11 @@ import {
 import { t } from '../../i18n/strings';
 import { dispatchUi, useUiCommands } from '../../agent/uiCommands';
 
-/** Stage Y: at or below this zoom the map shows one marker per GGS cluster (BDD-F17-S03). */
+/** Stage Y: at or below this zoom the map shows one marker per pad / cluster (BDD-F17-S03). */
 const CLUSTER_MAX_ZOOM = 11;
 
-/** Stage ED-6: GET /api/geo/ongc-assets — 13 assets; non-Assam tags are names + positions only (D-34). */
-interface OngcAsset {
+/** Stage ED-6: GET /api/geo/cairn-assets — Cairn / Vedanta India blocks; non-Barmer tags are names + positions only (D-34). */
+interface CairnAsset {
   asset_id: string;
   name: string;
   basin: string;
@@ -34,8 +34,8 @@ interface OngcAsset {
   live: boolean;
   well_tags: { name: string; lat: number; lng: number }[];
 }
-interface OngcAssets {
-  assets: OngcAsset[];
+interface CairnAssets {
+  assets: CairnAsset[];
   source_note: string;
   bbox: { min_lat: number; max_lat: number; min_lng: number; max_lng: number };
 }
@@ -47,9 +47,9 @@ const WELL_FOCUS_ZOOM = 14;
 type HealthFilter = 'all' | 'healthy' | 'attention' | 'not_producing';
 const GROUP_FILTER: Record<HealthGroup, HealthFilter> = { HEALTHY: 'healthy', ATTENTION: 'attention', NOT_PRODUCING: 'not_producing' };
 const FILTER_GROUP: Record<Exclude<HealthFilter, 'all'>, HealthGroup> = { healthy: 'HEALTHY', attention: 'ATTENTION', not_producing: 'NOT_PRODUCING' };
-const ASSAM_DRILL_BOUNDS: L.LatLngBoundsExpression = [
-  [26.55, 94.3],
-  [27.25, 95.15],
+const BARMER_DRILL_BOUNDS: L.LatLngBoundsExpression = [
+  [25.15, 71.25],
+  [26.25, 71.9],
 ];
 
 interface WellMapProps {
@@ -66,9 +66,18 @@ interface WellMapProps {
   fullscreenRightInset?: string;
 }
 
-/** Central processing facility (CDP / CTF) — uses facility_master `type` when present. */
-const isCentralFacility = (s: GatheringStation): boolean =>
-  (s as GatheringStation & { type?: string }).type === 'CDP' || s.id.startsWith('CDP');
+/** Central processing facility (MPT / CPF / RGT / CDP) — uses facility_master `type` or station ID prefix. */
+const isCentralFacility = (s: GatheringStation): boolean => {
+  const tp = ((s as GatheringStation & { type?: string }).type || '').toUpperCase();
+  const sid = (s.id || '').toUpperCase();
+  return (
+    ['CDP', 'CTF', 'MPT', 'CPF', 'RGT', 'TERMINAL'].includes(tp) ||
+    sid.startsWith('CDP') ||
+    sid.startsWith('MPT') ||
+    sid.startsWith('RGT') ||
+    sid.includes('CPF')
+  );
+};
 
 export const WellMap: React.FC<WellMapProps> = ({
   wells,
@@ -86,7 +95,7 @@ export const WellMap: React.FC<WellMapProps> = ({
   const boundaryLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const markersRef = useRef<{ [id: string]: L.Marker }>({});
   const clusterMarkersRef = useRef<L.Marker[]>([]);
-  // Stage ED-13 (F-41): GGS / CDP markers by station id, so "show GGS-03" can open the station popup.
+  // Stage ED-13 (F-41): Pad / CPF markers by station id, so "show MNG-PAD-B" can open the station popup.
   const stationMarkersRef = useRef<{ id: string; name: string; marker: L.Marker }[]>([]);
   const lastPannedRef = useRef<string | null>(null);
   const [mapStyle, setMapStyle] = useState<'satellite' | 'dark'>('satellite');
@@ -96,10 +105,10 @@ export const WellMap: React.FC<WellMapProps> = ({
   const [infrastructure, setInfrastructure] = useState<FieldInfrastructure | null>(null);
   const [mapData, setMapData] = useState<WellMapData | null>(null);
   const [zoom, setZoom] = useState<number>(10);
-  // Stage ED-6 (F-32, D-34): open on all-India; Assam Asset is the live drill-down.
+  // Stage ED-6 (F-32, D-34): open on all-India; Barmer Basin is the live drill-down.
   const [indiaView, setIndiaView] = useState<boolean>(true);
   const [viewNonce, setViewNonce] = useState<number>(0);
-  const [ongc, setOngc] = useState<OngcAssets | null>(null);
+  const [cairnAssets, setCairnAssets] = useState<CairnAssets | null>(null);
   const indiaLayerGroupRef = useRef<L.LayerGroup | null>(null);
   // Stage ED-10 (F-41): the well the agent asked to show; fitField() zooms here instead of the field bbox.
   const focusedWellRef = useRef<string | null>(null);
@@ -111,7 +120,7 @@ export const WellMap: React.FC<WellMapProps> = ({
   mapDataRef.current = mapData;
   const fieldRef = useRef<FieldFilter>(field);
   fieldRef.current = field;
-  const fieldLabel = field === 'ALL' ? 'Assam Asset' : field;
+  const fieldLabel = field === 'ALL' ? 'Barmer Basin' : field;
   // Stage Y: TC-020 bucket + cluster per well from /api/fields/map (same source as the KPI header counts)
   const bucketById = useMemo(() => {
     const m: Record<string, MapPoint> = {};
@@ -300,16 +309,16 @@ export const WellMap: React.FC<WellMapProps> = ({
         { padding: [24, 24] },
       );
     } else {
-      map.fitBounds(ASSAM_DRILL_BOUNDS, { padding: [24, 24] });
+      map.fitBounds(BARMER_DRILL_BOUNDS, { padding: [24, 24] });
     }
   }
 
-  // Stage ED-6: India ↔ Assam Asset view.
+  // Stage ED-6: India ↔ Barmer Basin view.
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
     if (indiaView) {
-      const b = ongc?.bbox ?? { min_lat: 8, max_lat: 29.5, min_lng: 68.5, max_lng: 97.5 };
+      const b = cairnAssets?.bbox ?? { min_lat: 8, max_lat: 29.5, min_lng: 68.5, max_lng: 97.5 };
       map.fitBounds(
         [
           [b.min_lat, b.min_lng],
@@ -321,9 +330,9 @@ export const WellMap: React.FC<WellMapProps> = ({
       fitField();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [indiaView, ongc, viewNonce]);
+  }, [indiaView, cairnAssets, viewNonce]);
 
-  // Choosing a field (selector / agent) drills into the Assam Asset. Compare with the previous value so the
+  // Choosing a field (selector / agent) drills into the Barmer Basin. Compare with the previous value so the
   // React StrictMode double effect on mount does not leave the India view.
   const prevFieldRef = useRef<FieldFilter>(field);
   useEffect(() => {
@@ -397,7 +406,7 @@ export const WellMap: React.FC<WellMapProps> = ({
       case 'health_filter': {
         const v = (cmd.value as HealthFilter) || 'all';
         setHealthFilter(v);
-        // Leave the India view so the filtered Assam wells are visible.
+        // Leave the India view so the filtered Barmer wells are visible.
         if (v !== 'all' && indiaViewRef.current) setIndiaView(false);
         return;
       }
@@ -450,27 +459,27 @@ export const WellMap: React.FC<WellMapProps> = ({
     }, 80);
   }
 
-  // Stage ED-6: fetch the 13-asset India overview once.
+  // Stage ED-6: fetch the Cairn / Vedanta India blocks overview once.
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/geo/ongc-assets')
-      .then((r) => (r.ok ? (r.json() as Promise<OngcAssets>) : null))
-      .then((d) => !cancelled && d && setOngc(d))
-      .catch((e) => console.warn('ONGC assets fetch failed:', e));
+    fetch('/api/geo/cairn-assets')
+      .then((r) => (r.ok ? (r.json() as Promise<CairnAssets>) : null))
+      .then((d) => !cancelled && d && setCairnAssets(d))
+      .catch((e) => console.warn('Cairn assets fetch failed:', e));
     return () => {
       cancelled = true;
     };
   }, []);
 
   // Stage ED-6 (D-34): asset labels + position-only well tags. Not clickable — except the live
-  // Assam Asset label, which drills down.
+  // Barmer Basin label, which drills down.
   useEffect(() => {
     const group = indiaLayerGroupRef.current;
     if (!group) return;
     group.clearLayers();
-    if (!ongc) return;
+    if (!cairnAssets) return;
     const showNames = zoom >= TAG_NAME_MIN_ZOOM;
-    ongc.assets.forEach((a) => {
+    cairnAssets.assets.forEach((a) => {
       if (!a.live) {
         a.well_tags.forEach((tg) => {
           group.addLayer(
@@ -514,7 +523,7 @@ export const WellMap: React.FC<WellMapProps> = ({
         group.addLayer(label);
       }
     });
-  }, [ongc, zoom]);
+  }, [cairnAssets, zoom]);
 
   // Update Tile Layers when mapStyle changes
   useEffect(() => {
@@ -804,7 +813,7 @@ export const WellMap: React.FC<WellMapProps> = ({
         return d < bd ? c : best;
       }, undefined);
 
-    // 1. Render Trunk Flowlines from GGS stations to their (nearest) central facility (CDP / CTF)
+    // 1. Render Trunk Flowlines from pad gathering headers to their (nearest) central processing facility (MPT / CPF / RGT)
     if (centralStations.length) {
       infrastructure.gathering_stations.forEach((station) => {
         const cdpStation = nearestCentral(station);
@@ -831,7 +840,7 @@ export const WellMap: React.FC<WellMapProps> = ({
       });
     }
 
-    // 2. Render Field Flowlines from Wells to their Servicing GGS
+    // 2. Render Field Flowlines from Wells to their Servicing Pad / Gathering Header
     const wellMapById: { [id: string]: WellSummary } = {};
     shownWells.forEach((w) => {
       wellMapById[w.id] = w;
@@ -866,7 +875,7 @@ export const WellMap: React.FC<WellMapProps> = ({
       }
     });
 
-    // 3. Render Gathering Station (GGS) & CDP Facility Markers
+    // 3. Render Pad / Gathering Header & Central Processing Facility Markers
     infrastructure.gathering_stations.forEach((station) => {
       const isCDP = isCentralFacility(station);
       const facilityColor = isCDP ? '#06b6d4' : '#f59e0b';
@@ -983,7 +992,7 @@ export const WellMap: React.FC<WellMapProps> = ({
                   const c = g ? GROUP_COLORS[g] : '#38bdf8';
                   const tip = g ? t(GROUP_LABEL_KEY[g]) : 'No health tag';
                   return `
-                  <button type="button" data-ggs-well="${wId}" title="${wId} · ${tip}" style="cursor: pointer; font-family: monospace; font-size: 9px; font-weight: 700; padding: 1px 5px; background: ${c}26; color: ${c}; border: 1px solid ${c}99; border-radius: 3px;">${wId}</button>
+                  <button type="button" data-pad-well="${wId}" title="${wId} · ${tip}" style="cursor: pointer; font-family: monospace; font-size: 9px; font-weight: 700; padding: 1px 5px; background: ${c}26; color: ${c}; border: 1px solid ${c}99; border-radius: 3px;">${wId}</button>
                 `;
                 }).join('')}
               </div>
@@ -996,11 +1005,11 @@ export const WellMap: React.FC<WellMapProps> = ({
       // Stage ED-13: a well button opens that well (panel + map zoom) through the same command bus as the agent.
       facilityMarker.on('popupopen', (e: L.PopupEvent) => {
         const el = e.popup.getElement();
-        el?.querySelectorAll<HTMLButtonElement>('button[data-ggs-well]').forEach((btn) => {
+        el?.querySelectorAll<HTMLButtonElement>('button[data-pad-well]').forEach((btn) => {
           btn.onclick = (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
-            const id = btn.dataset.ggsWell;
+            const id = btn.dataset.padWell;
             if (id) dispatchUi({ action: 'open_well', well_id: id });
           };
         });
@@ -1046,7 +1055,7 @@ export const WellMap: React.FC<WellMapProps> = ({
 
       {/* Layer Style & Flowline Controls */}
       <div className="absolute top-3 right-3 z-[400] flex items-center gap-1.5 bg-surface/90 backdrop-blur-md border border-border p-1 rounded-lg shadow-xl font-mono text-xs">
-        {/* Stage ED-6: India overview ↔ Assam Asset drill-down */}
+        {/* Stage ED-6: India overview ↔ Barmer Basin drill-down */}
         <button
           type="button"
           onClick={() => {
@@ -1054,7 +1063,7 @@ export const WellMap: React.FC<WellMapProps> = ({
             setIndiaView(true);
             setViewNonce((n) => n + 1);
           }}
-          title="All ONGC assets across India (tags outside Assam are position-only)"
+          title="All Cairn Oil & Gas / Vedanta assets across India (blocks outside Barmer are position-only)"
           className={`px-2.5 py-1 rounded transition-colors ${
             indiaView ? 'bg-teal-600 text-white font-bold shadow-sm' : 'text-textMuted hover:text-white'
           }`}
@@ -1068,19 +1077,19 @@ export const WellMap: React.FC<WellMapProps> = ({
             setIndiaView(false);
             setViewNonce((n) => n + 1);
           }}
-          title="Assam Asset — Lakwa, Lakhmani, Geleki (live data)"
+          title="Barmer Basin (RJ-ON-90/1) — Mangala, Bhagyam, Aishwariya, Raageshwari (live data)"
           className={`px-2.5 py-1 rounded transition-colors ${
             !indiaView ? 'bg-teal-600 text-white font-bold shadow-sm' : 'text-textMuted hover:text-white'
           }`}
         >
-          Assam
+          Barmer
         </button>
 
         <span className="text-border">|</span>
 
         <button
           onClick={() => setShowFlowlines(!showFlowlines)}
-          title={`Toggle ${fieldLabel} Flowline Network & GGS Gathering Stations`}
+          title={`Toggle ${fieldLabel} Flowline Network & Processing Facilities`}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded transition-colors ${
             showFlowlines
               ? 'bg-emerald-600 text-white font-bold shadow-sm'
@@ -1137,14 +1146,14 @@ export const WellMap: React.FC<WellMapProps> = ({
         </button>
       </div>
 
-      {/* Stage ED-6 (D-34): India view note — tags outside Assam carry no data */}
-      {indiaView && ongc && (
+      {/* Stage ED-6 (D-34): India view note — blocks outside Barmer carry no live telemetry */}
+      {indiaView && cairnAssets && (
         <div
           data-testid="map-india-note"
           className="absolute bottom-12 right-4 z-[400] max-w-xs bg-black/50 border border-white/10 text-white/80 px-2 py-1 rounded text-[10px] font-sans shadow-xl"
-          title={ongc.source_note}
+          title={cairnAssets.source_note}
         >
-          {ongc.assets.length} ONGC assets · live data: Assam Asset (Lakwa, Lakhmani, Geleki) · other tags: well name &amp; position only
+          {cairnAssets.assets.length} Cairn / Vedanta assets · live data: Barmer Basin RJ-ON-90/1 (Mangala, Bhagyam, Aishwariya, Raageshwari) · other blocks: position &amp; name only
         </div>
       )}
 
@@ -1153,7 +1162,7 @@ export const WellMap: React.FC<WellMapProps> = ({
         <div
           data-testid="map-synthetic-label"
           className="absolute bottom-4 right-4 z-[400] bg-amber-950/80 border border-amber-700/60 text-amber-200 px-2 py-1 rounded text-[10px] font-mono shadow-xl"
-          title="Field boundaries, GGS polygons and well locations are synthetic (demo data, D-3)"
+          title="Field boundaries, pad polygons and well locations are synthetic (demo data, D-3)"
         >
           ⚠ {t('map.synthetic')}
         </div>
@@ -1220,11 +1229,11 @@ export const WellMap: React.FC<WellMapProps> = ({
               })}
             </div>
             <span className="text-white/20">|</span>
-            <span className="flex items-center gap-1" title="Gas Gathering Station">
-              <span className="w-2 h-2 rounded-sm bg-amber-500"></span>GGS
+            <span className="flex items-center gap-1" title="Well Pad / Gathering Header">
+              <span className="w-2 h-2 rounded-sm bg-amber-500"></span>PAD
             </span>
-            <span className="flex items-center gap-1" title="Central Facility (CDP / CTF)">
-              <span className="w-2 h-2 rounded-sm bg-cyan-500"></span>CDP/CTF
+            <span className="flex items-center gap-1" title="Central Processing Facility (MPT / CPF / RGT)">
+              <span className="w-2 h-2 rounded-sm bg-cyan-500"></span>MPT/CPF
             </span>
             <span className="flex items-center gap-1" title="Well flowlines and headers">
               <span className="w-4 border-t border-dashed border-sky-400"></span>Flowlines

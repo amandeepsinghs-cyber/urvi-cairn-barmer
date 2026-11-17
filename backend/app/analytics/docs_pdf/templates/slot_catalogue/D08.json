@@ -7,9 +7,9 @@
   "doc_id": {
    "source": "corpus",
    "examples": [
-    "RCA-LKM-004-002",
-    "RCA-GK-106-008",
-    "RCA-LKW-142-002"
+    "RCA-ASH-004-002",
+    "RCA-MNG-106-008",
+    "RCA-BHG-042-002"
    ],
    "missing_share": 0.0
   },
@@ -33,9 +33,9 @@
   "doc_title": {
    "source": "corpus",
    "examples": [
-    "LKM-004 Failure Root-Cause Analysis \u2014 WAX_INHIBITOR (2023-10)",
-    "GK-106 Failure Root-Cause Analysis \u2014 GAS_SEP_INSTALL (2024-06)",
-    "LKW-142 Failure Root-Cause Analysis \u2014 CASING_REPAIR (2022-07)"
+    "ASH-004 Failure Root-Cause Analysis — WAX_INHIBITOR (2023-10)",
+    "MNG-106 Failure Root-Cause Analysis — GAS_SEP_INSTALL (2024-06)",
+    "BHG-042 Failure Root-Cause Analysis — CASING_REPAIR (2022-07)"
    ],
    "missing_share": 0.0
   },
@@ -51,25 +51,26 @@
   "field": {
    "source": "field_master.field",
    "examples": [
-    "Lakhmani",
-    "Geleki",
-    "Lakwa"
+    "Aishwariya",
+    "Mangala",
+    "Bhagyam"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Geleki",
-    "Lakhmani",
-    "Lakwa"
+    "Aishwariya",
+    "Bhagyam",
+    "Mangala",
+    "Raageshwari"
    ]
   },
   "asset": {
    "source": "field_master.asset",
    "examples": [
-    "Assam"
+    "Barmer Basin"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Assam"
+    "Barmer Basin"
    ]
   },
   "as_of": {
@@ -82,29 +83,34 @@
   "well_id": {
    "source": "well_master.well_id",
    "examples": [
-    "LKM-004",
-    "GK-106",
-    "LKW-142"
+    "ASH-004",
+    "MNG-106",
+    "BHG-042"
    ],
    "missing_share": 0.0
   },
   "cluster_id": {
    "source": "well_master.cluster_id",
    "examples": [
-    "LKM-GGS-I",
-    "GK-NE",
-    "LKW-GGS-III"
+    "ASH-PAD-1",
+    "MNG-PAD-B",
+    "BHG-PAD-3"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "GK-CENTRAL",
-    "GK-NE",
-    "GK-SW",
-    "LKM-GGS-I",
-    "LKM-GGS-II",
-    "LKW-GGS-I",
-    "LKW-GGS-II",
-    "LKW-GGS-III"
+    "ASH-ABH-3",
+    "ASH-PAD-1",
+    "ASH-PAD-2",
+    "BHG-PAD-1",
+    "BHG-PAD-2",
+    "BHG-PAD-3",
+    "MNG-PAD-A",
+    "MNG-PAD-B",
+    "MNG-PAD-C",
+    "MNG-PAD-D",
+    "RAG-OIL-1",
+    "RAG-RDG-N",
+    "RAG-RDG-S"
    ]
   },
   "spud_date": {
@@ -128,15 +134,16 @@
   "current_zone": {
    "source": "well_master.current_zone",
    "examples": [
-    "Tipam",
-    "Barail",
-    "Lakadong"
+    "Fatehgarh_Lower",
+    "Fatehgarh_Upper",
+    "Barmer_Hill"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Barail",
-    "Lakadong",
-    "Tipam"
+    "Barmer_Hill",
+    "Fatehgarh_Lower",
+    "Fatehgarh_Upper",
+    "Raageshwari_Volcanics"
    ]
   },
   "perf_top_m": {
@@ -184,8 +191,11 @@
    ],
    "missing_share": 0.0,
    "categorical_values": [
+    "ESP",
     "GAS_LIFT",
+    "JET_PUMP",
     "NATURAL",
+    "PCP",
     "SRP"
    ]
   },
@@ -311,41 +321,39 @@
   "facility_id": {
    "source": "facility_master.facility_id",
    "examples": [
-    "LKM-GGS-I",
-    "GGS-03",
-    "LKW-GGS-III"
+    "ASH-PAD-1",
+    "MPT-NAGANA",
+    "BHG-PAD-3"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "LKM-GGS-I",
-    "LKM-GGS-II",
-    "LKW-GGS-I",
-    "LKW-GGS-II",
-    "LKW-GGS-III"
+    "ASH-CPF",
+    "BHG-CPF",
+    "MPT-NAGANA",
+    "RGT-TERMINAL"
    ]
   },
   "facility_name": {
    "source": "facility_master.name",
    "examples": [
-    "Lakhmani Group Gathering Station I",
-    "Gas Gathering Station 3 (Geleki North/Barail)",
-    "Lakwa Group Gathering Station III"
+    "Aishwariya Central Processing Facility (ASH-CPF)",
+    "Mangala Processing Terminal (MPT-NAGANA)",
+    "Bhagyam Central Processing Facility (BHG-CPF)"
    ],
    "missing_share": 0.0,
    "categorical_values": [
-    "Lakhmani Group Gathering Station I",
-    "Lakhmani Group Gathering Station II",
-    "Lakwa Group Gathering Station I",
-    "Lakwa Group Gathering Station II",
-    "Lakwa Group Gathering Station III"
+    "Aishwariya Central Processing Facility (ASH-CPF)",
+    "Bhagyam Central Processing Facility (BHG-CPF)",
+    "Mangala Processing Terminal (MPT-NAGANA)",
+    "Raageshwari Gas Terminal (RGT-TERMINAL)"
    ]
   },
   "workover_id": {
    "source": "workover_history.workover_id",
    "examples": [
-    "WO-LKM-004-002",
-    "WO-GK-106-008",
-    "WO-LKW-142-002"
+    "WO-ASH-004-002",
+    "WO-MNG-106-008",
+    "WO-BHG-042-002"
    ],
    "missing_share": 0.0
   },
@@ -492,9 +500,9 @@
   "rig_id": {
    "source": "workover_history.rig_id",
    "examples": [
-    "RIG-ASSAM-01",
-    "RIG-ASSAM-07",
-    "RIG-ASSAM-03"
+    "RIG-BARMER-01",
+    "RIG-BARMER-07",
+    "RIG-BARMER-03"
    ],
    "missing_share": 0.361
   },
@@ -981,9 +989,9 @@
   "d02_doc_id": {
    "source": "workover_history.report_doc_id",
    "examples": [
-    "DOC-SCAN-LKM-004-002",
-    "DOC-SCAN-GK-106-009",
-    "DOC-SCAN-LKW-142-002"
+    "DOC-SCAN-ASH-004-002",
+    "DOC-SCAN-MNG-106-009",
+    "DOC-SCAN-BHG-042-002"
    ],
    "missing_share": 0.0
   },
@@ -999,9 +1007,9 @@
   "next_workover_id": {
    "source": "workover_history.workover_id[next]",
    "examples": [
-    "WO-LKM-004-003",
-    "WO-GK-106-011",
-    "WO-LKW-142-003"
+    "WO-ASH-004-003",
+    "WO-MNG-106-011",
+    "WO-BHG-042-003"
    ],
    "missing_share": 0.105
   },
@@ -1113,7 +1121,7 @@
    "source": "workover_history",
    "example_rows": [
     {
-     "workover_id": "WO-LKM-004-002",
+     "workover_id": "WO-ASH-004-002",
      "start_date": "2023-10-06",
      "end_date": "2023-10-06",
      "catalogue_job_code": "WAX_INHIBITOR",
@@ -1126,7 +1134,7 @@
      "run_life_days": "268"
     },
     {
-     "workover_id": "WO-GK-106-P005",
+     "workover_id": "WO-MNG-106-P005",
      "start_date": "2023-03-12",
      "end_date": "2023-03-16",
      "catalogue_job_code": "TUBING_REPLACE",
@@ -1148,10 +1156,10 @@
   "workover_id"
  ],
  "sample_doc_ids": [
-  "RCA-LKM-004-002",
-  "RCA-GK-106-008",
-  "RCA-LKW-142-002",
-  "RCA-LKW-138-004",
-  "RCA-LKM-082-003"
+  "RCA-ASH-004-002",
+  "RCA-MNG-106-008",
+  "RCA-BHG-042-002",
+  "RCA-BHG-038-004",
+  "RCA-ASH-082-003"
  ]
 }

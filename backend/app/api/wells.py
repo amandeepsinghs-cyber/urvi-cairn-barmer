@@ -2,7 +2,7 @@
 FastAPI Routes for Well Management, Telemetry, and Contextual AI Agent.
 
 v0.4 (Stage N): every route reads the ``WellRepository`` (parquet landing by default, SDD §5.7).
-``GLK-`` IDs are retired (404 with a pointer to ``GK-``); no currency leaves the API (D-1).
+``GLK-`` IDs are retired (404 with a pointer to ``MNG-`` / ``BHG-`` / ``ASH-`` / ``RAG-``); no currency leaves the API (D-1).
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -17,7 +17,7 @@ from app.services.ai_agent import generate_structured_recommendation
 
 router = APIRouter()
 
-RETIRED_DETAIL = "GLK- IDs retired in v0.4; use GK-"
+RETIRED_DETAIL = "GLK- IDs retired in v0.4; use MNG- / BHG- / ASH- / RAG-"
 HISTORY_RANGES = ("30d", "6m", "1y", "2y", "3y", "5y")
 SUMMARY_KEYS = (
     "id", "name", "coordinates", "basin", "formation", "lift_type", "status", "current_metrics",
@@ -94,7 +94,7 @@ def list_wells(
     status: str | None = Query(None, description="healthy, warning, or failed"),
     basin: str | None = Query(None),
     search: str | None = Query(None),
-    field: str | None = Query(None, description="Geleki, Lakwa or Lakhmani"),
+    field: str | None = Query(None, description="Mangala, Bhagyam, Aishwariya or Raageshwari"),
 ):
     results = []
     for w in get_all_wells():
@@ -197,8 +197,8 @@ def get_recommendation(well_id: str, persona: str = Depends(rbac.require("well.n
 
 
 @router.get("/field/infrastructure")
-def get_field_infrastructure(field: str = Query("Geleki", description="Geleki, Lakwa or Lakhmani")):
-    """Processing facilities (GGS / CTF / ETP) and serviced wells for one field, from facility_master."""
+def get_field_infrastructure(field: str = Query("Mangala", description="Mangala, Bhagyam, Aishwariya or Raageshwari")):
+    """Processing facilities (Pad Manifolds / MPT / CPF / RGT) and serviced wells for one field, from facility_master."""
     match = next((f for f in FIELD_CONFIGS if f.lower() == field.lower()), None)
     if match is None:
         raise HTTPException(status_code=404, detail=f"Unknown field {field!r}; expected one of {list(FIELD_CONFIGS)}")
@@ -213,7 +213,7 @@ def export_well_dossier(well_id: str):
     return {
         "well_id": w["id"],
         "well_name": w["name"],
-        "field": f"{cfg.field} Field, Assam ({cfg.asset} Asset)",
+        "field": f"{cfg.field} Field, Rajasthan ({cfg.asset} Asset — RJ-ON-90/1)",
         "formation": w["formation"],
         "status": w["status"],
         "coordinates": w["coordinates"],
