@@ -33,8 +33,8 @@
 | **C6** | Backend Tools, Cairn Branding, Prompts, Voice & RBAC | `C6.1`–`C6.7` (7) | `7 / 7` | `7 / 7` | ✅ **Gate C6 Passed** (`en-IN` Indian accent + 0 ONGC) |
 | **C7** | Frontend Map, Voice Controls, Persona UI, Architecture & Docs | `C7.1`–`C7.8` (8) | `8 / 8` | `8 / 8` | ✅ **Gate C7 Passed** (`8/8` incl. Visual Interventions Parity) |
 | **C8** | Test Suite, Golden Schemas, Eval Migration & Zero-ONGC Audit | `C8.1`–`C8.6` (6) | `6 / 6` | `6 / 6` | ✅ **Gate C8 Passed** (`807 passed, 0 failed`, 0 ONGC leaks) |
-| **C9** | Local Rehearsal, Cloud Run Deploy & CIO Demo Script | `C9.1`–`C9.6` (6) | `6 / 6` | `6 / 6` | ✅ **Gate C9 Passed** (`urvi-cairn-app-00003-cqg` 1-Click Live + `weblink`) |
-| **TOTAL** | **Full Cairn Oil & Gas (Barmer Basin) Build** | **68 Steps** | **`68 / 68`** | **`68 / 68`** | ✅ **ALL GATES `C0–C9` PASSED (`136 / 136` Checks `[x]`)** |
+| **C9** | Local Rehearsal, Cloud Run Deploy & CIO Demo Script | `C9.1`–`C9.7` (7) | `7 / 7` | `7 / 7` | ✅ **Gate C9 Passed** (`urvi-cairn-app-00004-cd9` 1-Click Live) |
+| **TOTAL** | **Full Cairn Oil & Gas (Barmer Basin) Build** | **69 Steps** | **`69 / 69`** | **`69 / 69`** | ✅ **ALL GATES `C0–C9` PASSED (`138 / 138` Checks `[x]`)** |
 
 ---
 
@@ -306,6 +306,9 @@
 
 - [x] **[C9.6 · Impl]** `[O]` **`[USER GATE]`** Enable 1-click Argolis-compliant Cloud Run access (`--no-invoker-iam-check`, `max-instances=1`, zero org-policy overrides) on `urvi-cairn-app`, persist in `deploy/deploy.sh`, and add `weblink` to `README.md` + `weblink.url` + `APP_LINK.md`.
 - [x] **[C9.6 · Verify]** `[O]` Verify unauthenticated `6/6` `smoke_test.py` (`HTTP 200` + `WS /ws/live` without Bearer token) against `https://urvi-cairn-app-498143636903.us-central1.run.app`, confirm `weblink` files, and push to `origin/main`. · *Evidence:* `Unauthenticated smoke_test.py 6/6 PASS (total_wells=460, WS /ws/live connected); README.md + weblink.url verified (2026-11-17)`
+
+- [x] **[C9.7 · Impl]** `[O]` Fix turn-by-turn voice morphing (remove prompt accent/prosody roleplay from `live_prompt.md`, set `temperature=0.2` on `Aoede`), unlock all Indian regional/native languages (`SpeechConfig` `language_code=None` + `live_prompt.md` & `prompt.py`), and stop unsolicited field production chart popups on area queries (`fleet_kpis` `action_kind=None` + `india_operating_areas`, `field_production_history` `plot=False` guard in `voice_tools.py`, `session.py`, `VoiceAgentPanel.tsx`).
+- [x] **[C9.7 · Verify]** `[O]` Confirm `npm run build` + `pytest tests/unit/test_r6_language_default.py tests/integration/test_ws_live.py tests/unit/test_agent_runner.py -q`, restart local daemon, and redeploy + smoke-test `v10-barmer-rc4` on Cloud Run. · *Evidence:* `23/23 tests PASS; vite build 5.21s; deployed urvi-cairn-app-00004-cd9 (unauthenticated smoke 6/6 PASS, WS /ws/live connected in 1,448 ms, 2026-11-17)`
 
 ### Gate C9 Sign-Off
 - [x] **Gate C9 Passed:** `urvi-cairn-app` live on Cloud Run (`urvi-cairn-app-00003-cqg`), smoke green (`6/6` remote + `7/7` selfcheck), CIO demo script rehearsed & pinned, and repo synced to `origin/main`.

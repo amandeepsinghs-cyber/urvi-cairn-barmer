@@ -127,15 +127,15 @@ def speech_language_code(lang: str | None) -> str:
 def build_live_config(
     types: Any, system_prompt: str, tools: list[Any], handle: str | None, voice: str, language: str | None = "english"
 ) -> Any:
-    """LiveConnectConfig with Indian English/Hindi speech locale, session resumption + sliding-window compression."""
+    """LiveConnectConfig locked to the single prebuilt voice (no language_code lock so all regional languages work)."""
     return types.LiveConnectConfig(
         response_modalities=[types.Modality.AUDIO],
+        temperature=0.2,
         output_audio_transcription=types.AudioTranscriptionConfig(),
         input_audio_transcription=types.AudioTranscriptionConfig(),
         system_instruction=types.Content(parts=[types.Part.from_text(text=system_prompt)]),
         tools=tools,
         speech_config=types.SpeechConfig(
-            language_code=speech_language_code(language),
             voice_config=types.VoiceConfig(prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice)),
         ),
         session_resumption=types.SessionResumptionConfig(handle=handle),
@@ -241,7 +241,10 @@ async def _run_tool(ws: WebSocket, name: str, args: dict[str, Any], state: dict[
         },
     )
     tool = voice_tools.VOICE_TOOLS.get(name)
-    if tool and tool.action_kind and result.get("status") == "OK":
+    emit_action = bool(tool and tool.action_kind and result.get("status") == "OK")
+    if name == "field_production_history" and not (args or {}).get("plot"):
+        emit_action = False  # BDD-F11-S01: tell numbers first; open chart only when user asks for plot/chart
+    if emit_action and tool:
         await _send(ws, {"type": "action", "kind": tool.action_kind, "payload": result})
     return result
 

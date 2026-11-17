@@ -483,9 +483,21 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
           transcriptWellId ??
           null;
         let targetScreen: ChatAction['screen'] | null = null;
-        if (kind === 'field_history_chart') targetScreen = 'field_history';
-        else if (kind === 'field_comparison') targetScreen = 'field_compare';
-        else if (kind === 'health_buckets') targetScreen = 'field_health';
+        const userLower = (lastUserTextRef.current || '').toLowerCase();
+        const isAreaOverviewOnly =
+          /\b(areas?|blocks?|assets?|where\s+do\s+we\s+operate|operating\s+areas?|which\s+fields\s+do\s+we)\b/i.test(
+            userLower
+          ) && !/\b(plot|chart|graph|compare|comparison|underperform|gap|target|history)\b/i.test(userLower);
+        const wantsFieldPlot =
+          Boolean(payload?.plot) ||
+          /\b(plot|chart|graph|trend|curve|screen|tab|(?:show|open|display)\b.*\b(?:history|production))\b|dikhao|दिखाओ|ग्राफ|चार्ट/i.test(
+            userLower
+          );
+        if (kind === 'field_history_chart') {
+          targetScreen = wantsFieldPlot && !isAreaOverviewOnly ? 'field_history' : null;
+        } else if (kind === 'field_comparison') {
+          targetScreen = isAreaOverviewOnly ? null : 'field_compare';
+        } else if (kind === 'health_buckets') targetScreen = isAreaOverviewOnly ? null : 'field_health';
         else if (kind === 'priority_queue') targetScreen = 'priority';
         else if (
           ['well_profile', 'well_production_chart', 'nba', 'counterfactual', 'intervention_classification'].includes(kind) ||

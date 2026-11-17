@@ -257,16 +257,52 @@ def _not_found(well_id: str) -> dict[str, Any]:
 @register_voice_tool(
     name="fleet_kpis",
     description=(
-        "Fleet-level KPIs: total wells, healthy / warning / failed counts, total oil BOPD, gas MCFD, "
-        "average water cut. Use for 'how is the field doing', 'kitne wells down hain'."
+        "Asset & operating-area overview + fleet KPIs: Cairn India blocks (Barmer Basin RJ-ON-90/1 live telemetry "
+        "plus Ravva, Cambay, Jorhat OALP), the 4 Barmer fields (Mangala, Bhagyam, Aishwariya, Raageshwari) and "
+        "processing terminals (MPT Nagana, RGT), total wells, healthy / warning / failed counts, total oil BOPD, "
+        "gas MCFD, average water cut. Use for 'tell me about the areas / fields / blocks', 'where do we operate', "
+        "'how is the asset doing', 'kitne wells down hain'. Answers verbally without opening charts."
     ),
-    action_kind="health_buckets",
+    action_kind=None,
 )
 def _v_fleet_kpis() -> Any:
     fn = _resolve([("app.api.wells", "get_fleet_kpis")])
     if fn is None:
         return {"status": "UNAVAILABLE", "message": "fleet KPIs not available"}
-    return fn()
+    out = to_json_safe(fn())
+    if not isinstance(out, dict):
+        out = {"data": out}
+    try:
+        from app.analytics.tools.cairn_assets import cairn_assets
+        assets = cairn_assets().get("assets") or []
+        out["india_operating_areas"] = [
+            {
+                "asset_id": a.get("asset_id"),
+                "name": a.get("name"),
+                "basin": a.get("basin"),
+                "offshore": a.get("offshore"),
+                "live_telemetry": a.get("live"),
+                "fields": a.get("fields") or [],
+            }
+            for a in assets
+        ]
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from app.analytics.tools.hierarchy import query_hierarchy
+        h = to_json_safe(query_hierarchy().value)
+        if isinstance(h, dict):
+            out["barmer_fields"] = [
+                {
+                    "field": f.get("field"),
+                    "well_count": f.get("n_wells") or f.get("well_count"),
+                    "clusters": [c.get("cluster_id") for c in (f.get("clusters") or [])],
+                }
+                for f in (h.get("fields") or [])
+            ]
+    except Exception:  # noqa: BLE001
+        pass
+    return out
 
 
 @register_voice_tool(
@@ -439,18 +475,20 @@ def _v_compare_fields_tc024(period: str = "QTD") -> dict[str, Any]:
 @register_voice_tool(
     name="field_production_history",
     description=(
-        "TC-028: field-wise production history (default all three fields, 60 months to as-of): per field start "
-        "vs end oil BOPD and % change, gas start vs end, water-cut change (pp) and producing wells. Tell these "
-        "numbers first; the plot opens only if the user asks for it. Use for '5 year production field-wise', "
-        "'pichle paanch saal ka production'."
+        "TC-028: field-wise production history (Mangala, Bhagyam, Aishwariya, Raageshwari; 60 months to as-of): "
+        "per field start vs end oil BOPD and % change, gas start vs end, water-cut change (pp) and producing wells. "
+        "Tell these numbers first; set plot=True ONLY when the user explicitly asks to show, open, or plot the "
+        "production chart/graph (leave plot=False otherwise). Do NOT use for general 'tell me about the areas' "
+        "questions (use fleet_kpis instead). Use for '5 year production field-wise', 'pichle paanch saal ka production'."
     ),
     action_kind="field_history_chart",
     personas={"ED", "ASSET_MANAGER"},
 )
-def _v_field_production_history(fields: str = "", freq: str = "M") -> dict[str, Any]:
+def _v_field_production_history(fields: str = "", freq: str = "M", plot: bool = False) -> dict[str, Any]:
     from app.analytics.tools.field_history import field_production_history
 
     env = field_production_history(fields=fields or None, freq=(freq or "M").upper()).envelope()
+    env["plot"] = bool(plot)
     data = env.get("data")
     if isinstance(data, dict) and isinstance(data.get("series"), list):
         data["series_rows"] = len(data["series"])

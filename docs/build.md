@@ -811,3 +811,14 @@ Canonical `LIFT_TYPES` across generator, Silver/Gold tables, and `features.py`:
   (cd backend && unset SMOKE_BEARER_TOKEN && uv run --frozen --no-dev python ../deploy/smoke_test.py "https://urvi-cairn-app-498143636903.us-central1.run.app") && grep -q "\[weblink\]" README.md && test -f weblink.url && echo "C9.6 1-CLICK CLOUD RUN + WEBLINK OK"
   ```
 
+### Step C9.7 — Voice Consistency (`Aoede`), All Regional Indian Languages & No Unsolicited Area Chart Popups (`[O]`)
+* **Files:** `backend/app/live/{session.py,live_prompt.md,voice_tools.py}`, `backend/app/agent/prompt.py`, `frontend/src/components/agent/VoiceAgentPanel.tsx`, `backend/tests/unit/test_r6_language_default.py`, `frontend/dist/`
+* **Instructions:**
+  1. Remove prompt-level accent/prosody roleplay lines from `live_prompt.md` and set `temperature=0.2` in `build_live_config` so `gemini-3.8-live` stays locked to one consistent `Aoede` voice on every response.
+  2. Omit `language_code` from `SpeechConfig` and update `live_prompt.md` + `prompt.py` so Urvi defaults to English and automatically replies in **any Indian regional or native language** (Punjabi, Marwari/Rajasthani, Hindi, Hinglish, Gujarati, Marathi, Tamil, Telugu, Bengali, Assamese, Kannada, Malayalam, Odia, etc.) when spoken or requested.
+  3. Enrich `fleet_kpis` (`action_kind=None`) with `india_operating_areas` + `barmer_fields`, add `plot: bool = False` to `field_production_history` in `voice_tools.py` + `session.py`, and guard `VoiceAgentPanel.tsx` so asking about operating areas/fields keeps the map open without auto-displaying field production charts.
+* **Verify:**
+  ```bash
+  (cd frontend && npm run build) && (cd backend && uv run pytest tests/unit/test_r6_language_default.py tests/integration/test_ws_live.py tests/unit/test_agent_runner.py -q) && echo "C9.7 VOICE CONSISTENCY + REGIONAL LANGUAGES + AREA MAP GUARD OK"
+  ```
+
