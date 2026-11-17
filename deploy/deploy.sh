@@ -152,6 +152,8 @@ step_deploy() {
     else
         x gcloud run deploy "${SERVICE}" --image "${IMAGE}" "${RUN_FLAGS[@]}"
     fi
+    # Argolis DRS blocks allUsers IAM bindings while permitting --no-invoker-iam-check for 1-click demo access.
+    x_soft gcloud run services update "${SERVICE}" --project "${PROJECT}" --region "${REGION}" --no-invoker-iam-check --quiet
 }
 
 service_url() {

@@ -8,7 +8,7 @@
 > Barmer Basin (`RJ-ON-90/1`) Cairn Oil & Gas implementation.
 
 # Urvi AI Agent: Barmer Basin Well Operations & Voice AI Platform
-## Barmer Basin (`RJ-ON-90/1`, Rajasthan • Cairn Oil & Gas / Vedanta Limited)
+## Barmer Basin (`RJ-ON-90/1`, Rajasthan • Cairn Oil & Gas / Vedanta Limited) · [weblink](https://urvi-cairn-app-498143636903.us-central1.run.app)
 
 > **Single-Agent, Multi-Tool Hybrid Architecture:** Natural spoken & typed language in (Gemini ADK / Live) → deterministic engineering physics, ML models & numeric-grounding guards underneath — best of both worlds with minimal hallucination.
 

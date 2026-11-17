@@ -33,8 +33,8 @@
 | **C6** | Backend Tools, Cairn Branding, Prompts, Voice & RBAC | `C6.1`–`C6.7` (7) | `7 / 7` | `7 / 7` | ✅ **Gate C6 Passed** (`en-IN` Indian accent + 0 ONGC) |
 | **C7** | Frontend Map, Voice Controls, Persona UI, Architecture & Docs | `C7.1`–`C7.8` (8) | `8 / 8` | `8 / 8` | ✅ **Gate C7 Passed** (`8/8` incl. Visual Interventions Parity) |
 | **C8** | Test Suite, Golden Schemas, Eval Migration & Zero-ONGC Audit | `C8.1`–`C8.6` (6) | `6 / 6` | `6 / 6` | ✅ **Gate C8 Passed** (`807 passed, 0 failed`, 0 ONGC leaks) |
-| **C9** | Local Rehearsal, Cloud Run Deploy & CIO Demo Script | `C9.1`–`C9.5` (5) | `5 / 5` | `5 / 5` | ✅ **Gate C9 Passed** (`urvi-cairn-app-00003-cqg` Live + Pushed) |
-| **TOTAL** | **Full Cairn Oil & Gas (Barmer Basin) Build** | **67 Steps** | **`67 / 67`** | **`67 / 67`** | ✅ **ALL GATES `C0–C9` PASSED (`134 / 134` Checks `[x]`)** |
+| **C9** | Local Rehearsal, Cloud Run Deploy & CIO Demo Script | `C9.1`–`C9.6` (6) | `6 / 6` | `6 / 6` | ✅ **Gate C9 Passed** (`urvi-cairn-app-00003-cqg` 1-Click Live + `weblink`) |
+| **TOTAL** | **Full Cairn Oil & Gas (Barmer Basin) Build** | **68 Steps** | **`68 / 68`** | **`68 / 68`** | ✅ **ALL GATES `C0–C9` PASSED (`136 / 136` Checks `[x]`)** |
 
 ---
 
@@ -302,7 +302,10 @@
 - [x] **[C9.4 · Verify]** `[O]` Confirm `deploy.sh smoke` passes 7/7 against live `https://urvi-cairn-app-...` URL and `APP_LINK.md` is updated. · *Evidence:* `deploy.sh smoke 6/6 PASS on urvi-cairn-app-00003-cqg (total_wells=460, 4 Barmer fields, 10 SOP hits, WS /ws/live connected in 2,842 ms); APP_LINK.md updated (2026-11-15)`
 
 - [x] **[C9.5 · Impl]** `[O]` **`[USER GATE]`** After explicit user OK, perform final audit of `docs/checklist.md` + `../wellpulse` untouched check, commit, and push to `origin/main`.
-- [x] **[C9.5 · Verify]** `[O]` Confirm 100% of `C0`–`C9` steps checked `[x]`, `../wellpulse` untouched, and `origin/main` up to date. · *Evidence:* `67/67 Impl + 67/67 Verify checked [x]; origin == amandeepsinghs-cyber/urvi-cairn-barmer.git; pushed to origin/main (2026-11-17)`
+- [x] **[C9.5 · Verify]** `[O]` Confirm 100% of `C0`–`C9` steps checked `[x]`, `../wellpulse` untouched, and `origin/main` up to date. · *Evidence:* `67/67 Impl + 67/67 Verify checked [x]; origin == amandeepsinghs-cyber/urvi-cairn-barmer.git; pushed 2d708a1 to origin/main (2026-11-17)`
+
+- [x] **[C9.6 · Impl]** `[O]` **`[USER GATE]`** Enable 1-click Argolis-compliant Cloud Run access (`--no-invoker-iam-check`, `max-instances=1`, zero org-policy overrides) on `urvi-cairn-app`, persist in `deploy/deploy.sh`, and add `weblink` to `README.md` + `weblink.url` + `APP_LINK.md`.
+- [x] **[C9.6 · Verify]** `[O]` Verify unauthenticated `6/6` `smoke_test.py` (`HTTP 200` + `WS /ws/live` without Bearer token) against `https://urvi-cairn-app-498143636903.us-central1.run.app`, confirm `weblink` files, and push to `origin/main`. · *Evidence:* `Unauthenticated smoke_test.py 6/6 PASS (total_wells=460, WS /ws/live connected); README.md + weblink.url verified (2026-11-17)`
 
 ### Gate C9 Sign-Off
 - [x] **Gate C9 Passed:** `urvi-cairn-app` live on Cloud Run (`urvi-cairn-app-00003-cqg`), smoke green (`6/6` remote + `7/7` selfcheck), CIO demo script rehearsed & pinned, and repo synced to `origin/main`.

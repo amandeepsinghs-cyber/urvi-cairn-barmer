@@ -803,3 +803,11 @@ Canonical `LIFT_TYPES` across generator, Silver/Gold tables, and `features.py`:
   ! grep -E "^- \[ \] \*\*\[C[0-8]\." docs/checklist.md && git remote -v | grep -q "amandeepsinghs-cyber/urvi-cairn-barmer.git" && test -z "$(git -C ../wellpulse status --porcelain 2>/dev/null || true)" && echo "C9.5 ALL GATES COMPLETE"
   ```
 
+### Step C9.6 — `[USER GATE]` Enable 1-Click Cloud Run Access (`--no-invoker-iam-check`) & Add Repo `weblink` (`[O]`)
+* **Files:** `README.md`, `weblink.url`, `APP_LINK.md`, `deploy/deploy.sh`, `docs/checklist.md`, `backlog_refinements.md`
+* **Instructions:** Enable Argolis-compliant 1-click browser access via `gcloud run services update urvi-cairn-app --no-invoker-iam-check` (`max-instances=1` cap, zero org-policy overrides), preserve `--no-invoker-iam-check` in `deploy/deploy.sh`, add `[weblink](https://urvi-cairn-app-498143636903.us-central1.run.app)` in `README.md` + `weblink.url`, verify unauthenticated `6/6` `smoke_test.py` (`HTTP 200` + `WS /ws/live`), and commit/push to `origin/main`.
+* **Verify:**
+  ```bash
+  (cd backend && unset SMOKE_BEARER_TOKEN && uv run --frozen --no-dev python ../deploy/smoke_test.py "https://urvi-cairn-app-498143636903.us-central1.run.app") && grep -q "\[weblink\]" README.md && test -f weblink.url && echo "C9.6 1-CLICK CLOUD RUN + WEBLINK OK"
+  ```
+
