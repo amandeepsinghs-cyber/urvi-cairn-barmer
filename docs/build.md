@@ -834,3 +834,11 @@ Canonical `LIFT_TYPES` across generator, Silver/Gold tables, and `features.py`:
   (cd frontend && npm run build) && (cd backend && uv run pytest -q) && uv run --project backend python frontend/scripts/build_architecture.py && grep -q "15 Indian languages" frontend/public/architecture/current.html && echo "C9.8 OK"
   ```
 
+### Step C9.9 — Voice Session Continuity Across Dropped Connections, Extra-Client Fix & Session Logging (`[O]`)
+* **Files:** `backend/app/live/session.py`, `backend/app/main.py`, `backend/tests/integration/test_ws_live.py`, `frontend/src/live/liveClient.ts`, `APP_LINK.md`
+* **Instructions:** (1) remove the unused module-level `LiveClient` that opened a second socket on tab wake-up and guard revive / reconnect with an `active` flag; (2) per-tab `?sid=` session id; on socket close the server parks the Gemini resume handle + recent turns (≤200 sessions, 30 min) and a reconnect with the same id resumes them (status `resumed`, memory kept); (3) browser refreshes the socket at ~55 min while Urvi is idle so Cloud Run's 60-min cut never lands mid-reply; (4) INFO session logging (socket open / close / restored, interruptions with `while_speaking`, text fallback) to Cloud Logging.
+* **Verify:**
+  ```bash
+  (cd frontend && npm run build) && (cd backend && uv run pytest tests/integration/test_ws_live.py -q) && echo "C9.9 OK"
+  ```
+

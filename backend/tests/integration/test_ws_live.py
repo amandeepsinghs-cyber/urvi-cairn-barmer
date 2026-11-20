@@ -410,3 +410,32 @@ def test_no_api_key_read_in_live_package():
     root = pathlib.Path(live_session.__file__).parent
     for p in list(root.glob("*.py")) + [root.parent / "api" / "live.py"]:
         assert "GEMINI_API_KEY" not in p.read_text(encoding="utf-8"), p
+
+
+def test_same_browser_session_resumes_after_socket_cut(live_app):
+    """C-R10: Cloud Run ends sockets at 60 min; the browser reconnects with the same ?sid= and the Gemini session
+    resumes (handle + recap) instead of starting from zero."""
+    live_session._PARKED.clear()
+    fake = FakeLive()
+    client = live_app(fake)
+    with client.websocket_connect("/ws/live?language=english&sid=tab-12345678") as ws:
+        recv_until(ws, is_status("connected"))
+        prompt(ws, "remember MNG-042")
+    with client.websocket_connect("/ws/live?language=english&sid=tab-12345678") as ws:
+        seen = recv_until(ws, lambda d: d.get("type") == "status" and d.get("status") in ("connected", "resumed"))
+        assert seen[-1]["status"] == "resumed" and seen[-1]["memory"] is True
+    assert fake.sessions[1].config.session_resumption.handle == "h1"
+    recap = [t for t, tc in fake.sessions[1].client_content if not tc]
+    assert recap and "remember MNG-042" in _texts(recap[0])
+
+
+def test_unknown_or_missing_sid_starts_fresh(live_app):
+    live_session._PARKED.clear()
+    fake = FakeLive()
+    client = live_app(fake)
+    with client.websocket_connect("/ws/live?language=english&sid=tab-aaaaaaaa") as ws:
+        recv_until(ws, is_status("connected"))
+    with client.websocket_connect("/ws/live?language=english&sid=tab-bbbbbbbb") as ws:
+        seen = recv_until(ws, lambda d: d.get("type") == "status" and d.get("status") in ("connected", "resumed"))
+        assert seen[-1]["status"] == "connected"
+    assert fake.sessions[1].config.session_resumption.handle is None

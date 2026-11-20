@@ -65,6 +65,37 @@ export class LiveClient {
   private turnStartTime: number | null = null;
   private waitingForFirstAudio = false;
   private fallbackRetryTimer: number | null = null;
+  /** C-R10: true while the app wants Live on (set by connect, cleared by disconnect). */
+  private active = false;
+  /** C-R10: when the current socket reported connected (Cloud Run ends sockets at 60 min). */
+  private connectedAt = 0;
+  private refreshTimer: number | null = null;
+  /** C-R10: per-tab voice session id so a reconnect resumes the same Gemini session and its memory. */
+  private readonly sid: string = LiveClient.tabSessionId();
+
+  private static tabSessionId(): string {
+    try {
+      const k = 'urvi.live.sid';
+      let v = window.sessionStorage.getItem(k);
+      if (!v) {
+        v = (crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/[^A-Za-z0-9-]/g, '');
+        window.sessionStorage.setItem(k, v);
+      }
+      return v;
+    } catch (_) {
+      return `${Date.now()}-${Math.random().toString(36).slice(2)}`.replace(/[^A-Za-z0-9-]/g, '');
+    }
+  }
+
+  /** Refresh the socket at ~55 min while Urvi is silent, so Cloud Run's 60-min cut never lands mid-reply. */
+  private startRefreshWatch(): void {
+    if (this.refreshTimer || typeof window === 'undefined') return;
+    this.refreshTimer = window.setInterval(() => {
+      if (!this.active || !this.ws || this.ws.readyState !== WebSocket.OPEN || !this.connectedAt) return;
+      const ageMin = (Date.now() - this.connectedAt) / 60000;
+      if (ageMin >= 55 && this.voiceState === 'idle') this.reopenSocket();
+    }, 30000);
+  }
 
   constructor(handlers?: LiveHandlers) {
     if (handlers) {
@@ -88,7 +119,7 @@ export class LiveClient {
   }
 
   private scheduleReconnect(): void {
-    if (this.explicitDisconnect || this.reconnectTimer) return;
+    if (this.explicitDisconnect || !this.active || this.reconnectTimer) return;
     this.reconnectAttempts += 1;
     const wait = this.backoffMs();
     this.setStatus('reconnecting', { message: `Reconnecting in ${Math.round(wait / 1000)}s...` });
@@ -100,7 +131,7 @@ export class LiveClient {
 
   /** In text fallback (Gemini Live unavailable), keep trying to get voice back every 20 s; text keeps working. */
   private scheduleFallbackRetry(): void {
-    if (this.explicitDisconnect || this.fallbackRetryTimer) return;
+    if (this.explicitDisconnect || !this.active || this.fallbackRetryTimer) return;
     this.fallbackRetryTimer = window.setTimeout(() => {
       this.fallbackRetryTimer = null;
       if (this.explicitDisconnect || this.status !== 'fallback') return;
@@ -121,7 +152,7 @@ export class LiveClient {
   }
 
   private reviveIfDropped(): void {
-    if (this.explicitDisconnect) return;
+    if (this.explicitDisconnect || !this.active) return;
     if (this.status === 'disconnected' || this.status === 'reconnecting' || this.status === 'fallback') {
       if (this.reconnectTimer) {
         window.clearTimeout(this.reconnectTimer);
@@ -167,6 +198,7 @@ export class LiveClient {
     if (ctx.well_id) params.set('well_id', ctx.well_id);
     if (ctx.field) params.set('field', ctx.field);
     if (ctx.persona) params.set('persona', ctx.persona);
+    params.set('sid', this.sid);
 
     const qs = params.toString();
     return `${proto}//${host}/ws/live${qs ? `?${qs}` : ''}`;
@@ -183,6 +215,9 @@ export class LiveClient {
     if (!this.currentContext.persona) this.currentContext.persona = getPersona(); // Stage Y
 
     this.explicitDisconnect = false;
+    this.active = true;
+    this.connectedAt = 0;
+    this.startRefreshWatch();
     this.setStatus('connecting');
 
     const url = this.buildWsUrl(this.currentContext);
@@ -258,7 +293,10 @@ export class LiveClient {
     switch (msg.type) {
       case 'status': {
         const nextStatus = msg.status as LiveStatus;
-        if (nextStatus === 'connected' || nextStatus === 'resumed') this.reconnectAttempts = 0;
+        if (nextStatus === 'connected' || nextStatus === 'resumed') {
+          this.reconnectAttempts = 0;
+          this.connectedAt = Date.now();
+        }
         this.setStatus(nextStatus, {
           model: msg.model,
           memory: msg.memory,
@@ -334,6 +372,11 @@ export class LiveClient {
 
   public disconnect(): void {
     this.explicitDisconnect = true;
+    this.active = false;
+    if (this.refreshTimer) {
+      window.clearInterval(this.refreshTimer);
+      this.refreshTimer = null;
+    }
     if (this.reconnectTimer) {
       window.clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -475,4 +518,3 @@ export function isLiveSupported(): boolean {
   );
 }
 
-export const liveClient = new LiveClient();

@@ -58,6 +58,11 @@ app.include_router(chat_router, prefix="/api")
 
 @app.on_event("startup")
 def startup_event():
+    import logging
+
+    # C-R10: emit wellpulse.* INFO logs (voice session open/close/resume/interrupt/fallback) to Cloud Logging.
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
+    logging.getLogger("wellpulse").setLevel(logging.INFO)
     print("[*] WellPulse Backend Initializing...")
     wells = get_repository().list_wells()  # warm the parquet repository (SDD §5.7)
     print(f"[✓] WellPulse Backend Ready with {len(wells)} active well assets.")

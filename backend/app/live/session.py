@@ -34,6 +34,7 @@ import contextlib
 import json
 import logging
 import os
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -282,6 +283,41 @@ def initial_ui_from_query(websocket: WebSocket) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# C-R10: voice session continuity across browser sockets. Cloud Run ends every WebSocket after 60 min and networks
+# blip; the browser reconnects with the same ?sid= and we resume the Gemini session (handle + recap) instead of
+# starting from zero. Bounded, short-lived store (one instance, D-16): at most 200 sessions, 30 min after last use.
+# ---------------------------------------------------------------------------
+_PARKED: dict[str, dict[str, Any]] = {}
+PARK_TTL_S = 1800.0
+PARK_MAX = 200
+
+
+def _sid(websocket: WebSocket) -> str:
+    sid = (websocket.query_params.get("sid") or "").strip()
+    return sid if 8 <= len(sid) <= 64 and sid.replace("-", "").isalnum() else ""
+
+
+def park_session(sid: str, state: dict[str, Any]) -> None:
+    if not sid:
+        return
+    _PARKED[sid] = {"handle": state.get("handle"), "resumable": state.get("resumable", False),
+                    "log": list(state.get("log") or [])[-(RECAP_KEEP_FIRST + RECAP_KEEP_LAST):],
+                    "t": time.monotonic()}
+    if len(_PARKED) > PARK_MAX:
+        for k in sorted(_PARKED, key=lambda k: _PARKED[k]["t"])[: len(_PARKED) - PARK_MAX]:
+            _PARKED.pop(k, None)
+
+
+def unpark_session(sid: str) -> dict[str, Any] | None:
+    if not sid:
+        return None
+    p = _PARKED.pop(sid, None)
+    if not p or time.monotonic() - p["t"] > PARK_TTL_S:
+        return None
+    return p
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 async def handle_live_websocket(websocket: WebSocket, connect_factory: ConnectFactory | None = None) -> None:
@@ -290,6 +326,12 @@ async def handle_live_websocket(websocket: WebSocket, connect_factory: ConnectFa
     settings = live_settings()
     inbound: asyncio.Queue = asyncio.Queue()
     state: dict[str, Any] = {"handle": None, "resumable": False, "ui": initial_ui_from_query(websocket), "log": []}
+    sid = _sid(websocket)
+    parked = unpark_session(sid)
+    if parked:  # C-R10: same browser session reconnecting -> resume the Gemini session and its memory
+        state.update(handle=parked["handle"], resumable=parked["resumable"], log=parked["log"], restored=True)
+    t_open = time.monotonic()
+    logger.info("live socket open sid=%s restored=%s lang=%s", sid or "-", bool(parked), state["ui"].get("language"))
 
     async def browser_reader() -> None:
         try:
@@ -314,6 +356,9 @@ async def handle_live_websocket(websocket: WebSocket, connect_factory: ConnectFa
             return
         await run_resilient_live(websocket, inbound, settings, state, connect_factory)
     finally:
+        park_session(sid, state)
+        logger.info("live socket closed sid=%s after %.0f s (turns logged=%d)", sid or "-",
+                    time.monotonic() - t_open, len(state.get("log") or []))
         reader_task.cancel()
         with contextlib.suppress(asyncio.CancelledError, Exception):
             await reader_task
@@ -341,7 +386,7 @@ async def run_resilient_live(
 
     model = settings["model"]
     failures = 0
-    ever_connected = False
+    ever_connected = bool(state.get("restored"))  # C-R10: a restored browser session resumes (handle + recap)
     while True:
         handle = state["handle"] if state["resumable"] else None
         resuming = ever_connected
@@ -372,6 +417,7 @@ async def run_resilient_live(
             failures += 1
             logger.warning("Gemini Live failure %d/%d: %s: %s", failures, MAX_CONSECUTIVE_FAILURES, type(e).__name__, e)
             if failures >= MAX_CONSECUTIVE_FAILURES:
+                logger.warning("Gemini Live FALLBACK to text after %d failures: %s", failures, type(e).__name__)
                 await _send(websocket, {"type": "status", "status": "fallback", "model": "text", "memory": bool(state["log"]),
                                         "message": f"Gemini Live unavailable ({type(e).__name__}) — switched to text."})
                 await run_fallback_session(websocket, inbound, state)
@@ -475,6 +521,9 @@ async def _run_bidi_stream(
                 if sc is None:
                     continue
                 if getattr(sc, "interrupted", False):
+                    # C-R10 telemetry: was Urvi cut off mid-reply (barge-in or her own voice echoed into the mic)?
+                    logger.info("Gemini Live interrupted while_speaking=%s heard=%r", bool(state.get("speaking")),
+                                "".join(state.get("heard") or [])[:80])
                     state["speaking"] = False
                     await _send(websocket, {"type": "interrupted"})
                 it = getattr(sc, "input_transcription", None)
