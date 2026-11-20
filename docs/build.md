@@ -842,3 +842,11 @@ Canonical `LIFT_TYPES` across generator, Silver/Gold tables, and `features.py`:
   (cd frontend && npm run build) && (cd backend && uv run pytest tests/integration/test_ws_live.py -q) && echo "C9.9 OK"
   ```
 
+### Step C9.10 — No Lost Answers When the Voice Connection Drops Mid-Reply (`[O]`)
+* **Files:** `backend/app/live/session.py`, `backend/tests/integration/test_ws_live.py`, `APP_LINK.md`, `backlog_refinements.md`
+* **Instructions:** (1) keep the question being answered (typed prompt or voice transcript) as "pending" until its real `turn_complete`; (2) when Gemini Live drops mid-answer (Vertex 1006 / server close) or the browser socket is cut, reconnect with memory and ask the pending question again (at most 2 times), closing the half-shown reply with "(connection blip — answering again)" or, after the limit, "(connection lost — please ask again)"; (3) on GoAway, let the current answer finish and reconnect after it instead of cutting it; (4) barge-in clears the pending question; (5) log every drop, re-ask and recovered answer.
+* **Verify:**
+  ```bash
+  (cd backend && uv run pytest tests/integration/test_ws_live.py -q) && echo "C9.10 OK"
+  ```
+

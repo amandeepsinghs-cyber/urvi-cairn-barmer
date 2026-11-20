@@ -54,6 +54,10 @@ MAX_BACKOFF_S = 8.0
 RECAP_KEEP_FIRST = 4
 RECAP_KEEP_LAST = 16
 RECAP_MAX_CHARS = 320
+MAX_REASK = 2  # C9.10: re-ask an unanswered question at most twice after a mid-answer drop
+REASK_NOTE = "[The connection dropped before you finished answering. Answer this again, briefly and in full.]"
+BLIP_CAPTION = " … (connection blip — answering again)"
+GIVE_UP_CAPTION = " … (connection lost — please ask again)"
 LANGUAGES = (
     "english", "hinglish", "hindi", "punjabi", "rajasthani", "gujarati", "marathi", "bengali", "assamese", "odia",
     "tamil", "telugu", "kannada", "malayalam", "urdu",
@@ -302,7 +306,7 @@ def park_session(sid: str, state: dict[str, Any]) -> None:
         return
     _PARKED[sid] = {"handle": state.get("handle"), "resumable": state.get("resumable", False),
                     "log": list(state.get("log") or [])[-(RECAP_KEEP_FIRST + RECAP_KEEP_LAST):],
-                    "t": time.monotonic()}
+                    "pending": state.get("pending"), "t": time.monotonic()}
     if len(_PARKED) > PARK_MAX:
         for k in sorted(_PARKED, key=lambda k: _PARKED[k]["t"])[: len(_PARKED) - PARK_MAX]:
             _PARKED.pop(k, None)
@@ -318,6 +322,49 @@ def unpark_session(sid: str) -> dict[str, Any] | None:
 
 
 # ---------------------------------------------------------------------------
+# C9.10: a Gemini Live drop (Vertex 1006 / GoAway) in the middle of an answer used to lose that answer — the user saw
+# a partial caption and heard nothing until they asked again. The question being answered is kept in
+# state["pending"] until its real turn_complete; after the reconnect it is asked again (at most MAX_REASK times).
+# ---------------------------------------------------------------------------
+def _set_pending(state: dict[str, Any], text: str, voice: bool) -> None:
+    text = " ".join((text or "").split())
+    if text:
+        state["pending"] = {"text": text, "voice": voice}
+
+
+def _clear_pending(state: dict[str, Any]) -> None:
+    state.pop("pending", None)
+    state.pop("reask_tries", None)
+    state.pop("caption_open", None)
+
+
+async def reask_pending(websocket: WebSocket, session: Any, state: dict[str, Any], types: Any) -> bool:
+    """After a reconnect, ask the unanswered question again. Returns True if it was re-sent."""
+    pending = state.get("pending")
+    if not pending:
+        return False
+    tries = state["reask_tries"] = state.get("reask_tries", 0) + 1
+    text = pending["text"]
+    give_up = tries > MAX_REASK or (pending.get("voice") and len(text.split()) < 2)
+    if state.pop("caption_open", False):  # close the half-shown reply bubble so the next answer gets its own
+        await _send(websocket, {"type": "caption_delta", "text": GIVE_UP_CAPTION if give_up else BLIP_CAPTION, "role": "agent"})
+        await _send(websocket, {"type": "turn_complete", "full_text": ""})
+    if give_up:
+        logger.warning("Gemini Live dropped turn NOT re-asked (try %d, voice=%s): %r", tries, pending.get("voice"), text[:80])
+        _clear_pending(state)
+        return False
+    logger.info("Gemini Live dropped mid-answer — re-asking (try %d, voice=%s): %r", tries, pending.get("voice"), text[:80])
+    line = _context_line(state["ui"])
+    body = f"{REASK_NOTE}\n{text}"
+    await session.send_client_content(
+        turns=[types.Content(role="user", parts=[types.Part.from_text(text=f"{line}\n{body}" if line else body)])],
+        turn_complete=True,
+    )
+    await _send(websocket, {"type": "voice_state", "state": "thinking"})
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 async def handle_live_websocket(websocket: WebSocket, connect_factory: ConnectFactory | None = None) -> None:
@@ -330,6 +377,8 @@ async def handle_live_websocket(websocket: WebSocket, connect_factory: ConnectFa
     parked = unpark_session(sid)
     if parked:  # C-R10: same browser session reconnecting -> resume the Gemini session and its memory
         state.update(handle=parked["handle"], resumable=parked["resumable"], log=parked["log"], restored=True)
+        if parked.get("pending"):
+            state["pending"] = parked["pending"]  # C9.10: the browser socket died mid-answer -> answer it on resume
     t_open = time.monotonic()
     logger.info("live socket open sid=%s restored=%s lang=%s", sid or "-", bool(parked), state["ui"].get("language"))
 
@@ -408,6 +457,8 @@ async def run_resilient_live(
                         await session.send_client_content(turns=recap, turn_complete=False)
                     except Exception as e:  # recap is best-effort
                         logger.warning("Recap send failed: %s", e)
+                if resuming:
+                    await reask_pending(websocket, session, state, types)
                 reason = await _run_bidi_stream(websocket, session, inbound, state, settings)
             logger.info("Gemini Live session ended: %s", reason)
             if reason == "browser_closed":
@@ -435,6 +486,8 @@ async def _run_bidi_stream(
     Raises on unexpected upstream errors so the caller can count failures.
     """
     from google.genai import types
+
+    state.pop("go_away_pending", None)
 
     async def send_context(prefix: str = "") -> None:
         line = _context_line(state["ui"])
@@ -474,6 +527,8 @@ async def _run_bidi_stream(
             elif mtype in ("prompt", "text"):
                 text = str(data.get("text", ""))
                 _log_turn(state, "User", text)
+                _clear_pending(state)
+                _set_pending(state, text, voice=False)
                 await _send(websocket, {"type": "voice_state", "state": "thinking"})
                 line = _context_line(state["ui"])
                 full = f"{line}\n{text}" if line else text
@@ -502,8 +557,12 @@ async def _run_bidi_stream(
                     state["handle"] = sru.new_handle
                     state["resumable"] = True
                 if getattr(response, "go_away", None) is not None:
-                    logger.info("Gemini Live GoAway (time_left=%s)", getattr(response.go_away, "time_left", None))
-                    return "go_away"
+                    logger.info("Gemini Live GoAway (time_left=%s) answer_in_progress=%s",
+                                getattr(response.go_away, "time_left", None), bool(state.get("pending")))
+                    if not state.get("pending"):
+                        return "go_away"
+                    state["go_away_pending"] = True  # C9.10: let the current answer finish, then reconnect
+                    continue
 
                 tc = getattr(response, "tool_call", None)
                 if tc is not None:
@@ -525,14 +584,18 @@ async def _run_bidi_stream(
                     logger.info("Gemini Live interrupted while_speaking=%s heard=%r", bool(state.get("speaking")),
                                 "".join(state.get("heard") or [])[:80])
                     state["speaking"] = False
+                    _clear_pending(state)  # barge-in: the user moved on; their new words become the pending question
                     await _send(websocket, {"type": "interrupted"})
                 it = getattr(sc, "input_transcription", None)
                 if it is not None and getattr(it, "text", None):
                     state.setdefault("heard", []).append(it.text)
+                    if not (state.get("pending") and not state["pending"].get("voice")):
+                        _set_pending(state, "".join(state["heard"]), voice=True)
                     await _send(websocket, {"type": "input_transcript", "text": it.text})
                 ot = getattr(sc, "output_transcription", None)
                 if ot is not None and getattr(ot, "text", None):
                     turn_output = True
+                    state["caption_open"] = True
                     caption.append(ot.text)
                     await _send(websocket, {"type": "caption_delta", "text": ot.text, "role": "agent"})
                 mt = getattr(sc, "model_turn", None)
@@ -559,8 +622,13 @@ async def _run_bidi_stream(
                     _log_turn(state, "Agent", full_text)
                     await _send(websocket, {"type": "turn_complete", "full_text": full_text})
                     await _send(websocket, {"type": "voice_state", "state": "idle"})
+                    if state.get("reask_tries"):
+                        logger.info("Gemini Live re-asked turn answered (words=%d)", len(full_text.split()))
+                    _clear_pending(state)
                     if state.pop("relocale", False):
                         return "language_changed"
+                    if state.pop("go_away_pending", False):
+                        return "go_away"
             if not got_any:
                 return "server_closed"
 

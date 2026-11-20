@@ -85,6 +85,8 @@ class FakeLiveSession:
             item = await self.out.get()
             if item is None:
                 return
+            if isinstance(item, BaseException):
+                raise item  # simulated upstream drop (e.g. Vertex 1006) mid-stream
             yield item
 
 
@@ -439,3 +441,111 @@ def test_unknown_or_missing_sid_starts_fresh(live_app):
         seen = recv_until(ws, lambda d: d.get("type") == "status" and d.get("status") in ("connected", "resumed"))
         assert seen[-1]["status"] == "connected"
     assert fake.sessions[1].config.session_resumption.handle is None
+
+
+# ---------------------------------------------------------------------------
+# C9.10: a drop in the middle of an answer must not lose the answer
+# ---------------------------------------------------------------------------
+def _drop() -> RuntimeError:
+    return RuntimeError("1006 None. abnormal closure [internal]")
+
+
+def _sent_prompts(s: FakeLiveSession) -> list[str]:
+    return [_texts(t) for t, tc in s.client_content if tc]
+
+
+def test_drop_mid_answer_reasks_the_question(live_app):
+    class DropFirstAnswer(FakeLive):
+        def on_prompt(self, s, turns):
+            if s.idx == 0:
+                return [_resp(server_content=_sc("Partial", audio=b"\x01\x00" * 48)), _drop()]
+            return super().on_prompt(s, turns)
+
+    fake = DropFirstAnswer()
+    client = live_app(fake)
+    with client.websocket_connect("/ws/live?language=english") as ws:
+        recv_until(ws, is_status("connected"))
+        ws.send_text(json.dumps({"type": "prompt", "text": "Which field is underperforming?"}))
+        first = recv_until(ws, is_turn_complete)
+        second = recv_until(ws, is_turn_complete)
+    # The half-shown bubble is closed with a note, then the full answer arrives as its own turn — with voice.
+    assert any(d.get("status") == "resumed" for d in first)
+    assert {"type": "caption_delta", "text": live_session.BLIP_CAPTION, "role": "agent"} in first
+    assert first[-1]["full_text"] == ""
+    assert second[-1]["full_text"] == "Answer 1." and any(d["type"] == "_audio" for d in second)
+    asked = _sent_prompts(fake.sessions[1])
+    assert len(asked) == 1 and live_session.REASK_NOTE in asked[0] and "Which field is underperforming?" in asked[0]
+
+
+def test_voice_question_dropped_mid_answer_is_reasked_from_transcript(live_app):
+    class DropVoiceAnswer(FakeLive):
+        def on_audio_end(self, s):
+            return [_resp(server_content=_sc(heard="Why is Bhagyam declining?")), _drop()]
+
+    fake = DropVoiceAnswer()
+    client = live_app(fake)
+    with client.websocket_connect("/ws/live") as ws:
+        recv_until(ws, is_status("connected"))
+        ws.send_bytes(b"\x00\x00" * 480)
+        ws.send_text(json.dumps({"type": "audio_end"}))
+        events = recv_until(ws, is_turn_complete)
+    assert events[-1]["full_text"] == "Answer 1."
+    asked = _sent_prompts(fake.sessions[1])
+    assert len(asked) == 1 and "Why is Bhagyam declining?" in asked[0] and live_session.REASK_NOTE in asked[0]
+
+
+def test_go_away_mid_answer_lets_the_answer_finish_first(live_app):
+    class GoAwayDuringAnswer(FakeLive):
+        def on_prompt(self, s, turns):
+            if s.idx == 0:
+                return [_resp(go_away=NS(time_left="30s"))] + super().on_prompt(s, turns)
+            return super().on_prompt(s, turns)
+
+    fake = GoAwayDuringAnswer()
+    client = live_app(fake)
+    with client.websocket_connect("/ws/live") as ws:
+        recv_until(ws, is_status("connected"))
+        events = prompt(ws, "Tell me about MNG-042.")
+        recv_until(ws, is_status("resumed"))
+    # Answered in full on the first session; the reconnect happens after it and asks nothing again.
+    assert events[-1]["full_text"] == "Answer 1." and any(d["type"] == "_audio" for d in events)
+    assert len(fake.sessions) == 2 and _sent_prompts(fake.sessions[1]) == []
+
+
+def test_completed_answer_is_never_reasked_after_a_later_drop(live_app):
+    class DropWhenIdle(FakeLive):
+        def on_prompt(self, s, turns):
+            out = super().on_prompt(s, turns)
+            return out + [_drop()] if s.idx == 0 else out
+
+    fake = DropWhenIdle()
+    client = live_app(fake)
+    with client.websocket_connect("/ws/live") as ws:
+        recv_until(ws, is_status("connected"))
+        prompt(ws, "hello")
+        recv_until(ws, is_status("resumed"))
+    assert _sent_prompts(fake.sessions[1]) == []
+
+
+def test_reask_gives_up_after_max_tries(live_app):
+    class AlwaysDropUntilLast(FakeLive):
+        def on_prompt(self, s, turns):
+            if s.idx <= live_session.MAX_REASK:
+                return [_resp(server_content=_sc("Partial")), _drop()]
+            return super().on_prompt(s, turns)
+
+    fake = AlwaysDropUntilLast()
+    client = live_app(fake)
+    with client.websocket_connect("/ws/live") as ws:
+        recv_until(ws, is_status("connected"))
+        ws.send_text(json.dumps({"type": "prompt", "text": "Compare all four fields."}))
+        for _ in range(live_session.MAX_REASK + 1):
+            recv_until(ws, is_status("resumed"))
+        gave_up = recv_until(ws, is_turn_complete)  # the half bubble is closed with "please ask again"
+        assert {"type": "caption_delta", "text": live_session.GIVE_UP_CAPTION, "role": "agent"} in gave_up
+        events = prompt(ws, "Next question please.")
+    assert len(fake.sessions) == live_session.MAX_REASK + 2
+    assert all(len(_sent_prompts(fake.sessions[i])) == 1 for i in range(1, live_session.MAX_REASK + 1))
+    assert _sent_prompts(fake.sessions[-1]) == [_sent_prompts(fake.sessions[-1])[0]]  # only the new question
+    assert "Next question please." in _sent_prompts(fake.sessions[-1])[0]
+    assert events[-1]["full_text"] == "Answer 1."
