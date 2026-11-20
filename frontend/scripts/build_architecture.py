@@ -490,30 +490,31 @@ def current_view() -> tuple[list[Box], list[Node], list[Arrow], list[tuple[str, 
     nodes = [
         Node(20, 250, 140, 110, "external", "Users", ["Asset Manager", "Production Engineer", "Chrome + microphone"],
              tip="Asset managers, production engineers and field supervisors. They use Urvi by mouse, typing "
-                 "or voice (English by default; Hindi / Hinglish on request)."),
+                 "or voice (Indian English by default; 15 Indian languages (Punjabi, Hindi, Gujarati, Marathi, Tamil, Telugu, ...) on request)."),
         Node(20, 420, 140, 60, "external", "Esri imagery", ["satellite basemap"],
              tip="Public satellite tiles behind the Barmer Basin map. Well and pad positions are synthetic."),
-        Node(BX, 250, BW, 70, "frontend", "Voice client", ["16 kHz in · 24 kHz out", "barge-in"],
-             tip="Streams microphone audio to the Live proxy over a WebSocket and plays Urvi's reply. A reconnect starts "
-                 "a fresh session (D-43)."),
+        Node(BX, 250, BW, 70, "frontend", "Voice client", ["16 kHz in · 24 kHz out", "auto-reconnect"],
+             tip="Streams microphone audio to the Live proxy over a WebSocket and plays Urvi's reply. Reconnects by itself "
+                 "with back-off (tab wake-up, network return) and retries voice every 20 s while in text mode (C-R10)."),
         Node(BX, 340, BW, 70, "frontend", "Urvi UI", ["single-page web app", "map-first"],
              tip="India → Barmer Basin → field → pad → well drill-down, the well panel and the docked Urvi agent."),
         Node(BX, 430, BW, 70, "frontend", "Field map", ["field + pad outlines", "health-coloured wells"],
              tip="460 wells coloured Healthy / Needs attention / Not producing, pad flowlines, and an India view."),
-        Node(BX, 520, BW, 70, "frontend", "Hands-off control", ["screen commands", "EN / Hinglish / Hindi"],
+        Node(BX, 520, BW, 70, "frontend", "Hands-off control", ["screen commands", "15 Indian languages"],
              tip="Plain screen commands run in the browser with no model call; the agent can also send allow-listed "
                  "screen actions (ui_control)."),
         Node(BX, 610, BW, 60, "frontend", "Answer canvas", ["charts · completion diagram", "field report"],
              tip="Agent answers open the matching view: charts, the completion diagram, comparisons, the printable "
                  "pre-field well pack."),
-        Node(LX, 95, CW, 70, "ai", "Gemini 3.8 Live", ["native audio · voice Aoede", "us-central1"], icon="gemini",
+        Node(LX, 95, CW, 70, "ai", "Gemini 3.8 Live", ["voice Aoede · en-IN locale", "us-central1"], icon="gemini",
              tip="Speech-to-speech model for voice. The demo runs in us-central1 because Gemini Live is not yet offered "
-                 "in India regions. Numbers come only from tool results."),
+                 "in India regions. One fixed voice (Aoede); the speech locale follows the language (Indian English "
+                 "by default). Numbers come only from tool results."),
         Node(RX, 95, CW, 70, "ai", "Gemini 3.8 Flash", ["text agent model", "global endpoint"], icon="gemini",
              tip="Reasoning model for the typed agent: chooses tools, reads results, writes a short answer (D-13)."),
         Node(LX, 250, CW, 70, "backend", "Gemini Live proxy", ["WS /ws/live · 13 tools", "screen context"],
              tip="Server-side WebSocket bridge between the browser and Gemini Live. Runs voice tool calls on the "
-                 "server; falls back to text after 3 failures."),
+                 "server; resumes the session on drops (6 tries with back-off) before falling back to text."),
         Node(RX, 250, CW, 80, "backend", "ADK agent runner", ["Google ADK · 34 tools", "number guardrail", "role access"],
              icon="agents",
              tip="Google Agent Development Kit runner for chat. Routes the 5-level drill-down to tools; an after-model "
@@ -522,12 +523,13 @@ def current_view() -> tuple[list[Box], list[Node], list[Arrow], list[tuple[str, 
              tip="Python API (FastAPI): wells, fields, documents, reports and /api/chat; also serves the web app."),
         Node(RX, 360, CW, 80, "backend", "Analytics & ML", ["TC-001…035 tools", "classifier · physics checks", "NBA · success engine"],
              tip="The tools behind every answer: decline attribution, health, candidate ranking, next best action "
-                 "with top 3 and P(success). Shared by chat and voice. See docs/ml_recommendation_engine.md."),
+                 "with top 3 and P(success). Shared by chat and voice; slow caches are warmed at startup so the "
+                 "first answer is quick. See docs/ml_recommendation_engine.md."),
         Node(RX, 470, CW, 70, "backend", "Data access layer", ["parquet (in image)", "BigQuery switch"],
              tip="One repository interface over the landing tables: parquet baked into the image for the demo; the "
                  "same API can read BigQuery Silver (parity-tested)."),
-        Node(LX, 460, CW, 70, "backend", "Document search", ["keyword index (in image)", "20,966 synthetic PDFs"],
-             tip="Keyword (TF-IDF) retrieval over the synthetic reports and SOP library; 28,675 chunks."),
+        Node(LX, 460, CW, 70, "backend", "Document search", ["keyword index (in image)", "20,277 synthetic PDFs"],
+             tip="Keyword (TF-IDF) retrieval over the synthetic reports and SOP library; 29,136 chunks."),
         Node(LX, 560, CW, 60, "backend", "Field report", ["dossier · HTML / PDF"],
              tip="Printable pre-field well pack and dossier; every digit traces to a tool return."),
         Node(RX, 560, CW, 60, "backend", "In-memory sessions", ["fresh per demo"],
@@ -603,7 +605,7 @@ def target_view() -> tuple[list[Box], list[Node], list[Arrow], list[tuple[str, s
     nodes = [
         Node(20, 140, 150, 100, "external", "Users", ["COO / CIO", "Asset Manager · Prod Eng", "browser + mic"],
              tip="Vedanta / Cairn users (COO / CIO, Asset Manager, Production Engineer) sign in via Vedanta SSO. "
-                 "English by default; Hindi / Hinglish on request."),
+                 "Indian English by default; 15 Indian languages (Punjabi, Hindi, Gujarati, Marathi, Tamil, Telugu, ...) on request."),
         Node(20, 270, 150, 60, "external", "Vedanta SSO / RBAC", ["identity provider"],
              tip="Vedanta enterprise identity directory. Identity-Aware Proxy federates with it to enforce persona RBAC."),
         Node(S[0], 80, S[1], 72, "external", "AVEVA PI & SCADA [verify]", ["MPT Nagana · RGT", "Jet-Pump / ESP telemetry"],
@@ -704,8 +706,8 @@ def target_view() -> tuple[list[Box], list[Node], list[Arrow], list[tuple[str, s
 CARDS_CURRENT = [
     ("Agent & voice", "cyan", ["Chat: ADK agent on Gemini 3.8 Flash, 34 tools",
                                "Voice: Gemini 3.8 Live via a server WebSocket proxy, 13 tools",
-                               "Hands-off screen control in English, Hinglish and Hindi",
-                               "English by default; Hindi / Hinglish on request"]),
+                               "Hands-off screen control by voice or text in 15 Indian languages",
+                               "Indian English voice by default; caches warmed at startup; auto-reconnect"]),
     ("Data & ML", "violet", ["460 synthetic Barmer wells · 4 fields · 60 months",
                              "GCS gs://urvi-cairn-barmer-ai-agent-datalake → BigQuery urvi_cairn_{bronze,silver,gold}",
                              "Intervention classifier + physics checks + success engine",

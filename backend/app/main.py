@@ -61,6 +61,9 @@ def startup_event():
     print("[*] WellPulse Backend Initializing...")
     wells = get_repository().list_wells()  # warm the parquet repository (SDD §5.7)
     print(f"[✓] WellPulse Backend Ready with {len(wells)} active well assets.")
+    from app.analytics.warmup import start_background_warmup  # C-R9: no cold-cache pauses on first voice answers
+
+    start_background_warmup()
 
 
 # Mount pre-built frontend static files if available (for Cloud Run production container)

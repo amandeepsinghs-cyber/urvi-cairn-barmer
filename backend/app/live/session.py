@@ -4,13 +4,14 @@ Port of the ADK repo's ``agent/live/live_session.py`` (itself a port of Drilling
 ``backend/app/agent/live_session.py``, ADR-003)::
 
     browser WS --(one reader task)--> inbound queue --> current Gemini Live session
-                                                   \\--> text fallback (after 3 failures)
+                                                   \\--> text fallback (after 6 failures)
 
 * The Gemini session can be replaced (GoAway / drop) without dropping the browser socket.
 * Reconnects reuse the latest ``SessionResumptionConfig`` handle, keep sliding-window context
   compression on, and send a **recap** of past turns so memory survives (BDD-F07-S03).
-* After 2 consecutive failures the handle is dropped (a stale handle can be the cause); after 3 the
-  client gets ``status: fallback`` and prompts are answered by ``app.live.fallback`` (BDD-F07-S04).
+* After 2 consecutive failures the handle is dropped (a stale handle can be the cause); after 6 (exponential
+  back-off, C-R10) the client gets ``status: fallback`` and prompts are answered by ``app.live.fallback``
+  (BDD-F07-S04); the browser then retries voice every 20 s.
 * Tool calls run the registered ``voice_tools`` in a worker thread with a 10 s timeout.
 * The language toggle (english / hinglish / hindi) is a LANGUAGE block in the system instruction at
   connect time and a context line on change (SDD §11.6). Voice never speaks ₹ / USD (D-1).
@@ -46,12 +47,24 @@ logger = logging.getLogger("wellpulse.live.session")
 DEFAULT_LIVE_MODEL = "gemini-3.8-live"  # verified 2026-10-07 by models.list + live.connect (us-central1)
 DEFAULT_LIVE_LOCATION = "us-central1"
 DEFAULT_PROJECT = "urvi-cairn-barmer-ai-agent"
-MAX_CONSECUTIVE_FAILURES = 3
+MAX_CONSECUTIVE_FAILURES = 6  # C-R10: ride out transient Vertex 1006 drops (~15 s of back-off) before text fallback
 DROP_HANDLE_AFTER = 2
+MAX_BACKOFF_S = 8.0
 RECAP_KEEP_FIRST = 4
 RECAP_KEEP_LAST = 16
 RECAP_MAX_CHARS = 320
-LANGUAGES = ("english", "hinglish", "hindi")
+LANGUAGES = (
+    "english", "hinglish", "hindi", "punjabi", "rajasthani", "gujarati", "marathi", "bengali", "assamese", "odia",
+    "tamil", "telugu", "kannada", "malayalam", "urdu",
+)
+# C-R8: Gemini Live speech locale per language. English / Hinglish use Indian English (en-IN) so the voice keeps an
+# Indian accent. Every locale below connected and answered in its language on gemini-3.8-live (probe 2026-11-19,
+# scratch/probe_locales.py). Rajasthani, Assamese, Odia and Urdu stay unlocked (None) and are auto-detected.
+SPEECH_LOCALES: dict[str, str | None] = {
+    "english": "en-IN", "hinglish": "en-IN", "hindi": "hi-IN", "punjabi": "pa-IN", "gujarati": "gu-IN",
+    "marathi": "mr-IN", "bengali": "bn-IN", "tamil": "ta-IN", "telugu": "te-IN", "kannada": "kn-IN",
+    "malayalam": "ml-IN",
+}
 PROMPT_PATH = Path(__file__).with_name("live_prompt.md")
 LANGUAGE_MARKER = "## LANGUAGE BLOCKS"
 
@@ -105,7 +118,9 @@ def language_block(lang: str) -> str:
         head, _, body = chunk.partition("\n")
         if head.strip().lower() == lang:
             return body.strip()
-    return f"Reply in {lang}."
+    return (f"Speak natural, fluent {lang.title()} with captions in its native script; oilfield technical terms may "
+            f"stay in English. Use feminine first-person forms where the language is gendered. Every number spoken "
+            f"must come directly from tool outputs.")
 
 
 def build_system_prompt(ui: dict[str, Any] | None) -> str:
@@ -119,15 +134,20 @@ def build_system_prompt(ui: dict[str, Any] | None) -> str:
     return "\n\n".join(parts)
 
 
-def speech_language_code(lang: str | None) -> str:
-    """BCP-47 locale for Gemini Live SpeechConfig: Indian English (en-IN) for English/Hinglish, hi-IN for Hindi."""
-    return "hi-IN" if norm_language(lang) == "hindi" else "en-IN"
+def speech_language_code(lang: str | None) -> str | None:
+    """BCP-47 Gemini Live locale for a language (en-IN for English / Hinglish); None = unlocked auto-detect."""
+    return SPEECH_LOCALES.get(norm_language(lang))
 
 
 def build_live_config(
     types: Any, system_prompt: str, tools: list[Any], handle: str | None, voice: str, language: str | None = "english"
 ) -> Any:
-    """LiveConnectConfig locked to the single prebuilt voice (no language_code lock so all regional languages work)."""
+    """LiveConnectConfig: one fixed prebuilt voice, per-language speech locale (Indian English by default)."""
+    code = speech_language_code(language)
+    speech = types.SpeechConfig(
+        voice_config=types.VoiceConfig(prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice)),
+        **({"language_code": code} if code else {}),
+    )
     return types.LiveConnectConfig(
         response_modalities=[types.Modality.AUDIO],
         temperature=0.2,
@@ -135,9 +155,7 @@ def build_live_config(
         input_audio_transcription=types.AudioTranscriptionConfig(),
         system_instruction=types.Content(parts=[types.Part.from_text(text=system_prompt)]),
         tools=tools,
-        speech_config=types.SpeechConfig(
-            voice_config=types.VoiceConfig(prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice)),
-        ),
+        speech_config=speech,
         session_resumption=types.SessionResumptionConfig(handle=handle),
         context_window_compression=types.ContextWindowCompressionConfig(sliding_window=types.SlidingWindow()),
     )
@@ -244,6 +262,13 @@ async def _run_tool(ws: WebSocket, name: str, args: dict[str, Any], state: dict[
     emit_action = bool(tool and tool.action_kind and result.get("status") == "OK")
     if name == "field_production_history" and not (args or {}).get("plot"):
         emit_action = False  # BDD-F11-S01: tell numbers first; open chart only when user asks for plot/chart
+    if name == "ui_control" and result.get("status") == "OK":
+        cmd = (result.get("data") or {}).get("command") if isinstance(result.get("data"), dict) else None
+        if isinstance(cmd, dict) and cmd.get("action") == "language" and cmd.get("value"):
+            before = speech_language_code(state["ui"].get("language"))
+            state["ui"]["language"] = norm_language(cmd["value"])
+            if speech_language_code(state["ui"]["language"]) != before:
+                state["relocale"] = True  # C-R8: reconnect on the new speech locale after this reply finishes
     if emit_action and tool:
         await _send(ws, {"type": "action", "kind": tool.action_kind, "payload": result})
     return result
@@ -353,7 +378,7 @@ async def run_resilient_live(
                 return
             if failures >= DROP_HANDLE_AFTER:
                 state["resumable"] = False
-            await asyncio.sleep(settings["backoff_s"] * failures)
+            await asyncio.sleep(min(MAX_BACKOFF_S, settings["backoff_s"] * (2 ** (failures - 1))))
 
 
 async def _run_bidi_stream(
@@ -392,7 +417,12 @@ async def _run_bidi_stream(
             except json.JSONDecodeError:
                 continue
             mtype = data.get("type")
+            locale_before = speech_language_code(state["ui"].get("language"))
             lang_changed = _merge_ui(state, data.get("ui_state"))
+            if lang_changed and speech_language_code(state["ui"].get("language")) != locale_before:
+                if mtype == "context":
+                    return "language_changed"  # C-R8: reconnect (resume handle + recap) on the new speech locale
+                state["relocale"] = True  # a prompt carried the switch: answer it, then reconnect after the reply
             if mtype == "context":
                 await send_context("[Language switched — use the new language from now on.]" if lang_changed else "")
             elif mtype in ("prompt", "text"):
@@ -480,6 +510,8 @@ async def _run_bidi_stream(
                     _log_turn(state, "Agent", full_text)
                     await _send(websocket, {"type": "turn_complete", "full_text": full_text})
                     await _send(websocket, {"type": "voice_state", "state": "idle"})
+                    if state.pop("relocale", False):
+                        return "language_changed"
             if not got_any:
                 return "server_closed"
 

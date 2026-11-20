@@ -12,6 +12,8 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
+os.environ.setdefault("WELLPULSE_WARM_CACHES", "0")  # C-R9: no background cache warm-up threads during tests
+
 
 @pytest.fixture(autouse=True)
 def _fake_agent_llm(monkeypatch, request):

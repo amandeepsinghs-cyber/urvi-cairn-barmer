@@ -75,17 +75,17 @@
     [
      "A",
      "Audio in",
-     "The browser streams your microphone (16 kHz) over a WebSocket to the Gemini Live proxy on our server, and plays Urvi's spoken reply (24 kHz). You can interrupt at any time."
+     "The browser streams your microphone (16 kHz) over a WebSocket to the Gemini Live proxy on our server, and plays Urvi's spoken reply (24 kHz). You can interrupt at any time. If the connection drops (network blip, laptop sleep), the browser reconnects by itself and, if it ever falls back to text, retries voice every 20 seconds."
     ],
     [
      "B",
      "Gemini 3.8 Live",
-     "The proxy connects to Gemini Live, a speech-to-speech model. It hears the question, decides which voice tool to call, and speaks the answer (voice: Aoede). English by default; Hindi or Hinglish if you switch."
+     "The proxy connects to Gemini Live, a speech-to-speech model. It hears the question, decides which voice tool to call, and speaks the answer in one fixed voice (Aoede). Indian English by default; switch to any of 15 Indian languages (Punjabi, Hindi, Gujarati, Marathi, Tamil, Telugu and more) by asking or from the language menu, and the speech locale follows. Short drops are resumed on the server (6 tries) before it falls back to text."
     ],
     [
      "C",
      "Same tools",
-     "Voice tools run on our server and call the same analytics code as chat. There are fewer of them (13) because a voice model works best with a short list; some bundle several chat tools, e.g. well_profile also returns offset decline, anomalies and wax / sand."
+     "Voice tools run on our server and call the same analytics code as chat. There are fewer of them (13) because a voice model works best with a short list; some bundle several chat tools, e.g. well_profile also returns offset decline, anomalies and wax / sand. The slowest calculations are warmed when the server starts, so the first answer comes in about a second."
     ]
    ]
   },

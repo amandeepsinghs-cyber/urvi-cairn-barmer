@@ -30,7 +30,10 @@ logger = logging.getLogger("wellpulse.agent.runner")
 
 APP_NAME = "wellpulse"
 DEGRADED_TEXT = "Model unavailable; showing tool output."
-LANGUAGES = ("english", "hinglish", "hindi")
+LANGUAGES = (  # C-R8: same set as app/live/session.py LANGUAGES and ui_control "language"
+    "english", "hinglish", "hindi", "punjabi", "rajasthani", "gujarati", "marathi", "bengali", "assamese", "odia",
+    "tamil", "telugu", "kannada", "malayalam", "urdu",
+)
 
 # tool name → artifact kind (SDD §12.4; + classifier / map)
 ARTIFACT_KIND = {

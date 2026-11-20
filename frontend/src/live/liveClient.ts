@@ -10,10 +10,11 @@
 import { audioPlayer } from './audioPlayer';
 import { micCapture } from './micCapture';
 import { getPersona, subscribePersona } from '../state/persona';
+import type { AppLanguage } from '../agent/uiCommands';
 
 export type LiveStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'resumed' | 'fallback';
 export type VoiceState = 'idle' | 'listening' | 'thinking' | 'speaking';
-export type LiveLanguage = 'english' | 'hinglish' | 'hindi';
+export type LiveLanguage = AppLanguage;
 
 export interface LiveContext {
   field?: string;
@@ -63,6 +64,7 @@ export class LiveClient {
   private openMic = false;
   private turnStartTime: number | null = null;
   private waitingForFirstAudio = false;
+  private fallbackRetryTimer: number | null = null;
 
   constructor(handlers?: LiveHandlers) {
     if (handlers) {
@@ -70,6 +72,63 @@ export class LiveClient {
     }
     // Stage Y: persona switch reaches Live — sent as ui_state.persona (server re-gates every tool call).
     subscribePersona((p) => this.setContext({ persona: p }));
+    // C-R10: voice must not stay dropped — reconnect as soon as the tab is visible again or the network returns.
+    if (typeof window !== 'undefined') {
+      const revive = () => this.reviveIfDropped();
+      window.addEventListener('online', revive);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') revive();
+      });
+    }
+  }
+
+  /** C-R10: back-off for socket reconnects: 1 s, 2 s, 4 s, 8 s, then every 15 s, for as long as Live is on. */
+  private backoffMs(): number {
+    return Math.min(15000, 1000 * 2 ** Math.max(0, this.reconnectAttempts - 1));
+  }
+
+  private scheduleReconnect(): void {
+    if (this.explicitDisconnect || this.reconnectTimer) return;
+    this.reconnectAttempts += 1;
+    const wait = this.backoffMs();
+    this.setStatus('reconnecting', { message: `Reconnecting in ${Math.round(wait / 1000)}s...` });
+    this.reconnectTimer = window.setTimeout(() => {
+      this.reconnectTimer = null;
+      if (!this.explicitDisconnect) this.connect(this.currentContext);
+    }, wait);
+  }
+
+  /** In text fallback (Gemini Live unavailable), keep trying to get voice back every 20 s; text keeps working. */
+  private scheduleFallbackRetry(): void {
+    if (this.explicitDisconnect || this.fallbackRetryTimer) return;
+    this.fallbackRetryTimer = window.setTimeout(() => {
+      this.fallbackRetryTimer = null;
+      if (this.explicitDisconnect || this.status !== 'fallback') return;
+      this.reopenSocket();
+    }, 20000);
+  }
+
+  /** Close the current socket (no auto-reconnect from its onclose) and dial a new one, keeping Live mode on. */
+  private reopenSocket(): void {
+    const old = this.ws;
+    this.ws = null;
+    if (old) {
+      try {
+        old.close();
+      } catch (_) {}
+    }
+    this.connect(this.currentContext);
+  }
+
+  private reviveIfDropped(): void {
+    if (this.explicitDisconnect) return;
+    if (this.status === 'disconnected' || this.status === 'reconnecting' || this.status === 'fallback') {
+      if (this.reconnectTimer) {
+        window.clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+      this.reopenSocket();
+    }
   }
 
   public setHandlers(h: LiveHandlers): void {
@@ -99,10 +158,9 @@ export class LiveClient {
       return 'ws://localhost:8002/ws/live';
     }
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host =
-      window.location.port === '5180'
-        ? `${window.location.hostname}:8002`
-        : window.location.host;
+    // C-R10: always same-origin. In local dev the Vite server proxies /ws to the backend (vite.config.ts); dialling
+    // <host>:8002 directly fails from a laptop (Cloudtop firewall / IPv6-only DNS) and left Live stuck in text mode.
+    const host = window.location.host;
 
     const params = new URLSearchParams();
     if (ctx.language) params.set('language', ctx.language);
@@ -137,7 +195,7 @@ export class LiveClient {
 
       this.ws.onopen = () => {
         if (this.ws !== currentSock) return;
-        this.reconnectAttempts = 0;
+        // Back-off resets only when the server reports the Gemini session is up (status connected / resumed).
         // Status stays 'connecting' until the server reports the Gemini session is up
         // ({type:"status", status:"connected"}); only then is Live really usable.
         this.setContext({});
@@ -171,48 +229,26 @@ export class LiveClient {
         this.ws = null;
         this.waitingForFirstAudio = false;
 
-        // If explicit disconnect or fallback: do not auto-reconnect
-        if (this.explicitDisconnect || this.status === 'fallback') {
-          if (this.status !== 'fallback') {
-            this.setStatus('disconnected');
-          }
+        if (this.explicitDisconnect) {
+          this.setStatus('disconnected');
           return;
         }
-
-        // Auto-reconnect: on unexpected socket close (not explicit disconnect, not fallback) retry once after 3 s.
-        if (this.reconnectAttempts === 0) {
-          this.reconnectAttempts = 1;
-          this.setStatus('reconnecting', { message: 'Reconnecting in 3s...' });
-          this.reconnectTimer = window.setTimeout(() => {
-            this.reconnectTimer = null;
-            if (!this.explicitDisconnect && this.status !== 'fallback') {
-              this.connect(this.currentContext);
-            }
-          }, 3000);
-        } else {
-          this.setStatus('disconnected', { message: 'Connection lost' });
+        if (this.status === 'fallback') {
+          this.scheduleFallbackRetry(); // text keeps working; voice comes back by itself
+          return;
         }
+        // C-R10: unexpected socket close (network blip, laptop sleep, 1 h Cloud Run limit): keep retrying with back-off.
+        this.scheduleReconnect();
       };
 
       this.ws.onerror = () => {
         if (this.ws !== currentSock) return;
-        this.handlers.onError?.('WebSocket connection error');
+        // onclose follows and schedules the retry; no error bubble for a transient drop.
       };
     } catch (_) {
       this.ws = null;
       this.waitingForFirstAudio = false;
-      if (!this.explicitDisconnect && this.status !== 'fallback' && this.reconnectAttempts === 0) {
-        this.reconnectAttempts = 1;
-        this.setStatus('reconnecting', { message: 'Reconnecting in 3s...' });
-        this.reconnectTimer = window.setTimeout(() => {
-          this.reconnectTimer = null;
-          if (!this.explicitDisconnect && this.status !== 'fallback') {
-            this.connect(this.currentContext);
-          }
-        }, 3000);
-      } else {
-        this.setStatus('disconnected');
-      }
+      this.scheduleReconnect();
     }
   }
 
@@ -222,11 +258,13 @@ export class LiveClient {
     switch (msg.type) {
       case 'status': {
         const nextStatus = msg.status as LiveStatus;
+        if (nextStatus === 'connected' || nextStatus === 'resumed') this.reconnectAttempts = 0;
         this.setStatus(nextStatus, {
           model: msg.model,
           memory: msg.memory,
           message: msg.message,
         });
+        if (nextStatus === 'fallback') this.scheduleFallbackRetry();
         break;
       }
 
@@ -300,6 +338,11 @@ export class LiveClient {
       window.clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+    if (this.fallbackRetryTimer) {
+      window.clearTimeout(this.fallbackRetryTimer);
+      this.fallbackRetryTimer = null;
+    }
+    this.reconnectAttempts = 0;
     this.openMic = false;
     this.turnStartTime = null;
     this.waitingForFirstAudio = false;

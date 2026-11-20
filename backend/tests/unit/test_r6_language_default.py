@@ -34,8 +34,14 @@ def test_live_config_unlocked_for_regional_languages_and_area_queries_do_not_pop
     from app.live import voice_tools
 
     cfg = session.build_live_config(types, "sys", [], None, "Aoede", "english")
-    assert cfg.speech_config.language_code is None
+    # C-R8: English keeps the Indian English locale (Indian accent); the voice stays one fixed prebuilt voice
+    assert cfg.speech_config.language_code == "en-IN"
     assert cfg.speech_config.voice_config.prebuilt_voice_config.voice_name == "Aoede"
+    assert session.build_live_config(types, "sys", [], None, "Aoede", "hindi").speech_config.language_code == "hi-IN"
+    assert session.build_live_config(types, "sys", [], None, "Aoede", "punjabi").speech_config.language_code == "pa-IN"
+    # Languages without a verified Live locale stay unlocked so the model auto-detects them
+    assert session.build_live_config(types, "sys", [], None, "Aoede", "assamese").speech_config.language_code is None
+    assert session.norm_language("Punjabi") == "punjabi" and session.norm_language("klingon") == "english"
 
     # Area overview uses fleet_kpis without hijacking the map screen
     assert voice_tools.VOICE_TOOLS["fleet_kpis"].action_kind is None

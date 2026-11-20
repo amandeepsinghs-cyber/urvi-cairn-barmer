@@ -1,7 +1,7 @@
 # Cairn Oil & Gas (Barmer Basin) — Step-by-Step Implementation & Verification Checklist (`checklist.md`)
 ## Urvi AI Agent for Cairn Oil & Gas · Vedanta Limited (Block RJ-ON-90/1, Rajasthan)
 
-**Document Version:** 4.1.0 (Cairn Barmer Replica — 67-Step Dual-Check Tracker · 100% Complete)  
+**Document Version:** 4.2.0 (Cairn Barmer Replica — 70-Step Dual-Check Tracker · 100% Complete)  
 **Date:** 2026-11-17 · **CIO Meeting Deadline:** 2026-11-18  
 **Authoritative Build Guide:** [`build.md`](./build.md) (Part I Deep Research Spec · Part II 67 Atomic Steps)  
 **Companion Docs:** [`backlog_refinements.md`](../backlog_refinements.md) · [`plan_prompt.md`](../plan_prompt.md) · [`DELEGATION.md`](./DELEGATION.md)  
@@ -33,8 +33,8 @@
 | **C6** | Backend Tools, Cairn Branding, Prompts, Voice & RBAC | `C6.1`–`C6.7` (7) | `7 / 7` | `7 / 7` | ✅ **Gate C6 Passed** (`en-IN` Indian accent + 0 ONGC) |
 | **C7** | Frontend Map, Voice Controls, Persona UI, Architecture & Docs | `C7.1`–`C7.8` (8) | `8 / 8` | `8 / 8` | ✅ **Gate C7 Passed** (`8/8` incl. Visual Interventions Parity) |
 | **C8** | Test Suite, Golden Schemas, Eval Migration & Zero-ONGC Audit | `C8.1`–`C8.6` (6) | `6 / 6` | `6 / 6` | ✅ **Gate C8 Passed** (`807 passed, 0 failed`, 0 ONGC leaks) |
-| **C9** | Local Rehearsal, Cloud Run Deploy & CIO Demo Script | `C9.1`–`C9.7` (7) | `7 / 7` | `7 / 7` | ✅ **Gate C9 Passed** (`urvi-cairn-app-00004-cd9` 1-Click Live) |
-| **TOTAL** | **Full Cairn Oil & Gas (Barmer Basin) Build** | **69 Steps** | **`69 / 69`** | **`69 / 69`** | ✅ **ALL GATES `C0–C9` PASSED (`138 / 138` Checks `[x]`)** |
+| **C9** | Local Rehearsal, Cloud Run Deploy & CIO Demo Script | `C9.1`–`C9.8` (8) | `8 / 8` | `8 / 8` | ✅ **Gate C9 Passed** (`urvi-cairn-app-00005-24s` 1-Click Live) |
+| **TOTAL** | **Full Cairn Oil & Gas (Barmer Basin) Build** | **70 Steps** | **`70 / 70`** | **`70 / 70`** | ✅ **ALL GATES `C0–C9` PASSED (`140 / 140` Checks `[x]`)** |
 
 ---
 
@@ -310,5 +310,8 @@
 - [x] **[C9.7 · Impl]** `[O]` Fix turn-by-turn voice morphing (remove prompt accent/prosody roleplay from `live_prompt.md`, set `temperature=0.2` on `Aoede`), unlock all Indian regional/native languages (`SpeechConfig` `language_code=None` + `live_prompt.md` & `prompt.py`), and stop unsolicited field production chart popups on area queries (`fleet_kpis` `action_kind=None` + `india_operating_areas`, `field_production_history` `plot=False` guard in `voice_tools.py`, `session.py`, `VoiceAgentPanel.tsx`).
 - [x] **[C9.7 · Verify]** `[O]` Confirm `npm run build` + `pytest tests/unit/test_r6_language_default.py tests/integration/test_ws_live.py tests/unit/test_agent_runner.py -q`, restart local daemon, and redeploy + smoke-test `v10-barmer-rc4` on Cloud Run. · *Evidence:* `23/23 tests PASS; vite build 5.21s; deployed urvi-cairn-app-00004-cd9 (unauthenticated smoke 6/6 PASS, WS /ws/live connected in 1,448 ms, 2026-11-17)`
 
+- [x] **[C9.8 · Impl]** `[O]` Indian English `en-IN` voice locale with per-language locales for 15 Indian languages (fixed `Aoede` voice, reconnect on locale change), background cache warm-up, two-sentence spoken answers, same-origin `/ws` + browser auto-reconnect / text-mode recovery + server 6-try back-off, and regenerated architecture / Explain / `how_urvi_works.md`.
+- [x] **[C9.8 · Verify]** `[O]` `npm run build`, full `pytest`, audio + latency probes, and redeploy + smoke test. · *Evidence:* `809 passed, 1 skipped; en-IN clips judged Indian English (high confidence), same voice x3; 11 locales connect; local first audio 0.8-1.7 s (was up to 10 s), field-comparison answer 31 words (was 74 s); deployed urvi-cairn-app-00005-24s (smoke 6/6 PASS, 2026-11-19); architecture regenerated 2026-11-20`
+
 ### Gate C9 Sign-Off
-- [x] **Gate C9 Passed:** `urvi-cairn-app` live on Cloud Run (`urvi-cairn-app-00003-cqg`), smoke green (`6/6` remote + `7/7` selfcheck), CIO demo script rehearsed & pinned, and repo synced to `origin/main`.
+- [x] **Gate C9 Passed:** `urvi-cairn-app` live on Cloud Run (`urvi-cairn-app-00005-24s`), smoke green (`6/6` remote + `7/7` selfcheck), CIO demo script rehearsed & pinned, and repo synced to `origin/main`.

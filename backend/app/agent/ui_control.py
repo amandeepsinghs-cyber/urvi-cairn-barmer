@@ -25,7 +25,10 @@ UI_ACTIONS: dict[str, tuple[str, ...] | None] = {
     "open_well": None,
     "open_screen": ("field_history", "field_compare", "field_health"),
     "panel": ("expand", "restore", "close"),
-    "language": ("english", "hinglish", "hindi"),
+    "language": (
+        "english", "hinglish", "hindi", "punjabi", "rajasthani", "gujarati", "marathi", "bengali", "assamese", "odia",
+        "tamil", "telugu", "kannada", "malayalam", "urdu",
+    ),  # C-R8: keep in sync with app/live/session.py LANGUAGES
     "report": ("open", "print", "close"),
     "agent": ("dock", "undock"),
     "health_filter": ("all", "healthy", "attention", "not_producing"),  # ED-14 (D-41), D-38 groups

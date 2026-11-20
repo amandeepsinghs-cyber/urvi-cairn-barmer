@@ -34,6 +34,7 @@ import {
 } from '../../api/chat';
 import { ChatArtifact } from './ChatArtifact';
 import { dispatchUi, parseUiCommands, useUiCommands, labelOf, UiCommand, isSmallTalk } from '../../agent/uiCommands';
+import type { AppLanguage } from '../../agent/uiCommands';
 
 interface VoiceAgentPanelProps {
   well?: WellDetail | null;
@@ -62,7 +63,25 @@ export interface AgentVoiceStatus {
   thinking: boolean;
 }
 
-type AgentLanguage = 'hinglish' | 'english' | 'hindi';
+type AgentLanguage = AppLanguage;
+/** C-R8: dropdown labels (native script); the voice locale follows the selection. */
+const LANGUAGE_OPTIONS: { value: AgentLanguage; label: string }[] = [
+  { value: 'english', label: 'English' },
+  { value: 'hinglish', label: 'Hinglish' },
+  { value: 'hindi', label: 'हिंदी' },
+  { value: 'punjabi', label: 'ਪੰਜਾਬੀ' },
+  { value: 'rajasthani', label: 'राजस्थानी' },
+  { value: 'gujarati', label: 'ગુજરાતી' },
+  { value: 'marathi', label: 'मराठी' },
+  { value: 'bengali', label: 'বাংলা' },
+  { value: 'assamese', label: 'অসমীয়া' },
+  { value: 'odia', label: 'ଓଡ଼ିଆ' },
+  { value: 'tamil', label: 'தமிழ்' },
+  { value: 'telugu', label: 'తెలుగు' },
+  { value: 'kannada', label: 'ಕನ್ನಡ' },
+  { value: 'malayalam', label: 'മലയാളം' },
+  { value: 'urdu', label: 'اردو' },
+];
 
 /**
  * Step 4 (UI redesign): data-heavy answers are shown in the right-hand panel, not as cards in the chat.
@@ -167,6 +186,7 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
   const lastUserTextRef = useRef<string>('');
   const lastUiAtRef = useRef<number>(0); // ED-14: when Live last drove the screen (D-41 safety net)
   const lastLiveNavRef = useRef<ChatAction | null>(null); // Re-align canvas view if transcript arrives after tool call
+  const fallbackAnnouncedRef = useRef<boolean>(false); // C-R10: one "switched to text" note per outage
 
   // Step 5: an explicit "field report / crew pack" request opens the printable report overlay for the
   // well named in the message (or the selected well) and leaves a re-open chip in the chat. Held in a
@@ -247,19 +267,20 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
         setLiveStatus(s);
         setStatusInfo(info || {});
 
-        if (s === 'resumed' && info?.memory) {
-          const resumeMsg: LiveChatMessage = {
+        // C-R10: reconnects are silent; announce text fallback once and announce when voice is back.
+        if ((s === 'connected' || s === 'resumed') && fallbackAnnouncedRef.current) {
+          fallbackAnnouncedRef.current = false;
+          const backMsg: LiveChatMessage = {
             id: `sys-${Date.now()}`,
             sender: 'agent',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            text: 'Live voice resumed — conversation memory kept.',
+            text: 'Live voice is back.',
             live: true,
           };
-          setMessages((prev) => [...prev, resumeMsg]);
-        } else if (s === 'fallback') {
-          const fbText = info?.message
-            ? `Live voice unavailable — switched to text (retry). (${info.message})`
-            : 'Live voice unavailable — switched to text (retry).';
+          setMessages((prev) => [...prev, backMsg]);
+        } else if (s === 'fallback' && !fallbackAnnouncedRef.current) {
+          fallbackAnnouncedRef.current = true;
+          const fbText = 'Live voice is reconnecting — answers are in text until it is back (retrying automatically).';
           const fbMsg: LiveChatMessage = {
             id: `sys-${Date.now()}`,
             sender: 'agent',
@@ -1141,9 +1162,11 @@ export const VoiceAgentPanel: React.FC<VoiceAgentPanelProps> = ({
             aria-label="Agent language"
             className="bg-[#0d1117] border border-border rounded px-1 py-0.5 text-[10px] text-textMain focus:outline-none focus:border-accent"
           >
-            <option value="hinglish">Hinglish</option>
-            <option value="english">English</option>
-            <option value="hindi">हिंदी</option>
+            {LANGUAGE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>

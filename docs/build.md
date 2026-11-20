@@ -822,3 +822,15 @@ Canonical `LIFT_TYPES` across generator, Silver/Gold tables, and `features.py`:
   (cd frontend && npm run build) && (cd backend && uv run pytest tests/unit/test_r6_language_default.py tests/integration/test_ws_live.py tests/unit/test_agent_runner.py -q) && echo "C9.7 VOICE CONSISTENCY + REGIONAL LANGUAGES + AREA MAP GUARD OK"
   ```
 
+### Step C9.8 — Indian English Voice Locale, 15-Language Switching, Cache Warm-Up, Brevity & Voice Auto-Reconnect (`[O]`)
+* **Files:** `backend/app/live/{session.py,live_prompt.md,voice_tools.py}`, `backend/app/agent/{prompt.py,runner.py,ui_control.py}`, `backend/app/analytics/warmup.py`, `backend/app/main.py`, `backend/tests/{conftest.py,integration/test_ws_live.py,unit/test_r6_language_default.py}`, `frontend/src/{agent/uiCommands.ts,api/chat.ts,live/liveClient.ts,components/agent/VoiceAgentPanel.tsx}`, `frontend/scripts/{build_architecture.py,architecture_explain.py}`, `frontend/public/architecture/*`, `docs/how_urvi_works.md`, `APP_LINK.md`
+* **Instructions:**
+  1. **Voice locale (C-R8):** per-language `SpeechConfig.language_code` (`en-IN` for English / Hinglish, `hi-IN`, `pa-IN`, `gu-IN`, `mr-IN`, `bn-IN`, `ta-IN`, `te-IN`, `kn-IN`, `ml-IN`; Rajasthani / Assamese / Odia / Urdu auto-detect), one fixed `Aoede` voice, no accent text in the prompt; language switches reconnect the Live session on the new locale (resume handle + recap). 15 languages in `ui_control`, the dropdown and the browser parser.
+  2. **Latency & brevity (C-R9):** background cache warm-up at startup (`compare_fields` x4 periods, health x4 fields, NBA + profile for 6 hero wells); two-sentence spoken answers; trimmed `compare_fields` voice payload.
+  3. **Voice drops (C-R10):** same-origin `/ws` (Vite proxy locally), unlimited browser reconnect with back-off, reconnect on tab wake-up / network return, auto-retry voice every 20 s from text mode, server 6 tries with exponential back-off before text fallback.
+  4. **Architecture:** regenerate diagrams, Explain JSONs and `docs/how_urvi_works.md` for the above.
+* **Verify:**
+  ```bash
+  (cd frontend && npm run build) && (cd backend && uv run pytest -q) && uv run --project backend python frontend/scripts/build_architecture.py && grep -q "15 Indian languages" frontend/public/architecture/current.html && echo "C9.8 OK"
+  ```
+

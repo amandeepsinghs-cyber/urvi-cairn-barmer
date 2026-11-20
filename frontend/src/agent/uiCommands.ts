@@ -22,7 +22,23 @@ export const UI_ACTIONS = {
   open_well: null,
   open_screen: ['field_history', 'field_compare', 'field_health'],
   panel: ['expand', 'restore', 'close'],
-  language: ['english', 'hinglish', 'hindi'],
+  language: [
+    'english',
+    'hinglish',
+    'hindi',
+    'punjabi',
+    'rajasthani',
+    'gujarati',
+    'marathi',
+    'bengali',
+    'assamese',
+    'odia',
+    'tamil',
+    'telugu',
+    'kannada',
+    'malayalam',
+    'urdu',
+  ],
   report: ['open', 'print', 'close'],
   agent: ['dock', 'undock'],
   health_filter: ['all', 'healthy', 'attention', 'not_producing'], // ED-14 (D-41)
@@ -30,6 +46,8 @@ export const UI_ACTIONS = {
 } as const;
 
 export type UiAction = keyof typeof UI_ACTIONS;
+/** C-R8: every language the agent can speak (dropdown, ui_control, Live speech locale). */
+export type AppLanguage = (typeof UI_ACTIONS)['language'][number];
 
 export interface UiCommand {
   action: UiAction;
@@ -229,11 +247,27 @@ const RULES: Rule[] = [
     build: () => ({ action: 'open_screen', value: 'field_health' }),
   },
   {
-    re: /\b(hinglish|hindi|english)\b|हिंदी|हिन्दी/,
+    re: /\b(hinglish|hindi|english|punjabi|rajasthani|marwari|gujarati|marathi|bengali|bangla|assamese|odia|oriya|tamil|telugu|kannada|malayalam|urdu)\b|हिंदी|हिन्दी|ਪੰਜਾਬੀ/,
     build: (m, s) => {
       if (!/\b(language|bhasha|switch|speak|talk|bolo|baat|mein|me|in|reply|answer|change)\b|भाषा|में/.test(s) && s.trim() !== m[0])
         return null;
-      const v = /hinglish/.test(s) ? 'hinglish' : /hindi|हिंदी|हिन्दी/.test(s) ? 'hindi' : 'english';
+      const REGIONAL: [RegExp, AppLanguage][] = [
+        [/punjabi|ਪੰਜਾਬੀ/, 'punjabi'],
+        [/rajasthani|marwari/, 'rajasthani'],
+        [/gujarati/, 'gujarati'],
+        [/marathi/, 'marathi'],
+        [/bengali|bangla/, 'bengali'],
+        [/assamese/, 'assamese'],
+        [/odia|oriya/, 'odia'],
+        [/tamil/, 'tamil'],
+        [/telugu/, 'telugu'],
+        [/kannada/, 'kannada'],
+        [/malayalam/, 'malayalam'],
+        [/urdu/, 'urdu'],
+      ];
+      const regional = REGIONAL.find(([re]) => re.test(s))?.[1];
+      const v: AppLanguage =
+        regional ?? (/hinglish/.test(s) ? 'hinglish' : /hindi|हिंदी|हिन्दी/.test(s) ? 'hindi' : 'english');
       return { action: 'language', value: v };
     },
   },

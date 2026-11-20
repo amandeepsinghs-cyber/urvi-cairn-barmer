@@ -3,9 +3,9 @@
  */
 
 import { getPersona } from '../state/persona';
-import type { UiCommand } from '../agent/uiCommands';
+import type { UiCommand, AppLanguage } from '../agent/uiCommands';
 
-export type ChatLanguage = 'english' | 'hinglish' | 'hindi';
+export type ChatLanguage = AppLanguage;
 export type ChatField = 'Mangala' | 'Bhagyam' | 'Aishwariya' | 'Raageshwari';
 
 export interface ChatRequest {

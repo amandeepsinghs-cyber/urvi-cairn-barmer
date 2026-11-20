@@ -333,15 +333,31 @@ def test_currency_is_stripped_from_voice_tool_results(live_app, monkeypatch):
 
 
 def test_language_switch_via_context_without_reconnect(live_app):
+    """Same speech locale (English -> Hinglish, both en-IN): context line only, no reconnect."""
     fake = FakeLive()
     client = live_app(fake)
     with client.websocket_connect("/ws/live?language=english") as ws:
         recv_until(ws, is_status("connected"))
-        ws.send_text(json.dumps({"type": "context", "ui_state": {"language": "hindi", "well_id": "X-1"}}))
+        ws.send_text(json.dumps({"type": "context", "ui_state": {"language": "hinglish", "well_id": "X-1"}}))
         prompt(ws, "status?")
     ctx = [t for t, tc in fake.sessions[0].client_content if not tc]
-    assert ctx and "language=hindi" in _texts(ctx[0]) and "Devanagari" in _texts(ctx[0])
+    assert ctx and "language=hinglish" in _texts(ctx[0]) and "Roman script" in _texts(ctx[0])
     assert len(fake.sessions) == 1
+
+
+def test_language_switch_to_new_locale_reconnects_with_that_locale(live_app):
+    """C-R8: English (en-IN) -> Hindi (hi-IN) rebuilds the Live session on the Hindi locale, same voice."""
+    fake = FakeLive()
+    client = live_app(fake)
+    with client.websocket_connect("/ws/live?language=english") as ws:
+        recv_until(ws, is_status("connected"))
+        ws.send_text(json.dumps({"type": "context", "ui_state": {"language": "hindi"}}))
+        recv_until(ws, is_status("resumed"))
+        prompt(ws, "status?")
+    assert len(fake.sessions) == 2
+    first, second = fake.sessions[0].config.speech_config, fake.sessions[1].config.speech_config
+    assert first.language_code == "en-IN" and second.language_code == "hi-IN"
+    assert first.voice_config.prebuilt_voice_config.voice_name == second.voice_config.prebuilt_voice_config.voice_name
 
 
 def test_tool_timeout_returns_unavailable(live_app, monkeypatch):

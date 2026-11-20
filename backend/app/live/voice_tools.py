@@ -469,7 +469,16 @@ def _v_classify_well_health(field: str, cluster_id: str = "") -> dict[str, Any]:
 def _v_compare_fields_tc024(period: str = "QTD") -> dict[str, Any]:
     from app.analytics.tools.field_performance import compare_fields
 
-    return compare_fields(period=(period or "QTD").upper()).envelope()
+    env = compare_fields(period=(period or "QTD").upper()).envelope()
+    data = env.get("data")
+    if isinstance(data, dict) and isinstance(data.get("rows"), list):
+        # C-R9: voice payload = headline facts only (the full table is on the Field comparison screen). A 4.5k-char
+        # payload made Live narrate every field for 74 s on 2026-11-19.
+        keep = ("field", "actual_bopd", "target_bopd", "gap_pct", "uptime_pct", "water_cut_pct",
+                "sick_or_lost_count", "top_factor", "controllable_pct")
+        data["rows"] = [{k: r.get(k) for k in keep} for r in data["rows"]]
+        data.pop("excluded", None)
+    return env
 
 
 @register_voice_tool(
