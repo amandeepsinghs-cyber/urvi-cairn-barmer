@@ -5,7 +5,7 @@
 
 **Origin:** replica of the ONGC WellPulse / Urvi demo, cloned 2026-11-15 at commit `c8fc208` (V 1.1) with history.
 The ONGC backlog and decisions remain in git history (`git show c8fc208:backlog_refinements.md`).
-**Deployment:** Live on Cloud Run (`urvi-cairn-app`, revision `urvi-cairn-app-00006-ghw` in `us-central1`, project `urvi-cairn-barmer-ai-agent` — see [`APP_LINK.md`](./APP_LINK.md)).
+**Deployment:** Live on Cloud Run (`urvi-cairn-app`, revision `urvi-cairn-app-00007-952` in `us-central1`, project `urvi-cairn-barmer-ai-agent` — see [`APP_LINK.md`](./APP_LINK.md)).
 
 > [!IMPORTANT]
 > **Answer first:** **All 67 build steps (`Gates C0–C9`, `134 / 134` `Impl`+`Verify` checks) complete, deployed on Cloud Run (`urvi-cairn-app-00003-cqg`), and pushed to `origin/main`.** All 460 Barmer Basin synthetic wells, 24 Stage-DG tables, 20,277 PDFs (`100.00%` fact-slot verified), GCS datalake + BigQuery Medallion (`asia-south1`, `29/29` checksum parity, `9/9` Gold assertions), retrained ML models (**Gate Q Macro-F1 `0.7683`**, **Gate E C-index `0.6587`**), Cairn/Vedanta branding & prompts, Indian English (`en-IN`) Gemini Live voice (`C6.7`), top-line **Single-Agent, Multi-Tool Hybrid Architecture** banner (`C7.7`), visual interventions parity (`C7.8`), `807 passed` `pytest` suite (`0` ONGC leaks), CIO demo script (`docs/demo_flow.md`), and live Cloud Run + local smoke checks are verified green.
@@ -42,7 +42,7 @@ The ONGC backlog and decisions remain in git history (`git show c8fc208:backlog_
 | C-R5 | 2026-11-15 | *"as I see the interventions in ONGC Urvi I dont see them visually here. Can you see if there is a inconsistency? ... sure apply the fix and then redeploy"* | Done (`Step C7.8` — deployed `urvi-cairn-app-00003-cqg`, `6/6` live smoke checks passed + local `:5180` live) | Final git commit/push (`C9.5`) |
 | C-R8 | 2026-11-19 | *"now the voice is US accent in urvi cairn. Can we make the voice to be similar to that in urvi ongc?"* | Done (`C9.8`: `en-IN` default locale + per-language locales; audio check Indian English, same voice) | — |
 | C-R9 | 2026-11-19 | *"sometime it does respond after a long pause. and doesnt feel readltime"* | Done (`C9.8`: cache warm-up + two-sentence answers) | — |
-| C-R10 | 2026-11-19 | *"the tool sometimes goes silent and text only ... The voice should not drop"* | Done (`C9.8` auto-reconnect + text recovery; `C9.9` session resume across drops, 55-min idle refresh, extra-connection fix, session logging; `C9.10` re-ask the question when a drop lands mid-answer, finish the answer before GoAway reconnects). Watch logs for interruptions while speaking (possible echo on open mic + speakers) | Review logs after next demo |
+| C-R10 | 2026-11-19 | *"the tool sometimes goes silent and text only ... The voice should not drop"* | Done (`C9.8` auto-reconnect + text recovery; `C9.9` session resume across drops, 55-min idle refresh, extra-connection fix, session logging; `C9.10` re-ask the question when a drop lands mid-answer, finish the answer before GoAway reconnects; deployed `00007-952`, live probe 0/24 silent). Watch logs for interruptions while speaking (possible echo on open mic + speakers) | Review logs after next demo |
 
 ---
 

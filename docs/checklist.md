@@ -33,7 +33,7 @@
 | **C6** | Backend Tools, Cairn Branding, Prompts, Voice & RBAC | `C6.1`–`C6.7` (7) | `7 / 7` | `7 / 7` | ✅ **Gate C6 Passed** (`en-IN` Indian accent + 0 ONGC) |
 | **C7** | Frontend Map, Voice Controls, Persona UI, Architecture & Docs | `C7.1`–`C7.8` (8) | `8 / 8` | `8 / 8` | ✅ **Gate C7 Passed** (`8/8` incl. Visual Interventions Parity) |
 | **C8** | Test Suite, Golden Schemas, Eval Migration & Zero-ONGC Audit | `C8.1`–`C8.6` (6) | `6 / 6` | `6 / 6` | ✅ **Gate C8 Passed** (`807 passed, 0 failed`, 0 ONGC leaks) |
-| **C9** | Local Rehearsal, Cloud Run Deploy & CIO Demo Script | `C9.1`–`C9.10` (10) | `10 / 10` | `10 / 10` | ✅ **Gate C9 Passed** (`urvi-cairn-app-00006-ghw` 1-Click Live) |
+| **C9** | Local Rehearsal, Cloud Run Deploy & CIO Demo Script | `C9.1`–`C9.10` (10) | `10 / 10` | `10 / 10` | ✅ **Gate C9 Passed** (`urvi-cairn-app-00007-952` 1-Click Live) |
 | **TOTAL** | **Full Cairn Oil & Gas (Barmer Basin) Build** | **72 Steps** | **`72 / 72`** | **`72 / 72`** | ✅ **ALL GATES `C0–C9` PASSED (`144 / 144` Checks `[x]`)** |
 
 ---
@@ -317,6 +317,6 @@
 - [x] **[C9.9 · Verify]** `[O]` Tests + live resume probe. · *Evidence:* `72/72 voice tests (incl. resume + fresh-sid tests); full suite 788 passed + 23 BigQuery parity passed separately; deployed urvi-cairn-app-00006-ghw (smoke 6/6); live probe: socket 2 with same sid -> "resumed", Urvi recalled name + well (BHG-019) (2026-11-20)`
 
 - [x] **[C9.10 · Impl]** `[O]` Re-ask the unanswered question after a mid-answer voice drop (Vertex 1006, server close or browser socket cut; max 2 re-asks, half reply closed with a note), finish the current answer before reconnecting on GoAway, barge-in clears it, drop / re-ask logging.
-- [x] **[C9.10 · Verify]** `[O]` Tests + live probe. · *Evidence:* `EVIDENCE_PENDING`
+- [x] **[C9.10 · Verify]** `[O]` Tests + live probe. · *Evidence:* `20/20 voice tests (5 new: drop mid-answer re-ask, voice transcript re-ask, GoAway waits for answer, no re-ask after a finished answer, give-up after 2 tries); full suite 816 passed, 1 skipped; deployed urvi-cairn-app-00007-952 (v10-barmer-rc7, smoke 6/6); live 24-question probe 0/24 silent (rc6: 1/24 lost to a Vertex 1006 drop) (2026-11-20)`
 ### Gate C9 Sign-Off
-- [x] **Gate C9 Passed:** `urvi-cairn-app` live on Cloud Run (`urvi-cairn-app-00006-ghw`), smoke green (`6/6` remote + `7/7` selfcheck), CIO demo script rehearsed & pinned, and repo synced to `origin/main`.
+- [x] **Gate C9 Passed:** `urvi-cairn-app` live on Cloud Run (`urvi-cairn-app-00007-952`), smoke green (`6/6` remote + `7/7` selfcheck), CIO demo script rehearsed & pinned, and repo synced to `origin/main`.
